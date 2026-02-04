@@ -1,9 +1,7 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import router from './router';
-import debug from './types';
 
-
-const BASE_URL = debug ? 'http://127.0.0.1:8000' : import.meta.env.VITE_PROD_API_URL;
+const BASE_URL = 'http://127.0.0.1:8000';
 
 const api: AxiosInstance = axios.create({
 	baseURL: BASE_URL,
@@ -34,11 +32,11 @@ api.interceptors.response.use(
 				if (refreshToken === null) {
 					localStorage.removeItem('token');
 					localStorage.removeItem('refresh_token');
-					router.push({ name: 'home' });
+					router.push({ name: 'login' });
 					return Promise.reject(error);
 				}
 				const { data } = await axios.post(
-					`${BASE_URL}/refresh`,
+					`${BASE_URL}/auth/refresh`,
 					{
 						token: localStorage.getItem('refresh_token'),
 					},
@@ -52,7 +50,7 @@ api.interceptors.response.use(
 			} catch (err) {
 				localStorage.removeItem('token');
 				localStorage.removeItem('refresh_token');
-				router.push({ name: 'home' });
+				router.push({ name: 'login' });
 				console.error('Refresh token failed', err);
 				return Promise.reject(err);
 			}

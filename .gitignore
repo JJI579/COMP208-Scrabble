@@ -88,3 +88,5 @@ pids
 venv
 
 later-update/
+
+*.pyc

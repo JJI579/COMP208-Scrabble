@@ -1,5 +1,6 @@
 // import App from '@/App.vue'
 // import Landing from '@/Components/Landing/Landing.vue'
+import Landing from '@/Components/Landing/Landing.vue'
 import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/Login.vue'
 import Join from '@/Components/Play/Join.vue'
@@ -12,8 +13,8 @@ const router = createRouter({
 	routes: [
 		{
 			path: '/',
-			name: 'landing',
-			component: Login
+			name: 'home',
+			component: Landing
 		},
 		{
 			path: '/play',

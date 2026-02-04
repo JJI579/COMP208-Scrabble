@@ -1,14 +1,60 @@
 <script lang="ts" setup>
 import { computed, ref, useTransitionState } from 'vue';
 import InputField from './InputField.vue';
+import api from '@/api';
 
 
 
 const usernameModel = ref('');
 const passwordModel = ref('');
-const ex = computed(() => {
-	return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-})
+const triedSubmit = ref(false);
+const errorMessage = ref('');
+const currentSelection = ref('login');
+
+
+async function login() {
+	console.log("Tried")
+	if (usernameModel.value.length == 0 || passwordModel.value.length == 0) return triedSubmit.value = true;
+	const data = {
+		username: usernameModel.value,
+		password: passwordModel.value
+	}
+
+	const resp = await api.post('/auth/login', data);
+	console.log(resp)
+
+}
+
+async function register() {
+	if (usernameModel.value.length == 0 || passwordModel.value.length == 0) return triedSubmit.value = true;
+	const data = {
+		username: usernameModel.value,
+		password: passwordModel.value
+	}
+	try {
+		const resp = await api.post('/auth/register', data);
+		console.log(resp)
+
+	} catch (error: any) {
+		const errorData = error.response?.data;
+		if (errorData) {
+			const errorDetail = errorData.detail;
+			if (errorDetail) {
+				errorMessage.value = errorDetail
+			}
+		} else {
+			console.log(error);
+		}
+	}
+}
+
+async function handleSubmit() {
+	if (currentSelection.value == 'login') {
+		await login();
+	} else {
+		await register();
+	}
+}
 </script>
 
 
@@ -18,10 +64,24 @@ const ex = computed(() => {
 	<!-- Login / register page! -->
 	<div class="content">
 		<div class="form">
-			<h2>Scrabble</h2>
-			<InputField v-model:input="usernameModel" :placeholder="'Username'" />
-			<InputField v-model:input="passwordModel" :placeholder="'Password'" :type="'password'" />
-
+			<h2 class="title">Scrabble</h2>
+			<div class="error" v-if="errorMessage.length > 0">
+				{{ errorMessage }}
+			</div>
+			<div class="option">
+				<div class="text"
+					@click="currentSelection == 'login' ? currentSelection = 'register' : currentSelection = 'login'">
+					{{ currentSelection == 'login' ? 'Register' : 'Login' }}
+				</div>
+			</div>
+			<InputField v-model:input="usernameModel" :placeholder="'Username'" :show-error="triedSubmit" />
+			<InputField v-model:input="passwordModel" :placeholder="'Password'" :type="'password'"
+				:show-error="triedSubmit" />
+			<div class="submit" @click="handleSubmit">
+				<div class="submit__text">
+					{{ currentSelection == 'login' ? 'Login' : 'Register' }}
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -49,6 +109,40 @@ const ex = computed(() => {
 	align-items: center;
 	flex-direction: column;
 	gap: .75rem;
+}
+
+.title {
+	margin-bottom: 3rem;
+}
+
+.option {
+	display: flex;
+	justify-content: left;
+	width: 80%;
+}
+
+.text {
+	margin-right: auto;
+	width: fit-content;
+	padding: .5rem;
+	border-radius: 10px;
+	color: #5865f2;
+	font-weight: 500;
+}
+
+.submit {
+	margin-top: 1.5rem;
+	width: 80%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 20px;
+	background-color: #5865f2;
+	color: white;
+	cursor: pointer;
+	font-weight: 500;
+	font-size: 1rem;
+	padding: 0.6em 0.8em;
 }
 
 @media (max-width: 999px) {

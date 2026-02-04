@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-# from modules.database import init_db, close_db, init_db_sync, get_session
+from modules.database.database import init_db, close_db, init_db_sync, get_session
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
@@ -10,11 +10,10 @@ from pydantic import BaseModel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+	init_db_sync()
+	await init_db()
 	yield
-	# init_db_sync()
-	# await init_db()
-	# yield
-	# await close_db()
+	await close_db()
 
 app = FastAPI(title="Scrabble Websocket Application", lifespan=lifespan)
 
@@ -34,3 +33,6 @@ app.add_middleware(
 @app.get("/")
 async def root():
 	return {"message": "Hello World"}
+
+from routes.auth import router
+app.include_router(router)

@@ -11,6 +11,11 @@ const props = defineProps({
 		required: false,
 		default: "text",
 		type: String
+	},
+	showError: {
+		required: false,
+		default: false,
+		type: Boolean
 	}
 })
 
@@ -25,8 +30,9 @@ const model = defineModel<string>('input')
 
 	<div class="input">
 		<input class="input__field" v-model="model" @focus="isActive = true" @blur="isActive = false"
-			:type="props.type">
-		<div class="text" :class="{ 'text--active': isActive === true || (model ?? '').length > 0 }">
+			:class="{ 'input--error': props.showError && (model ?? '').length == 0 }" :type="props.type">
+		<div class="text"
+			:class="{ 'text--active': isActive || (model ?? '').length > 0, 'text--error': props.showError && (model ?? '').length == 0 }">
 			{{ props.placeholder }}
 		</div>
 	</div>
@@ -45,6 +51,12 @@ const model = defineModel<string>('input')
 	padding: 0.6em 0.8em;
 	width: 100%;
 	height: 3.5rem;
+	border-radius: 8px;
+
+}
+
+.input--error {
+	border: 1px solid red;
 }
 
 .text {
@@ -55,6 +67,10 @@ const model = defineModel<string>('input')
 	font-size: small;
 	color: grey;
 	transition: 0.5s ease all;
+}
+
+.text--error {
+	color: red;
 }
 
 .text--active {
