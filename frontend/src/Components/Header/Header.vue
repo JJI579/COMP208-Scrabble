@@ -17,7 +17,9 @@ const userStore = useUserStore();
 			</RouterLink>
 		</div>
 		<div class="end" v-if="userStore.isLoggedIn">
-			<!-- Flex end -->
+			<RouterLink class="link" :to="{ name: 'dashboard' }">
+				Home
+			</RouterLink>
 		</div>
 		<div class="end" v-else>
 			<RouterLink class="link" :to="{ name: 'login' }">Login</RouterLink>
@@ -30,6 +32,8 @@ const userStore = useUserStore();
 <style lang="css" scoped>
 /* Header */
 .header {
+	position: sticky;
+	top: 0;
 	display: flex;
 	justify-content: space-between;
 	width: 80%;
@@ -53,5 +57,17 @@ const userStore = useUserStore();
 .end {
 	display: flex;
 	gap: .5rem;
+}
+
+.user {
+	padding: .25rem;
+	height: 1.5rem;
+	width: 1.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 50%;
+	border: 2px solid black;
+	box-sizing: content-box;
 }
 </style>
