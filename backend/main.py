@@ -1,0 +1,36 @@
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+# from modules.database import init_db, close_db, init_db_sync, get_session
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+
+currentPath = Path.cwd()
+
+from pydantic import BaseModel
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	yield
+	# init_db_sync()
+	# await init_db()
+	# yield
+	# await close_db()
+
+app = FastAPI(title="Scrabble Websocket Application", lifespan=lifespan)
+
+origins = [
+	"http://127.0.0.1:5173",
+	"http://localhost:5173"
+]
+
+app.add_middleware(
+	CORSMiddleware,
+	allow_origins=origins,
+	allow_credentials=True,
+	allow_methods=["*"],
+	allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+	return {"message": "Hello World"}
