@@ -34,5 +34,7 @@ app.add_middleware(
 async def root():
 	return {"message": "Hello World"}
 
-from routes.auth import router
-app.include_router(router)
+from routes import auth, users
+
+app.include_router(auth.router)
+app.include_router(users.router)

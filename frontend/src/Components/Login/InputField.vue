@@ -52,6 +52,7 @@ const model = defineModel<string>('input')
 	width: 100%;
 	height: 3.5rem;
 	border-radius: 8px;
+	border: 1px solid grey;
 
 }
 

@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { computed, ref, useTransitionState } from 'vue';
+import { computed, onMounted, ref, useTransitionState } from 'vue';
 import InputField from './InputField.vue';
 import api from '@/api';
 
-
+import type { LoginReturn } from '@/types';
+import { useRoute, useRouter } from 'vue-router';
+import useUserStore from '../Stores/user';
 
 const usernameModel = ref('');
 const passwordModel = ref('');
@@ -11,6 +13,17 @@ const triedSubmit = ref(false);
 const errorMessage = ref('');
 const currentSelection = ref('login');
 
+const router = useRouter();
+const route = useRoute();
+
+const userStore = useUserStore();
+
+
+onMounted(() => {
+	if (route.query.register) {
+		currentSelection.value = "register"
+	}
+})
 
 async function login() {
 	console.log("Tried")
@@ -22,7 +35,14 @@ async function login() {
 
 	const resp = await api.post('/auth/login', data);
 	console.log(resp)
-
+	const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
+	localStorage.setItem("refresh_token", refresh_token)
+	localStorage.setItem("token", token)
+	router.push({ name: "dashboard" })
+	// This should work as all tokens have been pushed etc
+	setTimeout(() => {
+		userStore.login()
+	}, 500);
 }
 
 async function register() {
@@ -33,8 +53,7 @@ async function register() {
 	}
 	try {
 		const resp = await api.post('/auth/register', data);
-		console.log(resp)
-
+		return await login();
 	} catch (error: any) {
 		const errorData = error.response?.data;
 		if (errorData) {

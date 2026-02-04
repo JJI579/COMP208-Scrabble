@@ -1,4 +1,4 @@
-from backend.modules.database.database import get_session
+from modules.database.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException
 from typing import TypedDict, Annotated

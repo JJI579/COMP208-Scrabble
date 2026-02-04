@@ -1,8 +1,10 @@
 // import App from '@/App.vue'
 // import Landing from '@/Components/Landing/Landing.vue'
+import Dashboard from '@/Components/Dashboard/Dashboard.vue'
 import Landing from '@/Components/Landing/Landing.vue'
 import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/Login.vue'
+import Create from '@/Components/Play/Create.vue'
 import Join from '@/Components/Play/Join.vue'
 import Play from '@/Components/Play/Play.vue'
 import Profile from '@/Components/Profile/Profile.vue'
@@ -14,12 +16,17 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'home',
-			component: Landing
+			component: Create
 		},
 		{
 			path: '/play',
 			name: 'play',
 			component: Play
+		},
+		{
+			path: '/create',
+			name: 'create',
+			component: Create
 		},
 		{
 			path: '/join',
@@ -41,6 +48,11 @@ const router = createRouter({
 			name: 'login',
 			component: Login
 		},
+		{
+			path: '/dashboard',
+			name: 'dashboard',
+			component: Dashboard
+		}
 	],
 })
 

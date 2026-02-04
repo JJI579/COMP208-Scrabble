@@ -1,16 +1,27 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { computed, onMounted } from 'vue';
+import { RouterView } from 'vue-router';
+import Header from './Components/Header/Header.vue';
+import useUserStore from './Components/Stores/user';
+
+
+onMounted(() => {
+	var hasToken = localStorage.getItem('token');
+	const userStore = useUserStore();
+	if (hasToken) userStore.login();
+
+})
+</script>
 
 <template>
-	<div class="header">
-		<RouterLink to="/login">Login</RouterLink>
-	</div>
+	<Header />
 	<div class="content">
-
 		<RouterView />
 	</div>
 </template>
 
 <style scoped>
+/* Main Content Wrapper */
 .content {
 	width: 60%;
 	height: 100%;

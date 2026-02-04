@@ -28,11 +28,5 @@ class Friend(Base):
 	senderID = Column(Integer, ForeignKey("tblUsers.userID"),  primary_key=True, index=True)
 	receiverID = Column(Integer, ForeignKey("tblUsers.userID"), primary_key=True, index=True)
 	status = Column(String, index=True)
-	createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)	
+	createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
 	dismissed = Column(Boolean, default=False, nullable=False)
-
-
-
-
-
-
