@@ -84,3 +84,7 @@ pids
 *.vue.cache
 *.vue.cache.js
 *.suo
+
+venv
+
+later-update/
