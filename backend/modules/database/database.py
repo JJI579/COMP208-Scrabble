@@ -25,7 +25,7 @@ async def init_db():
 
 	engine = create_async_engine(
 		DATABASE_URL,
-		echo=False,
+		echo=True,
 	)
 
 	SessionLocal = async_sessionmaker(

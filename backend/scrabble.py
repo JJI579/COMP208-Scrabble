@@ -2,14 +2,20 @@ from pathlib import Path
 import json
 import requests
 import twl
+from sqlalchemy import text
+from modules.database.database import get_session, init_db_sync, init_db
+import asyncio
 
+
+init_db_sync()
+asyncio.run(init_db())
 currentPath = Path.cwd()
 pointsPath = currentPath / "scrabble_points.json"
 pointsData = json.load(open(pointsPath))
 
 
 defaultFiller = '|'
-arr = [[defaultFiller for _ in range(16)] for _ in range(16)]
+arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
 
 # return 
 # {
@@ -46,7 +52,7 @@ class Scrabble:
 		coordinates = []
 		traversedBack = False
 		while True:
-			if y > 0 or y < 16:
+			if y > 0 and y < 15:
 				# perform
 				if self.game[y][x] != defaultFiller:
 					if [x, y] not in coordinates:
@@ -65,7 +71,7 @@ class Scrabble:
 						# this shouldve traversed backwards, and now finished going forwards
 						break
 			else:
-				pass
+				break
 
 		return coordinates
 	
@@ -75,8 +81,9 @@ class Scrabble:
 		coordinates = []
 		traversedBack = False
 		while True:
-			if x > 0 or x < 16:
+			if x > 0 and x < 15:
 				# perform
+				print(y, x)
 				if self.game[y][x] != defaultFiller:
 					if [x, y] not in coordinates:
 						coordinates.append([x, y])
@@ -93,9 +100,8 @@ class Scrabble:
 					else:
 						# this shouldve traversed backwards, and now finished going forwards
 						break
-
 			else:
-				pass
+				break
 
 		return coordinates
 
@@ -109,20 +115,18 @@ class Scrabble:
 			if [x,y] not in preExisting:
 				wordCoordinates.append([x, y])
 			cellContents = self.get_cell(x, y)
-			print('-------------\n' + word)
-			print(preExisting)
-			print([x,y ] in preExisting)
-			if cellContents != defaultFiller and [x, y] not in preExisting:
+			if cellContents != defaultFiller and (x, y) not in preExisting:
 				print(x, y)
 				print(self.get_cell(x, y))
-				print("cell has already been taken!")
+				print(preExisting)
 				# TODO: check if there is a word that works otherwise raise an issue.
+				print("cell has already been taken!")
 				for x, y in tempPlaced:
 					self.game[y][x] = defaultFiller
 				return
 			else:
 				# make it place already to imply that it can be used!
-				if [x, y] not in preExisting:
+				if (x, y) not in preExisting:
 					print("temp placed letter: ", word[i])
 					self.game[y][x] = word[i]
 					tempPlaced.append([x, y])
@@ -132,7 +136,15 @@ class Scrabble:
 				y+=1
 			else:
 				x+=1
-		
+		if not self.firstPlaced:
+			# MAKE SURE IT CROSSES THE MIDDLE AS START
+			if [7,7] not in wordCoordinates:
+				return ""
+			else:
+				if self.check_word(word):
+					# fine
+					pass
+				# check the word and allow placement.
 
 		# we need to implement below on every letter, however if the direction of the letter is going down, then you only need to consider horizontal for each letter
 		# and if the word placed was right, considered up and down along every letter, then see how that goes...
@@ -143,38 +155,41 @@ class Scrabble:
 		hasJoiningWord = False
 		# assume every connection is a word until proven wrong
 		isWord = True
-		for testDirection in ['right', "down"]:
-			if testDirection == "right":
-				potentialWord = self.expand_horizontally(position)
-			else:
-				potentialWord = self.expand_vertically(position)
-			testArray = potentialWord.copy()
-			# print("1")
-			# print(potentialWord)
-			[testArray.remove(x) for x in wordCoordinates if x in testArray]
-			print(potentialWord)
-			print(testArray)
-			if len(testArray) != 0:
-				if testDirection == "down":
-					potentialWord.sort(key=lambda x: x[1] )
+		for currentPosition in wordCoordinates:
+			if not isWord:
+				break
+			for testDirection in ['right', "down"]:
+				if testDirection == "right":
+					potentialWord = self.expand_horizontally(currentPosition)
 				else:
-					potentialWord.sort(key=lambda x: x[0] )
-				wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
-				wordString = ''.join([x[1] for x in wordOrdered])
-				print(f'string: ' + wordString)
-				if not self.check_word(wordString):
-					isWord = False
+					potentialWord = self.expand_vertically(currentPosition)
+				testArray = potentialWord.copy()
+				[testArray.remove(x) for x in wordCoordinates if x in testArray]
+				if len(testArray) != 0:
+					if testDirection == "down":
+						potentialWord.sort(key=lambda x: x[1] )
+					else:
+						potentialWord.sort(key=lambda x: x[0] )
+					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
+					wordString = ''.join([x[1] for x in wordOrdered])
+					print(f'string: ' + wordString)
+					if not self.check_word(wordString):
+						isWord = False
+						print(f"{wordString} is false")
+						break
+					else:
+						print("this is true¬")
+						hasJoiningWord = True
 				else:
-					print("this is true¬")
-					hasJoiningWord = True
-			else:
-				if not self.firstPlaced:
-					hasJoiningWord = True
-					self.firstPlaced = True
-		if not hasJoiningWord and isWord:
-			# remove coordinates placed
-			for x, y in tempPlaced:
-				self.game[y][x] = defaultFiller
+					if not self.firstPlaced:
+						hasJoiningWord = True
+						self.firstPlaced = True
+		print(f'{hasJoiningWord} | {isWord} | {word}')
+		if self.firstPlaced:
+			if not hasJoiningWord or not isWord: 
+				# remove coordinates placed
+				for x, y in tempPlaced:
+					self.game[y][x] = defaultFiller
 		# for l in wordOrdered:
 		# 	print(l)
 
@@ -197,15 +212,28 @@ class Scrabble:
 			print()
 
 	def check_word(self, word: str):
-		return twl.check(word)
+		return asyncio.run(self._check_word(word))
+		# return twl.check(word)
 		# resp = requests.get(f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}')
 		# respData = resp.json()
 		# return not ('title' in respData)
 	
+	async def _check_word(self, word: str):
+		async for session in get_session():
+			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word})
+			result = resp.scalar_one_or_none()
+			print(f"Word Found: {result}")
+			return result
+
+
+
+
 scrab = Scrabble([0, 1], arr)
 
-scrab.place_word("in", (8,8), "right")
-scrab.place_word("to", (8,9), "right")
+scrab.place_word("protege", (7,4), "down")
+scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
+scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
+# scrab.place_word("lazed", (10,3), "right", )
 # scrab.place_word("bet", (7,7), "down", [])
 # scrab.place_word("ee", (8,7), "right", [])
 # scrab.place_word("bet", (9,6), "down", preExisting=[[9,7]])

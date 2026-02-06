@@ -30,3 +30,10 @@ class Friend(Base):
 	status = Column(String, index=True)
 	createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
 	dismissed = Column(Boolean, default=False, nullable=False)
+
+
+class Word(Base):
+
+	__tablename__ = "tblWords"
+	wordID = Column(Integer, primary_key=True, index=True)
+	word = Column(String, unique=True, nullable=False)
