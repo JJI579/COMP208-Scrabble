@@ -1,0 +1,11 @@
+:root {
+	--bg-colour: #FAF9F6;
+	--text-colour: #333333;
+	--scrabble-board: #19bcb7;
+}
+
+html,
+body,
+#app {
+	background-color: var(--bg-colour);
+}

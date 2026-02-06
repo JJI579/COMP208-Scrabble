@@ -39,6 +39,8 @@ const userStore = useUserStore();
 	width: 80%;
 	margin: auto;
 	align-items: center;
+	color: var(--text-colour);
+
 }
 
 .first {}
@@ -46,11 +48,17 @@ const userStore = useUserStore();
 .title {
 	font-size: 1.5em;
 	font-weight: 600;
+	color: var(--text-colour);
 }
 
 .link {
 	text-decoration: none;
-	color: initial;
+	color: var(--text-colour);
+	transition: 0.2s ease all;
+}
+
+.link:hover {
+	color: black;
 }
 
 
