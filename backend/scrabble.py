@@ -8,8 +8,8 @@ pointsPath = currentPath / "scrabble_points.json"
 pointsData = json.load(open(pointsPath))
 
 
-defaultFiller = 'x'
-arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
+defaultFiller = '|'
+arr = [[defaultFiller for _ in range(16)] for _ in range(16)]
 
 # return 
 # {
@@ -171,7 +171,7 @@ class Scrabble:
 				if not self.firstPlaced:
 					hasJoiningWord = True
 					self.firstPlaced = True
-		if not hasJoiningWord:
+		if not hasJoiningWord and isWord:
 			# remove coordinates placed
 			for x, y in tempPlaced:
 				self.game[y][x] = defaultFiller
@@ -204,14 +204,11 @@ class Scrabble:
 	
 scrab = Scrabble([0, 1], arr)
 
-scrab.place_word("bet", (7,7), "down", [])
-scrab.place_word("ee", (8,7), "right", [])
-scrab.place_word("bet", (9,6), "down", preExisting=[[9,7]])
-
-# scrab.place_word("b", (9,6), "down", [])
-# scrab.place_word("t", (10,7), "down", [])
-# scrab.place_word("ea", (10,8), "down", [])
-# scrab.place_word("t", (10,10), "down", [])
+scrab.place_word("in", (8,8), "right")
+scrab.place_word("to", (8,9), "right")
+# scrab.place_word("bet", (7,7), "down", [])
+# scrab.place_word("ee", (8,7), "right", [])
+# scrab.place_word("bet", (9,6), "down", preExisting=[[9,7]])
 
 scrab.print_board()
 
