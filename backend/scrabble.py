@@ -25,17 +25,54 @@ arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
 # 		["id", "letter"]
 # 	]
 # }
+class Player:
+
+	def __init__(self) -> None:
+		self.letters = []
+
+	def append_letters(self, toGive: list[str]):
+		for x in toGive:
+			self.letters.append(x)
+
+	def remove_letters(self, toTake: list[str]):
+		for x in toTake:
+			try:
+				self.letters.remove(x)
+			except ValueError:
+				print(f"A letter to be removed is NOT in the players letter category | Letter: {x}")
+
+	def can_make(self, word: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
+		wordMap = {}
+		availableCount = {}
+		# TODO: consider preExisting
+		for x in word:
+			if x not in wordMap:
+				wordMap[x] = 1
+			else:
+				wordMap[x] += 1
+			availableCount[x] = self.letters.count(x)
+		
+		for key, val in wordMap.items():
+			if key not in availableCount:
+				return False
+			if availableCount[key] < val:
+				return False
+			
+		
 class Scrabble:
 
 	def __init__(self, players, arr) -> None:
-		self.players: list[int] = players
+		self.players: dict[str, Player] = {
+
+		}
 		self.gameTurn = 0
 		self.game = arr
 		self.firstPlaced = False
 		pass
 
 	def add_player(self, userID: int):
-		self.players.append(userID)
+		pass
+		# self.players.append(userID)
 
 	def next_turn(self):
 		if self.gameTurn < len(self.players):
@@ -46,6 +83,20 @@ class Scrabble:
 	def get_cell(self, x: int, y: int):
 		return self.game[y][x]
 	
+	def handle_placement(self, word: str, playerCode: str, preExisting: list[tuple[int, int]] = [], blanks: list[tuple[int, int]] = []):
+		# player code is a string that they will use to verify that it is their turn, unless i use their bearer token / session_id to verify its from them?
+		pass
+	
+	def convert_id_to_coordinate(self, squareID: int):
+		x = squareID % 15
+		y = squareID // 15
+		return (x, y)
+	
+	def convert_coordinate_to_id(self, coordinate: tuple[int, int]):
+		x = coordinate[0]
+		y = coordinate[1]
+		return (y * 15) + x
+
 	def expand_vertically(self, position,):
 		x = position[0]
 		y = position[1]
@@ -83,7 +134,6 @@ class Scrabble:
 		while True:
 			if x > 0 and x < 15:
 				# perform
-				print(y, x)
 				if self.game[y][x] != defaultFiller:
 					if [x, y] not in coordinates:
 						coordinates.append([x, y])
@@ -105,7 +155,7 @@ class Scrabble:
 
 		return coordinates
 
-	def place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[int] = [], preExisting: list[tuple[int, int]] = []):
+	def place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
@@ -131,7 +181,14 @@ class Scrabble:
 					self.game[y][x] = word[i]
 					tempPlaced.append([x, y])
 				else:
-					print("missed letter: ", word[i])
+					if self.get_cell(x,y) == word[i]:
+						print("missed letter: ", word[i])
+					else:
+						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
+						for x, y in tempPlaced:
+							self.game[y][x] = defaultFiller
+						return
+
 			if direction=="down":
 				y+=1
 			else:
@@ -148,21 +205,26 @@ class Scrabble:
 
 		# we need to implement below on every letter, however if the direction of the letter is going down, then you only need to consider horizontal for each letter
 		# and if the word placed was right, considered up and down along every letter, then see how that goes...
+		# NOTE: pretty sure i have got it working...
 
 		# below works for basic concatenation
 
 		# assume there is no joining word till proved
 		hasJoiningWord = False
 		# assume every connection is a word until proven wrong
-		isWord = True
+		# also we assume that they can provide us either a word, or not, if it is a word, prove wrong via connections, else it is fine.
+		isWord = self.check_word(word)
+		forceBreak = False
+		points = 0
 		for currentPosition in wordCoordinates:
-			if not isWord:
+			if forceBreak:
 				break
 			for testDirection in ['right', "down"]:
 				if testDirection == "right":
 					potentialWord = self.expand_horizontally(currentPosition)
 				else:
 					potentialWord = self.expand_vertically(currentPosition)
+				print(potentialWord)
 				testArray = potentialWord.copy()
 				[testArray.remove(x) for x in wordCoordinates if x in testArray]
 				if len(testArray) != 0:
@@ -172,21 +234,30 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
-					print(f'string: ' + wordString)
+					print(f'Checking word found: ' + wordString)
 					if not self.check_word(wordString):
 						isWord = False
-						print(f"{wordString} is false")
+						forceBreak = True
+						print(f"{wordString} is not a word. ")
 						break
 					else:
-						print("this is true¬")
+						print(f"{wordString} is a word.")
+						points+=self.calculate_points(wordOrdered, blanks)
 						hasJoiningWord = True
+						isWord = True
 				else:
 					if not self.firstPlaced:
 						hasJoiningWord = True
 						self.firstPlaced = True
-		print(f'{hasJoiningWord} | {isWord} | {word}')
+		
+		if len(word) == 7 and len(preExisting) == 0:
+			points+=50 
+
+		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
+		
 		if self.firstPlaced:
 			if not hasJoiningWord or not isWord: 
+				pass
 				# remove coordinates placed
 				for x, y in tempPlaced:
 					self.game[y][x] = defaultFiller
@@ -196,14 +267,21 @@ class Scrabble:
 		# have to prove that it is connecting some kind of word to make it work.
 
 		
-	def calculate_points(self, word: str, blanks: list[int]):
+	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
 		# THIS FUNCTION DOES NOT CONSIDER DOUBLE WORDS / LETTERS ETC.
-		# blanks are indexes of the word
+		# blanks are coordinates of the letter.
 		points = 0
-		for ind in range(len(word)):
-			if ind not in blanks:
-				points += pointsData[word[ind].upper()]
+		for tupe, letter in wordOrdered:
+			if tupe not in blanks:
+				# do not ignore
+				points += pointsData[letter.upper()]
 		return points
+
+		# points = 0
+		# for ind in range(len(word)):
+		# 	if ind not in blanks:
+		# 		points += pointsData[word[ind].upper()]
+		# return points
 
 	def print_board(self):
 		for x in self.game:
@@ -236,7 +314,8 @@ scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
 # scrab.place_word("lazed", (10,3), "right", )
 # scrab.place_word("bet", (7,7), "down", [])
 # scrab.place_word("ee", (8,7), "right", [])
-# scrab.place_word("bet", (9,6), "down", preExisting=[[9,7]])
+scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
+scrab.place_word("b", (12,3), "down")
+# scrab.place_word("e", (14,2), "right")
 
 scrab.print_board()
-
