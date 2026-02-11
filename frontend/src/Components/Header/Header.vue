@@ -4,7 +4,11 @@ import useUserStore from '../Stores/user';
 
 const userStore = useUserStore();
 
+const menuOpen = ref(false);
 
+function toggleMenu() {
+	menuOpen.value = !menuOpen.value;
+}
 
 </script>
 
@@ -12,6 +16,9 @@ const userStore = useUserStore();
 
 	<div class="header">
 		<div class="first">
+			<div class="first__icon" @click="toggleMenu">
+				<i class="pi pi-bars"></i>
+			</div>
 			<RouterLink :to="{ name: 'home' }" class="link">
 				<p class="title">Scrabble</p>
 			</RouterLink>
@@ -26,6 +33,62 @@ const userStore = useUserStore();
 			<RouterLink class="link" :to="{ name: 'login', query: { register: 'true' } }">Sign Up</RouterLink>
 		</div>
 	</div>
+	<div class="menu__container">
+		<div class="menu">
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="menu__option">
+					<div class="icon">
+						<i class="pi pi-home"></i>
+					</div>
+					<div class="title">
+						Home
+					</div>
+				</div>
+			</RouterLink>
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="menu__option">
+					<div class="icon">
+						<i class="pi pi-search"></i>
+					</div>
+					<div class="title">
+						Word Finder
+					</div>
+				</div>
+			</RouterLink>
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="menu__option">
+					<div class="icon">
+						<i class="pi pi-book"></i>
+					</div>
+					<div class="title">
+						Dictionary
+					</div>
+				</div>
+			</RouterLink>
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="menu__option">
+					<div class="icon">
+						<i class="pi pi-shopping-cart"></i>
+					</div>
+					<div class="title">
+						Shop
+					</div>
+				</div>
+			</RouterLink>
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="menu__option">
+					<div class="icon">
+						<i class="pi pi-users"></i>
+					</div>
+					<div class="title">
+						Friends
+					</div>
+				</div>
+			</RouterLink>
+		</div>
+
+	</div>
+
 </template>
 
 
@@ -41,7 +104,17 @@ const userStore = useUserStore();
 	align-items: center;
 }
 
-.first {}
+.first {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.first__icon {
+	font-size: 1.25rem;
+	font-weight: bold;
+
+}
 
 .title {
 	font-size: 1.5em;
@@ -70,4 +143,37 @@ const userStore = useUserStore();
 	border: 2px solid black;
 	box-sizing: content-box;
 }
+
+/* Menu */
+.menu__container {
+	height: 100%;
+	width: 25%;
+	background-color: var(--clr-surface-a10);
+	position: absolute;
+	top: 0;
+}
+
+.menu {
+	margin: 1rem;
+	margin-block: 2rem;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.menu__option {
+	display: flex;
+	gap: .5rem;
+	align-items: center;
+}
+
+.icon {}
+
+.link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.title {}
 </style>
