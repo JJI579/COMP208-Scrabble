@@ -34,8 +34,11 @@ function toggleMenu() {
 			<RouterLink class="link" :to="{ name: 'login', query: { register: 'true' } }">Sign Up</RouterLink>
 		</div>
 	</div>
-	<div class="menu__container">
+	<div class="menu__container" :class="{ 'menu--active': menuOpen }">
 		<div class="menu">
+			<div class="out">
+				<i class="pi pi-times out__icon" @click="toggleMenu"></i>
+			</div>
 			<HeaderLink location="home" name="Home" icon="pi-home" />
 			<HeaderLink location="home" name="Word Finder" icon="pi-search" />
 			<HeaderLink location="home" name="Dictionary" icon="pi-book" />
@@ -58,6 +61,8 @@ function toggleMenu() {
 	width: 80%;
 	margin: auto;
 	align-items: center;
+	z-index: 999998;
+	background-color: var(--clr-surface-a0);
 }
 
 .first {
@@ -107,6 +112,13 @@ function toggleMenu() {
 	background-color: var(--clr-surface-a10);
 	position: absolute;
 	top: 0;
+	left: -30%;
+	transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1) all;
+	z-index: 9999999;
+}
+
+.menu--active {
+	left: 0;
 }
 
 .menu {
@@ -115,8 +127,15 @@ function toggleMenu() {
 	display: flex;
 	justify-content: center;
 	flex-direction: column;
-	gap: 2rem;
+	gap: 1rem;
+
 }
 
+.out {
+	padding: 1rem;
+}
 
+.out__icon {
+	font-size: 1.25rem;
+}
 </style>
