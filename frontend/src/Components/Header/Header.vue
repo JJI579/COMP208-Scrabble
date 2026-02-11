@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
+import HeaderLink from './HeaderLink.vue';
 
 const userStore = useUserStore();
 
@@ -35,56 +36,11 @@ function toggleMenu() {
 	</div>
 	<div class="menu__container">
 		<div class="menu">
-			<RouterLink :to="{ name: 'home' }" class="link">
-				<div class="menu__option">
-					<div class="icon">
-						<i class="pi pi-home"></i>
-					</div>
-					<div class="title">
-						Home
-					</div>
-				</div>
-			</RouterLink>
-			<RouterLink :to="{ name: 'home' }" class="link">
-				<div class="menu__option">
-					<div class="icon">
-						<i class="pi pi-search"></i>
-					</div>
-					<div class="title">
-						Word Finder
-					</div>
-				</div>
-			</RouterLink>
-			<RouterLink :to="{ name: 'home' }" class="link">
-				<div class="menu__option">
-					<div class="icon">
-						<i class="pi pi-book"></i>
-					</div>
-					<div class="title">
-						Dictionary
-					</div>
-				</div>
-			</RouterLink>
-			<RouterLink :to="{ name: 'home' }" class="link">
-				<div class="menu__option">
-					<div class="icon">
-						<i class="pi pi-shopping-cart"></i>
-					</div>
-					<div class="title">
-						Shop
-					</div>
-				</div>
-			</RouterLink>
-			<RouterLink :to="{ name: 'home' }" class="link">
-				<div class="menu__option">
-					<div class="icon">
-						<i class="pi pi-users"></i>
-					</div>
-					<div class="title">
-						Friends
-					</div>
-				</div>
-			</RouterLink>
+			<HeaderLink location="home" name="Home" icon="pi-home" />
+			<HeaderLink location="home" name="Word Finder" icon="pi-search" />
+			<HeaderLink location="home" name="Dictionary" icon="pi-book" />
+			<HeaderLink location="home" name="Shop" icon="pi-shopping-cart" />
+			<HeaderLink location="home" name="Friends" icon="pi-users" />
 		</div>
 
 	</div>
@@ -162,18 +118,5 @@ function toggleMenu() {
 	gap: 2rem;
 }
 
-.menu__option {
-	display: flex;
-	gap: .5rem;
-	align-items: center;
-}
 
-.icon {}
-
-.link {
-	color: inherit;
-	text-decoration: none;
-}
-
-.title {}
 </style>
