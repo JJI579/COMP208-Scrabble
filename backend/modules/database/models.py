@@ -31,6 +31,24 @@ class Friend(Base):
 	createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
 	dismissed = Column(Boolean, default=False, nullable=False)
 
+class Game(Base):
+
+	__tablename__ = "tblGames"
+
+	gameID = Column(Integer, primary_key=True, index=True)
+	gameCode = Column(String, nullable=False)
+	active = Column(Boolean, default=True, nullable=False)
+	options = Column(String, nullable=False)
+
+class GamePlayers(Base):
+
+	__tablename__ = "tblGamePlayers"
+	
+	gameID = Column(Integer, ForeignKey("tblGames.gameID"), primary_key=True, index=True)
+	userID = Column(Integer, ForeignKey("tblUsers.userID"), primary_key=True, index=True)
+	hasJoined = Column(Boolean, default=False, nullable=False)
+	# this is to identify if someone has tried to join but then left!
+	hasLeft = Column(Boolean, default=False, nullable=False)
 
 class Word(Base):
 

@@ -30,6 +30,11 @@ class WebsocketManager:
 		self.games[code] = Game(options)
 		return code
 	
+	def fetch_game(self, code: str) -> Game | bool:
+		if code in self.games:
+			return self.games[code]
+		return False
+	
 	async def send_message(self, websocket: WebSocket, message: str):
 		await websocket.send_text(message)
 

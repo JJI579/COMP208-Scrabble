@@ -1,19 +1,7 @@
 
 from typing import Literal, TypedDict
+from modules.schema import PacketType
 
-PacketType = Literal[
-	"GAME_START",
-	"GAME_CANCEL",
-	"PLAYER_JOIN",
-	"PLAYER_LEAVE",
-	"GROUP_UPDATE",
-	"GROUP_JOIN",
-	"GROUP_LEAVE",
-	"GAME_PLACE",
-	"GAME_REPLACE",
-	"GAME_UPDATE",
-	"GAME_TURN",
-]
 
 class BasePacket(TypedDict):
 	t: PacketType
@@ -113,7 +101,6 @@ class StartPackets(Packets):
 
 	
 
-
 # These packets are sent during the game (game has started)
 class DuringPackets:
 
@@ -122,4 +109,9 @@ class DuringPackets:
 
 
 
+class AllPackets:
+	def __init__(self) -> None:
+		self.start = StartPackets()
+		self.during = DuringPackets()
 
+packets = AllPackets()

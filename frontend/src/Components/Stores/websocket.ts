@@ -103,8 +103,6 @@ const useWebsocketStore = defineStore("websocket", () => {
 	const websocket = new WebSocket(websocketURL);
 	const game = ref<Game | null>(null);
 
-
-
 	websocket.onopen = () => {
 		console.log('Websocket connection opened');
 		const token = localStorage.getItem('token')
@@ -113,7 +111,6 @@ const useWebsocketStore = defineStore("websocket", () => {
 
 
 	websocket.onmessage = (message) => {
-
 		const data: WebsocketPacket = JSON.parse(message.data)
 		console.log(data)
 		switch (data.t) {
@@ -126,7 +123,21 @@ const useWebsocketStore = defineStore("websocket", () => {
 		websocket.close()
 	}
 
-	return { websocket, disconnect };
+	function join(code: string) {
+		const packet = generatePacket("PLAYER_JOIN", { code: code })
+		if (websocket.readyState === websocket.OPEN) {
+			websocket.send(packet)
+		} else {
+			websocket.addEventListener("open", () => {
+				websocket.send(packet)
+			}, {
+				once: true
+			})
+		}
+
+	}
+
+	return { websocket, disconnect, join };
 })
 
 export default useWebsocketStore;

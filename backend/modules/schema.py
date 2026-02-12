@@ -2,6 +2,22 @@ from pydantic import BaseModel
 import datetime
 from typing import Optional, Literal
 
+PacketType = Literal[
+	"IDENTIFY",
+	"DISCONNECT",
+	"GAME_START",
+	"GAME_CANCEL",
+	"PLAYER_JOIN",
+	"PLAYER_LEAVE",
+	"GROUP_UPDATE",
+	"GROUP_JOIN",
+	"GROUP_LEAVE",
+	"GAME_PLACE",
+	"GAME_REPLACE",
+	"GAME_UPDATE",
+	"GAME_TURN",
+]
+
 GAME_TYPE = Literal[
 	"NORMAL",
 	"GROUP",

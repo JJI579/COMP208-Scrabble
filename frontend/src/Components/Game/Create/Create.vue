@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import SegmentedControl from '../SegmentedControl/SegmentedControl.vue';
 import CustomSelect from '../CustomSelect/CustomSelect.vue';
 import api from '@/api';
+import { useRouter } from 'vue-router';
 
 
 const gameTypeRef = ref("NORMAL");
@@ -16,6 +17,9 @@ const dictionaryOptions = [["false", "No"], ["true", "Yes"]]
 
 const groupSizeRef = ref("2");
 const groupSizeOptions = [["2", "2"], ["3", "3"]]
+
+const router = useRouter();
+
 // game_type: GAME_TYPE
 // group_size: Optional[int]
 // time_limit: str | bool
@@ -30,6 +34,7 @@ async function createGame() {
 		dictionary: useDictionaryRef.value
 	})
 	console.log(resp.data.code)
+	router.push({ name: "join", query: { code: resp.data.code } })
 
 }
 
