@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ref, type PropType } from 'vue';
-import CustomSelect from './CustomSelect.vue';
-
-
+import CustomSelect from '../CustomSelect/CustomSelect.vue';
 
 type options = "team" | "friend" | "bot"
 const props = defineProps({

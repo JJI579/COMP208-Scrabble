@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import Option from '../Play/SegmentedControl/Option.vue';
+
 import CustomOption from './CustomOption.vue';
 
 
@@ -29,8 +29,6 @@ function optionClicked(index: number) {
 	indexRef.value = index;
 	menuOpen.value = false;
 }
-
-
 
 </script>
 
@@ -62,6 +60,7 @@ function optionClicked(index: number) {
 	flex-direction: column;
 	gap: .5rem;
 	max-width: 30%;
+
 	/* background-color: blue; */
 	/* background-color: blue; */
 }
@@ -99,6 +98,7 @@ function optionClicked(index: number) {
 	flex-direction: column;
 	border-radius: 8px;
 	background-color: var(--clr-surface-a10);
+	z-index: 999999;
 }
 
 .options .option:not(:last-child) {
