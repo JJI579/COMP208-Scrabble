@@ -1,5 +1,12 @@
 from pydantic import BaseModel
 import datetime
+from typing import Optional, Literal
+
+GAME_TYPE = Literal[
+	"NORMAL",
+	"GROUP",
+	"BOT"
+]
 
 # Users
 class UserFetch(BaseModel):
@@ -27,3 +34,10 @@ class registerForm(BaseModel):
 
 class refreshForm(BaseModel):
 	token: str
+
+
+class GameOptions(BaseModel):
+    game_type: GAME_TYPE
+    group_size: Optional[int] = None
+    time_limit: str
+    dictionary: bool

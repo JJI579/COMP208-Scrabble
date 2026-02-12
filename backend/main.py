@@ -40,3 +40,5 @@ from routes import auth, users, websocket
 app.include_router(websocket.router)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(websocket.router)
+app.include_router(websocket.gameRouter)

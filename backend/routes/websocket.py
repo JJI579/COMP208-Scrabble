@@ -5,6 +5,12 @@ from modules.database.database import AsyncSession
 from modules.functions import get_current_user
 from modules.websocket.WebsocketManager import manager
 from modules.logger import WebsocketLogger
+from typing import Annotated
+from modules.database.models import User
+from modules.schema import GameOptions
+
+from modules.websocket.WebsocketManager import manager
+
 router = APIRouter(
 	prefix="",
 	tags=[],
@@ -14,6 +20,17 @@ gameRouter = APIRouter(
 	prefix="/game",
 	tags=["game"],
 )
+
+@gameRouter.post("/create")
+async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):	
+	print(options.game_type)
+	print(options.time_limit)
+	print(options.dictionary)
+	print(options.group_size)
+	CODE = manager.create_game(options)
+	return {
+		"code": CODE
+	}
 
 wsLogger = WebsocketLogger();
 

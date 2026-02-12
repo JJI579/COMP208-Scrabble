@@ -1,35 +1,22 @@
 from .scrabble import Scrabble, arr
-from typing import Literal, TypedDict, Optional
-from modules.schema import UserFetch
-
-GAME_TYPE = Literal[
-	"NORMAL",
-	"GROUP",
-	"BOT"
-]
-
-class GameOptions(TypedDict):
-	game_type: GAME_TYPE
-	group_size: Optional[int]
-	time_limit: str | bool
-	dictionary: bool # whether dictionary is allowed
+from modules.schema import UserFetch, GAME_TYPE, GameOptions
 
 class Game:
 
 	def __init__(self, options: GameOptions) -> None:
 		self.game = Scrabble(arr.copy())
-		self.type = options['game_type']
+		self.type = options.game_type
 		self.players = []
 		self.hasStarted = False
 		if self.type == "GROUP":
-			if options['group_size']:
-				self.groups = [[] for _ in range(options["group_size"])] # makes array of groups
+			if options.group_size:
+				self.groups = [[] for _ in range(options.group_size)] # makes array of groups
 			else:
 				raise Exception("Group size not specified")
 		elif self.type == "BOT":
 			self.bot = True
-		self.dictionary_allowed = options['dictionary']
-		self.time_limit = options['time_limit']
+		self.dictionary_allowed = options.dictionary
+		self.time_limit = options.time_limit
 
 	def add_player(self, player: UserFetch):
 		if self.hasStarted:

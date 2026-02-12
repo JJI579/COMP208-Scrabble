@@ -5,11 +5,13 @@ from modules.database.database import get_session
 from sqlmodel import select
 from sqlalchemy import and_, or_
 from modules.database.models import User, Token
-from modules.scrabble.game import Game, GameOptions
+from modules.scrabble.game import Game
+from modules.schema import GameOptions
+
 
 import secrets
 
-letterChoice = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+letterChoice = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 def generateGameCode():
 	return ''.join(secrets.choice(letterChoice) for _ in range(4))
@@ -19,10 +21,8 @@ class WebsocketManager:
 	def __init__(self) -> None:
 		self.connections = {}
 		# gameID, gameClass
-		self.games = {
-		}
+		self.games = {}
 
-	
 	def create_game(self, options: GameOptions):
 		code = generateGameCode()
 		while code in self.games:

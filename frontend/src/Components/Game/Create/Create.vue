@@ -5,16 +5,16 @@ import CustomSelect from '../CustomSelect/CustomSelect.vue';
 import api from '@/api';
 
 
-const gameTypeRef = ref("normal");
-const options = [['normal', "Normal"], ['team', "Team"], ["bot", "Bot"]]
+const gameTypeRef = ref("NORMAL");
+const options = [['NORMAL', "Normal"], ['TEAM', "Team"], ["BOT", "Bot"]]
 
-const timeLimitRef = ref();
+const timeLimitRef = ref("none");
 const timeLimitOptions = [["none", "None"], ["45", "45 Minutes"], ["1", "1 Hour"], ["2", "2 Hours"]]
 
 const useDictionaryRef = ref("false");
-const dictionaryOptions = [["true", "Yes"], ["false", "No"]]
+const dictionaryOptions = [["false", "No"], ["true", "Yes"]]
 
-const groupSizeRef = ref();
+const groupSizeRef = ref("2");
 const groupSizeOptions = [["2", "2"], ["3", "3"]]
 // game_type: GAME_TYPE
 // group_size: Optional[int]
@@ -23,12 +23,14 @@ const groupSizeOptions = [["2", "2"], ["3", "3"]]
 
 async function createGame() {
 	// TODO: implement.
-	await api.post("/game/create", {
+	const resp = await api.post("/game/create", {
 		game_type: gameTypeRef.value,
-		group_size: groupSizeRef.value,
+		group_size: Number(groupSizeRef.value),
 		time_limit: timeLimitRef.value,
 		dictionary: useDictionaryRef.value
 	})
+	console.log(resp.data.code)
+
 }
 
 
