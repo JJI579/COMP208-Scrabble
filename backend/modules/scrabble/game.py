@@ -20,6 +20,7 @@ class Game:
 		self.game = Scrabble(arr.copy())
 		self.type = options['game_type']
 		self.players = []
+		self.hasStarted = False
 		if self.type == "GROUP":
 			if options['group_size']:
 				self.groups = [[] for _ in range(options["group_size"])] # makes array of groups
@@ -31,6 +32,8 @@ class Game:
 		self.time_limit = options['time_limit']
 
 	def add_player(self, player: UserFetch):
+		if self.hasStarted:
+			raise Exception("Game has already started")
 		if player in self.players:
 			raise Exception("Player already in game")
 		else:
@@ -61,6 +64,8 @@ class Game:
 					raise Exception("Only one player when Bot Game")
 	
 	def remove_player(self, player: UserFetch):
+		if self.hasStarted:
+			raise Exception("Game has already started")
 		try:
 			self.players.remove(player)
 			if self.type == "GROUP":
@@ -74,6 +79,8 @@ class Game:
 			raise Exception("Player not in player list")
 		
 	def join_group(self, player: UserFetch, groupIndex: int):
+		if self.hasStarted:
+			raise Exception("Game has already started")
 		"""
 		Join a player to a group
 
@@ -96,6 +103,8 @@ class Game:
 		return True
 	
 	def leave_group(self, player: UserFetch):
+		if self.hasStarted:
+			raise Exception("Game has already started")
 		hasGroup = False
 		for i, group in enumerate(self.groups):
 			if player in group:
@@ -104,3 +113,7 @@ class Game:
 		if not hasGroup:
 			raise Exception("Player is not in a group")
 		return True
+
+	def start_game(self):
+		self.hasStarted = True
+		# TODO: perform other stuff.
