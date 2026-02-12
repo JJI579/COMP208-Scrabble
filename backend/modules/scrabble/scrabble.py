@@ -2,13 +2,10 @@ from pathlib import Path
 import json
 import requests
 import twl
+from modules.database.database import get_session
 from sqlalchemy import text
-from modules.database.database import get_session, init_db_sync, init_db
 import asyncio
 
-
-init_db_sync()
-asyncio.run(init_db())
 currentPath = Path.cwd()
 pointsPath = currentPath / "scrabble_points.json"
 pointsData = json.load(open(pointsPath))

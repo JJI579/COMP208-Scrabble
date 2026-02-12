@@ -1,4 +1,4 @@
-from scrabble import Scrabble, arr
+from .scrabble import Scrabble, arr
 from typing import Literal, TypedDict, Optional
 from modules.schema import UserFetch
 
