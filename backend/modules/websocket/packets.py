@@ -118,6 +118,8 @@ class AuthenticationPackets(Packets):
 		}
 		return self.create_packet('IDENTIFY', data)
 
+	def not_found(self):
+		return self.create_packet('NOT_FOUND', {})
 
 class AllPackets:
 	def __init__(self) -> None:

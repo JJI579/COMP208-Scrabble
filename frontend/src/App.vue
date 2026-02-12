@@ -11,6 +11,7 @@ onMounted(() => {
 	const userStore = useUserStore();
 	if (hasToken) userStore.login();
 	if (!websocket.websocket) {
+		console.log("going to try connecitng.")
 		websocket.connect()
 	}
 

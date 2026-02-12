@@ -2,6 +2,7 @@ import api from "@/api";
 import type { InitType, PacketType, SelfReturn, UserReturn, WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import useUserStore from "./user";
 
 function generatePacket(type: PacketType | InitType, data: any) {
 	const packet: WebsocketPacket = {
@@ -76,6 +77,19 @@ class Game implements GAME {
 		return this.players;
 	}
 
+	getPlayer(userID: number) {
+		if (this.players !== undefined) {
+			for (let i = 0; i < this.players.length; i++) {
+				console.log(this.players[i])
+				if (this.players[i]['userID'] == userID) {
+					return this.players[i];
+				}
+			}
+		}
+
+
+	}
+
 	getGroups(): UserReturn[][] {
 		return this.groups;
 	}
@@ -139,8 +153,8 @@ class Game implements GAME {
 
 }
 
-
 export const useWebsocketStore = defineStore("websocket", () => {
+	const userStore = useUserStore();
 	const websocketURL = 'ws://localhost:8000/ws'
 	const sessionID = ref<string | null>(null)
 	const websocket = ref<WebSocket | null>(null)
@@ -148,14 +162,14 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	let reconnectTimeout: number | null = null
 
 	function connect() {
-		if (websocket.value) return // already connected / connecting
+		if (websocket.value) return
 
 		websocket.value = new WebSocket(websocketURL)
 
 		websocket.value.onopen = () => {
 			console.log("WebSocket opened")
 			if (sessionID.value !== null) {
-				websocket.value?.send(generatePacket("RESUME", { sessionID: sessionID.value }));
+				websocket.value?.send(generatePacket("RESUME", { sessionID: sessionID.value, userID: userStore.userData?.userID }));
 			} else {
 				// identify for first time
 				const token = localStorage.getItem("token")
@@ -169,11 +183,19 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			console.log(data)
 
 			switch (data.t) {
+				// case "NOT_FOUND":
+				// 	const token = localStorage.getItem("token")
+				// 	websocket.value?.send(generatePacket("IDENTIFY", { token }))
+				// 	break
 				case "PLAYER_JOIN":
 					if (!game.value && data.d.game) {
 						game.value = new Game(data.d.gameID, data.d.game)
 					} else {
-						game.value?.addPlayer(data.d.user)
+						if (game.value?.players.includes(data.d.user)) return
+						console.log("appending new player")
+						console.log(data.d.user)
+
+						game.value?.getPlayer(data.d.user.userID)
 					}
 					break
 				case "PLAYER_LEAVE":

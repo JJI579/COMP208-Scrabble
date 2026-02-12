@@ -23,6 +23,10 @@ class WebsocketManager:
 		self.archive = {}
 		# gameID, gameClass
 		self.games = {}
+		# userID, array of packets
+		self.to_send = {
+
+		}
 
 	def create_game(self, options: GameOptions):
 		code = generateGameCode()
@@ -37,7 +41,24 @@ class WebsocketManager:
 		return False
 	
 	async def send_message(self, websocket: WebSocket, message: str):
-		await websocket.send_text(message)
+		try:
+			await websocket.send_text(message)
+		except Exception as er:
+			print("TRIED TO SEND MESSAGE BUT ERROR")
+			print(er)
+			if websocket.user_id in self.to_send: # type: ignore
+				self.to_send[websocket.user_id].append(message) # type: ignore
+			else:
+				self.to_send[websocket.user_id] = [message] # type: ignore
+			
+	async def resend_resume(self, userID: int, websocket: WebSocket):
+		if userID in self.to_send:
+			for message in self.to_send[userID]:
+				await self.send_message(websocket, message)
+				await asyncio.sleep(0.5)
+			del self.to_send[userID]
+
+
 
 	async def send_direct_message(self, message, userID: int):
 		if type(message) == dict:
@@ -76,7 +97,7 @@ class WebsocketManager:
 			for connection in self.connections:
 				await self.send_message(self.connections[connection]['websocket'], message)
 
-	async def remove(self, userID: int, ):
+	async def remove(self, userID: int):
 		
 		if userID in self.connections:
 			try:
@@ -122,6 +143,14 @@ class WebsocketManager:
 				}
 				return userID
 	
+	def find_user(self, sessionID: str, userID: int):
+		if userID in self.archive:
+			if sessionID == self.archive[userID]['session_id']:
+				self.connections[userID] = self.archive[userID]
+				del self.archive[userID]
+				return self.connections[userID]
+		return False
+
 	def set_game(self, userID: int, gameID: str):
 		if userID in self.connections: 
 			if gameID in self.games:

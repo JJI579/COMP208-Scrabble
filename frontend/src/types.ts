@@ -32,6 +32,7 @@ type PacketType =
 	| "GAME_PLACE"
 	| "GAME_REPLACE"
 	| "GAME_UPDATE"
+	| "NOT_FOUND"
 	| "GAME_TURN";
 
 type WebsocketPacket = {
