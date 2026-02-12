@@ -88,5 +88,6 @@ pids
 venv
 
 later-update/
-
+work-split.txt
+extra-stuff/
 *.pyc
