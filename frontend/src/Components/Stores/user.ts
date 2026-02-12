@@ -21,7 +21,7 @@ const useUserStore = defineStore("user", () => {
 	}
 
 
-	return { isLoggedIn, login };
+	return { isLoggedIn, login, userData };
 })
 
 export default useUserStore;

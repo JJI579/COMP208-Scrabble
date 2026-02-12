@@ -33,9 +33,7 @@ async function createGame() {
 		time_limit: timeLimitRef.value,
 		dictionary: useDictionaryRef.value
 	})
-	console.log(resp.data.code)
 	router.push({ name: "join", query: { code: resp.data.code } })
-
 }
 
 

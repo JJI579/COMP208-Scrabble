@@ -107,11 +107,22 @@ class DuringPackets:
 	def __init__(self) -> None:
 		pass
 
+class AuthenticationPackets(Packets):
+	
+	def __init__(self) -> None:
+		super().__init__()
+	
+	def identify(self, wsID: str):
+		data = {
+			'ID': wsID
+		}
+		return self.create_packet('IDENTIFY', data)
 
 
 class AllPackets:
 	def __init__(self) -> None:
 		self.start = StartPackets()
 		self.during = DuringPackets()
+		self.authentication = AuthenticationPackets()
 
 packets = AllPackets()

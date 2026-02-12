@@ -4,9 +4,10 @@ from modules.schema import UserFetch, GAME_TYPE, GameOptions
 class Game:
 
 	def __init__(self, options: GameOptions) -> None:
+		self.options = options.model_dump(mode="json")
 		self.game = Scrabble(arr.copy())
 		self.type = options.game_type
-		self.players = []
+		self.players: list[UserFetch] = []
 		self.hasStarted = False
 		if self.type == "GROUP":
 			if options.group_size:
@@ -17,6 +18,20 @@ class Game:
 			self.bot = True
 		self.dictionary_allowed = options.dictionary
 		self.time_limit = options.time_limit
+
+	def export_data(self):
+		# TODO: include scrabble board data
+		data =  {
+			"game_type": self.type,
+			"players": [x.model_dump(mode="json") for x in self.players],
+			"has_started": self.hasStarted,
+			"options": self.options
+		}
+		if self.type == "GROUP":
+			data['groups'] = self.groups
+		
+		return data
+
 
 	def add_player(self, player: UserFetch):
 		if self.hasStarted:
@@ -50,20 +65,31 @@ class Game:
 				else:
 					raise Exception("Only one player when Bot Game")
 	
-	def remove_player(self, player: UserFetch):
-		if self.hasStarted:
-			raise Exception("Game has already started")
-		try:
-			self.players.remove(player)
+	def remove_player(self, player: UserFetch | int):
+		if type(player) == int:
+			for i, p in enumerate(self.players):
+				if p.userID == player:
+					self.players.pop(i)
+					break
 			if self.type == "GROUP":
 				for i, group in enumerate(self.groups):
 					if player in group:
 						self.groups[i].remove(player)
 						# only one player per group so can break.
 						break
-			return True
-		except ValueError:
-			raise Exception("Player not in player list")
+		elif type(player) == UserFetch:
+			try:
+				self.players.remove(player)
+				if self.type == "GROUP":
+					for i, group in enumerate(self.groups):
+						if player in group:
+							self.groups[i].remove(player)
+							# only one player per group so can break.
+							break
+			except ValueError:
+				raise Exception("Player not in player list")
+		return True
+	
 		
 	def join_group(self, player: UserFetch, groupIndex: int):
 		if self.hasStarted:

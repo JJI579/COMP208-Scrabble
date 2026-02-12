@@ -3,12 +3,16 @@ import { computed, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import Header from './Components/Header/Header.vue';
 import useUserStore from './Components/Stores/user';
+import useWebsocketStore from './Components/Stores/websocket';
 
-
+const websocket = useWebsocketStore()
 onMounted(() => {
 	var hasToken = localStorage.getItem('token');
 	const userStore = useUserStore();
 	if (hasToken) userStore.login();
+	if (!websocket.websocket) {
+		websocket.connect()
+	}
 
 })
 </script>

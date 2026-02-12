@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import useWebsocketStore from '@/Components/Stores/websocket';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 
 const route = useRoute();
 
 
+const websocket = useWebsocketStore()
 
 onMounted(() => {
-	const websocket = useWebsocketStore()
 
 	const code = route.query.code;
 
@@ -23,13 +23,28 @@ onMounted(() => {
 	}
 })
 
+const codeModel = ref('');
+function joinGame() {
+	websocket.join(codeModel.value)
+}
 </script>
 
 
 
 <template>
 
+	<div class="join">
+		<input type="text" v-model="codeModel" placeholder="enter code...">
+		<button @click="joinGame">Join</button>
+	</div>
+	<div class="players">
+		{{ websocket.sessionID }}
+		{{ websocket.game?.players }}
+		<div class="player" v-for="player in websocket.game?.players">
+			{{ player.userName }}
+		</div>
 
+	</div>
 </template>
 
 

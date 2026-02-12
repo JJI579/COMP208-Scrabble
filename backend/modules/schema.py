@@ -3,6 +3,7 @@ import datetime
 from typing import Optional, Literal
 
 PacketType = Literal[
+	"RESUME",
 	"IDENTIFY",
 	"DISCONNECT",
 	"GAME_START",

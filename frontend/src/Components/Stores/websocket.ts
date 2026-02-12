@@ -26,16 +26,42 @@ type GAME = {
 }
 
 
+type gameOptions = {
+	game_type: GAME_TYPE,
+	group_size: number,
+	time_limit: string,
+	dictionary: boolean
+}
+type initData = {
+	game_type: GAME_TYPE,
+	players: UserReturn[],
+	has_started: boolean,
+	options: gameOptions,
+	groups?: UserReturn[][]
+}
+
 
 class Game implements GAME {
-	constructor(public id: number, public type: GAME_TYPE, public players: UserReturn[], public groups: UserReturn[][], public hasStarted: boolean, public timeLimit: number, public dictionaryAllowed: boolean) {
-		this.id = id;
-		this.type = type;
-		this.players = players;
-		this.groups = groups;
-		this.hasStarted = hasStarted;
-		this.timeLimit = timeLimit;
-		this.dictionaryAllowed = dictionaryAllowed;
+	id: number;
+	type: GAME_TYPE;
+	players: UserReturn[]
+	groups: UserReturn[][] = []
+	hasStarted: boolean;
+	timeLimit: number;
+	dictionaryAllowed: boolean;
+
+	constructor(gameCode: number, dictionary: initData) {
+		this.id = gameCode;
+		this.type = dictionary.game_type;
+		this.players = dictionary.players;
+		if (dictionary.groups) {
+			this.groups = dictionary.groups;
+		}
+		this.hasStarted = dictionary.has_started;
+		console.log(dictionary.options.time_limit)
+		// TODO: convert time_limit to actual time limit
+		this.timeLimit = 999999999999999999;
+		this.dictionaryAllowed = dictionary.options.dictionary;
 	}
 
 	getId(): number {
@@ -78,6 +104,23 @@ class Game implements GAME {
 		this.players = players;
 	}
 
+	addPlayer(player: UserReturn): void {
+		if (this.hasStarted) {
+			throw new Error("Game has already started");
+		}
+		this.players.push(player);
+	}
+
+	removePlayer(player: UserReturn) {
+		this.players = this.players.filter(p => p.userID !== player.userID);
+		this.groups.map(element => {
+			if (element.includes(player)) {
+				return element.filter(p => p.userID !== player.userID);
+			}
+			return element
+		});
+	}
+
 	setGroups(groups: UserReturn[][]): void {
 		this.groups = groups;
 	}
@@ -97,47 +140,83 @@ class Game implements GAME {
 }
 
 
-const useWebsocketStore = defineStore("websocket", () => {
-	const debug = true;
-	const websocketURL = debug ? 'ws://localhost:8000/ws' : 'wss://pibble.pics/api/ws';
-	const websocket = new WebSocket(websocketURL);
-	const game = ref<Game | null>(null);
+export const useWebsocketStore = defineStore("websocket", () => {
+	const websocketURL = 'ws://localhost:8000/ws'
+	const sessionID = ref<string | null>(null)
+	const websocket = ref<WebSocket | null>(null)
+	const game = ref<Game | null>(null)
+	let reconnectTimeout: number | null = null
 
-	websocket.onopen = () => {
-		console.log('Websocket connection opened');
-		const token = localStorage.getItem('token')
-		websocket.send(generatePacket('IDENTIFY', { token: token }))
-	};
+	function connect() {
+		if (websocket.value) return // already connected / connecting
 
+		websocket.value = new WebSocket(websocketURL)
 
-	websocket.onmessage = (message) => {
-		const data: WebsocketPacket = JSON.parse(message.data)
-		console.log(data)
-		switch (data.t) {
+		websocket.value.onopen = () => {
+			console.log("WebSocket opened")
+			if (sessionID.value !== null) {
+				websocket.value?.send(generatePacket("RESUME", { sessionID: sessionID.value }));
+			} else {
+				// identify for first time
+				const token = localStorage.getItem("token")
+				websocket.value?.send(generatePacket("IDENTIFY", { token }))
+			}
 
 		}
-	};
+
+		websocket.value.onmessage = (event) => {
+			const data: WebsocketPacket = JSON.parse(event.data)
+			console.log(data)
+
+			switch (data.t) {
+				case "PLAYER_JOIN":
+					if (!game.value && data.d.game) {
+						game.value = new Game(data.d.gameID, data.d.game)
+					} else {
+						game.value?.addPlayer(data.d.user)
+					}
+					break
+				case "PLAYER_LEAVE":
+					game.value?.removePlayer(data.d.user)
+					break
+				case "IDENTIFY":
+					sessionID.value = data.d.ID
+					break
+			}
+		}
+
+		websocket.value.onclose = (event) => {
+			console.log("WebSocket closed, retrying in 1s", event)
+			websocket.value = null
+			if (reconnectTimeout) clearTimeout(reconnectTimeout)
+			reconnectTimeout = window.setTimeout(connect, 1000)
+		}
+	}
 
 	function disconnect() {
-		websocket.send(generatePacket('DISCONNECT', {}))
-		websocket.close()
+		if (websocket.value?.readyState === WebSocket.OPEN) {
+			websocket.value.send(generatePacket("DISCONNECT", {}))
+			websocket.value.close()
+		}
+	}
+
+	function send(packet: string) {
+		if (websocket.value?.readyState === WebSocket.OPEN) {
+			websocket.value.send(packet)
+		} else {
+			websocket.value?.addEventListener(
+				"open",
+				() => websocket.value?.send(packet),
+				{ once: true }
+			)
+		}
 	}
 
 	function join(code: string) {
-		const packet = generatePacket("PLAYER_JOIN", { code: code })
-		if (websocket.readyState === websocket.OPEN) {
-			websocket.send(packet)
-		} else {
-			websocket.addEventListener("open", () => {
-				websocket.send(packet)
-			}, {
-				once: true
-			})
-		}
-
+		send(generatePacket("PLAYER_JOIN", { code }))
 	}
 
-	return { websocket, disconnect, join };
+	return { websocket, game, connect, disconnect, join, sessionID }
 })
 
 export default useWebsocketStore;

@@ -22,6 +22,7 @@ type InitType = "IDENTIFY" | "DISCONNECT"
 
 type PacketType =
 	| "GAME_START"
+	| "RESUME"
 	| "GAME_CANCEL"
 	| "PLAYER_JOIN"
 	| "PLAYER_LEAVE"

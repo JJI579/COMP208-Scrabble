@@ -65,6 +65,13 @@ class Scrabble:
 		self.firstPlaced = False
 		pass
 
+	def export_data(self):
+		return {
+			"game": self.game,
+			"players": self.players,
+			"gameTurn": self.gameTurn
+		}
+
 	def next_turn(self):
 		if self.gameTurn < len(self.players):
 			self.gameTurn += 1

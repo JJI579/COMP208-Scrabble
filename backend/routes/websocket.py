@@ -42,7 +42,8 @@ from modules.websocket.packets import packets
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	print("Websocket found")
-	websocket.session_id = secrets.token_hex(40) # type: ignore
+	sessionID = secrets.token_hex(10)
+	websocket.session_id = sessionID # type: ignore
 	await websocket.accept()
 	wsLogger.info(f'New Websocket: {websocket.session_id} | Websocket accepted.') # type: ignore
 	userIdentified = False
@@ -52,13 +53,18 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 			packetType: PacketType = data.get('t', '')
 			print("PACKET TYPE: ", packetType)
 			if packetType == "IDENTIFY" and not userIdentified:
-				identifyResponse = await manager.identify(websocket, data['d']['token'])
+				identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID) # type: ignore
 				if not identifyResponse:
 					wsLogger.error("Not found, closing websocket.")
 					return await websocket.close()
 				userIdentified = identifyResponse
 				wsLogger.info(f"WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
 				websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
+				await manager.send_direct_message(packets.authentication.identify(websocket.session_id), userIdentified) # type: ignore
+			elif packetType == "RESUME" and not userIdentified:
+				print(data)
+				websocket.session_id = "0000" # type: ignore
+				pass
 			else:
 				if userIdentified:
 					print("User has been identified, listen for it here.")
@@ -72,18 +78,35 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 								wsLogger.error(f"WS ID: {websocket.session_id} | Game not found: {data['d']['code']}") # pyright: ignore[reportAttributeAccessIssue]
 								break
 							try:
-								game.add_player(userIdentified)
+								# Checking if the user exists
 								resp = await session.execute(select(User).where(User.userID == websocket.user_id)) # type: ignore
 								userObj = resp.scalar_one()
-								thePacket = packets.start.join_game(gameCode, UserFetch.model_validate(userObj).model_dump())
-								print(thePacket)
-								# TODO: broadcast "thePacket" to game players apart from the one who joined
+								userJSON: UserFetch = UserFetch.model_validate(userObj)
+								# This will throw an exception if they cannot join because of the game.
+								manager.set_game(websocket.user_id, gameCode) # type: ignore
+								game.add_player(userJSON)
+								thePacket = packets.start.join_game(gameCode, userJSON.model_dump(mode="json"))
+								await manager.broadcast_specific(thePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+								# Send new player the game info alongside their accepted request to join the game.
+								gameInfoPacket = thePacket
+								gameInfo = game.export_data()
+								gameInfoPacket['d']['game'] = gameInfo
+								await manager.send_direct_message(gameInfoPacket, websocket.user_id) # type: ignore
 							except Exception as er:
-								wsLogger.error(f"WS ID: {websocket.session_id} | Error: {er}") # pyright: ignore[reportAttributeAccessIssue]
+								if er.args[0] == "Player already in game":
+									# make em join
+									resp = await session.execute(select(User).where(User.userID == websocket.user_id)) # type: ignore
+									userObj = resp.scalar_one()
+									userJSON: UserFetch = UserFetch.model_validate(userObj)
+									thePacket = packets.start.join_game(gameCode, userJSON.model_dump(mode="json"))
+									gameInfoPacket = thePacket
+									gameInfo = game.export_data()
+									gameInfoPacket['d']['game'] = gameInfo
+									await manager.send_direct_message(gameInfoPacket, websocket.user_id) # type: ignore
+								else:
+									wsLogger.error(f"ERROR | WS ID: {websocket.session_id} | Error: {er}") # pyright: ignore[reportAttributeAccessIssue]
 								# TODO: send error packet.
 								break
-							
-
 
 				else:
 					wsLogger.info(f"Closing Websocket: {websocket.session_id} | Attempted to send data when Unauthenticated") # pyright: ignore[reportAttributeAccessIssue]
