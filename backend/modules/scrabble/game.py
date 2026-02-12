@@ -32,7 +32,7 @@ class Game:
 		
 		return data
 
-
+	
 	def add_player(self, player: UserFetch):
 		if self.hasStarted:
 			raise Exception("Game has already started")

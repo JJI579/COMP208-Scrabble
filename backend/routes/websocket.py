@@ -40,6 +40,86 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 wsLogger = WebsocketLogger();
 
 from modules.websocket.packets import packets
+
+class GameHandler:
+
+	def __init__(self) -> None:
+		pass
+
+	@staticmethod
+	async def player_join(data: dict, websocket: WebSocket):
+		print("player join")
+		print(data)
+		game = manager.fetch_game(data['d']['code'])
+		if type(game) == bool:
+			print("game type is bool")
+			# TODO: send error message
+			return False
+		userID = websocket.user_id # type: ignore
+		userData = manager.connections[userID]['info']
+		fetchModel = UserFetch.model_validate(userData)
+		try:
+			game.add_player(fetchModel)
+		except Exception as er:
+			print(f"error: {er}")
+			# TODO: send error message
+			return False
+		sendPacket = packets.start.join_game(gameID=data['d']['code'], user=fetchModel.model_dump(mode="json"))
+		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		await GameHandler.game_update(data, websocket)
+		return True
+
+	@staticmethod
+	async def game_update(data: dict, websocket: WebSocket):
+		game = manager.fetch_game(data['d']['code'])
+		if type(game) == bool:
+			print("game type is bool")
+			# TODO: send error message
+			return False
+		packetData = packets.start.update_game(game.export_data())
+		await manager.send_direct_message(packetData, websocket.user_id) # type: ignore
+		
+
+
+
+@router.websocket('/ws1')
+async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
+	hasIdentified = False
+	sessionID = secrets.token_hex(20)
+	await websocket.accept()
+	websocket.session_id = sessionID # type: ignore
+	while True:
+		try:
+			data = await websocket.receive_json()
+		except WebSocketDisconnect:
+			print("it has disconnected")
+			return
+		packetType: PacketType = data.get('t', '')
+
+		if packetType == "IDENTIFY" and not hasIdentified:
+			identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID)
+			if not identifyResponse:
+				wsLogger.error("Not found, closing websocket.")
+				return await websocket.close()
+			userIdentified = identifyResponse
+			wsLogger.info(f"WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
+			websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
+			await manager.send_direct_message(packets.authentication.identify(websocket.session_id), userIdentified) # type: ignore
+			hasIdentified = True
+		else:
+			if hasIdentified:
+				match (packetType):
+
+					case "PLAYER_JOIN":
+						resp = await GameHandler.player_join(data, websocket)
+						if not resp:
+							continue
+
+						
+			else:
+				return
+	
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	print("Websocket found")

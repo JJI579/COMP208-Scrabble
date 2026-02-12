@@ -38,7 +38,7 @@ function joinGame() {
 		<button @click="joinGame">Join</button>
 	</div>
 	<div class="players">
-		{{ websocket.sessionID }}
+		{{ websocket.game }}
 		{{ websocket.game?.players }}
 		<div class="player" v-for="player in websocket.game?.players">
 			{{ player.userName }}

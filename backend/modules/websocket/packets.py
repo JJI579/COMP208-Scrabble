@@ -87,8 +87,11 @@ class StartPackets(Packets):
 		}
 		return self.create_packet("GROUP_UPDATE", data)
 
-	def update_game(self):
-		pass
+	def update_game(self, gameInfo: dict):
+		data = {
+			"game": gameInfo
+		}
+		return self.create_packet("GAME_UPDATE", data)
 
 	def replace_shelf_game(self):
 		# these are the letters that the user has!

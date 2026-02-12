@@ -153,7 +153,73 @@ class Game implements GAME {
 
 }
 
-export const useWebsocketStore = defineStore("websocket", () => {
+
+export const useWebsocketStore = defineStore('websocket-2', () => {
+	const websocketURL = 'ws://localhost:8000/ws1'
+	const websocket = ref<WebSocket | null>(null);
+	const game = ref<Game | null>(null);
+
+	const readyToSend = ref(false)
+
+
+
+
+	function connect() {
+		if (websocket.value) return
+
+		websocket.value = new WebSocket(websocketURL)
+
+		websocket.value.onopen = () => {
+			const token = localStorage.getItem("token")
+			websocket.value?.send(generatePacket("IDENTIFY", { token }))
+		}
+
+		websocket.value.onmessage = (event) => {
+			const data: WebsocketPacket = JSON.parse(event.data)
+			console.log(data)
+
+			switch (data.t) {
+				case "IDENTIFY":
+					readyToSend.value = true
+				case "GAME_UPDATE":
+					if (!game.value && data.d.game) {
+						console.log(data)
+						game.value = new Game(data.d.code, data.d.game)
+					}
+					break
+				case "PLAYER_JOIN":
+					break
+				case "PLAYER_LEAVE":
+					break
+			}
+		}
+	}
+
+	function join(code: string) {
+		send(generatePacket("PLAYER_JOIN", { code }))
+	}
+
+	function send(packet: string) {
+		if (websocket.value?.readyState === WebSocket.OPEN) {
+			// TODO: make this wait until authenticated
+			websocket.value.send(packet)
+		} else {
+			websocket.value?.addEventListener(
+				"open",
+				() => websocket.value?.send(packet),
+				{ once: true }
+			)
+		}
+	}
+
+
+
+	return { websocket, game, connect, join }
+
+
+});
+
+export const xuseWebsocketStore = defineStore("websocket", () => {
 	const userStore = useUserStore();
 	const websocketURL = 'ws://localhost:8000/ws'
 	const sessionID = ref<string | null>(null)
