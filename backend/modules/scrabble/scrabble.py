@@ -303,19 +303,16 @@ class Scrabble:
 			print(f"Word Found: {result}")
 			return result
 
+# scrab = Scrabble([0, 1], arr)
 
+# scrab.place_word("protege", (7,4), "down")
+# scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
+# scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
+# # scrab.place_word("lazed", (10,3), "right", )
+# # scrab.place_word("bet", (7,7), "down", [])
+# # scrab.place_word("ee", (8,7), "right", [])
+# scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
+# scrab.place_word("b", (12,3), "down")
+# # scrab.place_word("e", (14,2), "right")
 
-
-scrab = Scrabble([0, 1], arr)
-
-scrab.place_word("protege", (7,4), "down")
-scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
-scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
-# scrab.place_word("lazed", (10,3), "right", )
-# scrab.place_word("bet", (7,7), "down", [])
-# scrab.place_word("ee", (8,7), "right", [])
-scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
-scrab.place_word("b", (12,3), "down")
-# scrab.place_word("e", (14,2), "right")
-
-scrab.print_board()
+# scrab.print_board()
