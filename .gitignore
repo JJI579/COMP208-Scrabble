@@ -92,3 +92,5 @@ extra-stuff/
 *.pyc
 
 work-split.txt
+extra-stuff/
+backend/__pycache__/main.cpython-311.pyc

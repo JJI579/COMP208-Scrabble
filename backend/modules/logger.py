@@ -29,3 +29,8 @@ class APILogger:
 	
 	def debug(self, message: str):
 		self.logger.debug(message)
+
+class WebsocketLogger(APILogger):
+
+	def __init__(self, name: str = 'WebsocketLogger', logFileName: str = 'websocket.log', formatString="[WEBSOCKET]"):
+		super().__init__(name, logFileName, formatString)
