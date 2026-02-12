@@ -61,18 +61,12 @@ class Player:
 		
 class Scrabble:
 
-	def __init__(self, players, arr) -> None:
-		self.players: dict[str, Player] = {
-
-		}
+	def __init__(self, arr) -> None:
+		self.players = []
 		self.gameTurn = 0
 		self.game = arr
 		self.firstPlaced = False
 		pass
-
-	def add_player(self, userID: int):
-		pass
-		# self.players.append(userID)
 
 	def next_turn(self):
 		if self.gameTurn < len(self.players):
