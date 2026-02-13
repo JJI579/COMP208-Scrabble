@@ -28,11 +28,11 @@ class WebsocketManager:
 
 		}
 
-	def create_game(self, options: GameOptions):
+	def create_game(self, options: GameOptions, leaderID: int):
 		code = generateGameCode()
 		while code in self.games:
 			code = generateGameCode()
-		self.games[code] = Game(options)
+		self.games[code] = Game(code, options, leaderID)
 		return code
 	
 	def fetch_game(self, code: str) -> Game | bool:
@@ -57,8 +57,6 @@ class WebsocketManager:
 				await self.send_message(websocket, message)
 				await asyncio.sleep(0.5)
 			del self.to_send[userID]
-
-
 
 	async def send_direct_message(self, message, userID: int):
 		if type(message) == dict:
@@ -144,11 +142,17 @@ class WebsocketManager:
 				return userID
 	
 	def find_user(self, sessionID: str, userID: int):
+		# FIX: this has side affects which are not relevant to the func name
 		if userID in self.archive:
 			if sessionID == self.archive[userID]['session_id']:
 				self.connections[userID] = self.archive[userID]
 				del self.archive[userID]
 				return self.connections[userID]
+		return False
+	
+	def fetch_connection(self, userID: int):
+		if userID in self.connections:
+			return self.connections[userID]
 		return False
 
 	def set_game(self, userID: int, gameID: str):

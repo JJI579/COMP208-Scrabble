@@ -15,6 +15,7 @@ from sqlmodel import select
 from modules.database.models import User
 from modules.schema import UserFetch
 import asyncio
+import json
 
 router = APIRouter(
 	prefix="",
@@ -28,11 +29,7 @@ gameRouter = APIRouter(
 
 @gameRouter.post("/create")
 async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):	
-	print(options.game_type)
-	print(options.time_limit)
-	print(options.dictionary)
-	print(options.group_size)
-	CODE = manager.create_game(options)
+	CODE = manager.create_game(options, current_user.userID) # type: ignore
 	return {
 		"code": CODE
 	}
@@ -51,8 +48,10 @@ class GameHandler:
 		print("player join")
 		print(data)
 		game = manager.fetch_game(data['d']['code'])
+		
 		if type(game) == bool:
-			print("game type is bool")
+			print("Game does not exist")
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
 			# TODO: send error message
 			return False
 		userID = websocket.user_id # type: ignore
@@ -60,28 +59,56 @@ class GameHandler:
 		fetchModel = UserFetch.model_validate(userData)
 		try:
 			game.add_player(fetchModel)
+			manager.set_game(userID, game.id)
 		except Exception as er:
+			if er.args[0] == "Player already in game":
+				sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
+				await GameHandler.game_update(game.id, websocket)
+				await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+				return True
+			else:
+				print("Error with game not exsiting.")
 			print(f"error: {er}")
 			# TODO: send error message
 			return False
-		sendPacket = packets.start.join_game(gameID=data['d']['code'], user=fetchModel.model_dump(mode="json"))
+		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
-		await GameHandler.game_update(data, websocket)
+		await GameHandler.game_update(game.id, websocket)
 		return True
 
 	@staticmethod
-	async def game_update(data: dict, websocket: WebSocket):
-		game = manager.fetch_game(data['d']['code'])
+	async def player_leave(data: dict, websocket: WebSocket):
+		userID = websocket.user_id # type: ignore
+		user = manager.fetch_connection(userID)
+		if not user:
+			print("websocket should not be existing...")
+			# TODO: websocket should not be existing...
+			return
+		
+		if not user['game']:
+			print("No game exists under the user....")
+			return
+		
+		game = manager.fetch_game(user['game'])
+		if type(game) == bool:
+			print("the game doesnt exist...")
+			return 
+		
+		sendPacket = packets.start.leave_game(game.id, user['info'])
+		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		game.remove_player(user['info'])
+		
+
+	@staticmethod
+	async def game_update(gameID: str, websocket: WebSocket):
+		game = manager.fetch_game(gameID)
 		if type(game) == bool:
 			print("game type is bool")
 			# TODO: send error message
 			return False
-		packetData = packets.start.update_game(game.export_data())
+		packetData = packets.start.update_game(game.export_data(), game.id)
 		await manager.send_direct_message(packetData, websocket.user_id) # type: ignore
 		
-
-
-
 @router.websocket('/ws1')
 async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	hasIdentified = False
@@ -95,7 +122,6 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 			print("it has disconnected")
 			return
 		packetType: PacketType = data.get('t', '')
-
 		if packetType == "IDENTIFY" and not hasIdentified:
 			identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID)
 			if not identifyResponse:
@@ -114,7 +140,17 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						resp = await GameHandler.player_join(data, websocket)
 						if not resp:
 							continue
-
+					case "PLAYER_LEAVE":
+						print("player left game.")
+						userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+						print(userConnection)
+						continue
+					case "GAME_UPDATE":
+						# Client requesting full game update
+						userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+						print(userConnection)
+						break
+						# await GameHandler.game_update()
 						
 			else:
 				return

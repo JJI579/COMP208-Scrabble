@@ -3,7 +3,9 @@ from modules.schema import UserFetch, GAME_TYPE, GameOptions
 
 class Game:
 
-	def __init__(self, options: GameOptions) -> None:
+	def __init__(self, gameID: str, options: GameOptions, leaderID: int) -> None:
+		self.id = gameID
+		self.leader = leaderID
 		self.options = options.model_dump(mode="json")
 		self.game = Scrabble(arr.copy())
 		self.type = options.game_type
@@ -22,6 +24,7 @@ class Game:
 	def export_data(self):
 		# TODO: include scrabble board data
 		data =  {
+			"leader": self.leader,
 			"game_type": self.type,
 			"players": [x.model_dump(mode="json") for x in self.players],
 			"has_started": self.hasStarted,
@@ -69,6 +72,7 @@ class Game:
 		if type(player) == int:
 			for i, p in enumerate(self.players):
 				if p.userID == player:
+					# TODO: pretty sure this errors since modifying a list whilst iterating through it
 					self.players.pop(i)
 					break
 			if self.type == "GROUP":
@@ -82,8 +86,8 @@ class Game:
 				self.players.remove(player)
 				if self.type == "GROUP":
 					for i, group in enumerate(self.groups):
-						if player in group:
-							self.groups[i].remove(player)
+						if player.userID in group:
+							self.groups[i].remove(player.userID)
 							# only one player per group so can break.
 							break
 			except ValueError:

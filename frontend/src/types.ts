@@ -9,7 +9,7 @@ type LoginReturn = {
 }
 
 type UserReturn = {
-	userID: string
+	userID: Number
 	userName: string
 	userCreatedAt: string
 }
@@ -21,11 +21,14 @@ type SelfReturn = UserReturn & {
 type InitType = "IDENTIFY" | "DISCONNECT"
 
 type PacketType =
+	| "GAME_INVALID"
 	| "GAME_START"
 	| "RESUME"
+	| "PING"
 	| "GAME_CANCEL"
 	| "PLAYER_JOIN"
 	| "PLAYER_LEAVE"
+	| "PLAYER_DISCONNECT"
 	| "GROUP_UPDATE"
 	| "GROUP_JOIN"
 	| "GROUP_LEAVE"

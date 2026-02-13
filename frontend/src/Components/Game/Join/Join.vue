@@ -27,6 +27,10 @@ const codeModel = ref('');
 function joinGame() {
 	websocket.join(codeModel.value)
 }
+
+function leaveGame() {
+	websocket.leave()
+}
 </script>
 
 
@@ -36,14 +40,18 @@ function joinGame() {
 	<div class="join">
 		<input type="text" v-model="codeModel" placeholder="enter code...">
 		<button @click="joinGame">Join</button>
+		<button @click="leaveGame">Leave</button>
 	</div>
 	<div class="players">
-		{{ websocket.game }}
-		{{ websocket.game?.players }}
-		<div class="player" v-for="player in websocket.game?.players">
+
+		<div class="player" v-for="player in websocket.game?.players.values()">
 			{{ player.userName }}
 		</div>
 
+	</div>
+
+	<div class="start" v-if="websocket.isLeader()">
+		<button>Start Game</button>
 	</div>
 </template>
 

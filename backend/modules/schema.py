@@ -3,6 +3,7 @@ import datetime
 from typing import Optional, Literal
 
 PacketType = Literal[
+	"INVALID_GAME",
 	"NOT_FOUND",
 	"RESUME",
 	"IDENTIFY",
@@ -11,6 +12,7 @@ PacketType = Literal[
 	"GAME_CANCEL",
 	"PLAYER_JOIN",
 	"PLAYER_LEAVE",
+	"PLAYER_DISCONNECT",
 	"GROUP_UPDATE",
 	"GROUP_JOIN",
 	"GROUP_LEAVE",

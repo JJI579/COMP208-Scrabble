@@ -40,8 +40,13 @@ class StartPackets(Packets):
 		}
 		return self.create_packet("GAME_CANCEL", data)
 		
-
-	def join_game(self, gameID: int, user: dict):
+	def invalid_game(self, gameID: int):
+		data = {
+			"gameID": gameID
+		}
+		return self.create_packet("INVALID_GAME", data)
+	
+	def join_game(self, gameID: str, user: dict):
 		data = {
 			"gameID": gameID,
 			"user": user
@@ -49,7 +54,7 @@ class StartPackets(Packets):
 		# returns player_join
 		return self.create_packet("PLAYER_JOIN", data)
 
-	def leave_game(self, gameID: int, user: dict):
+	def leave_game(self, gameID: str, user: dict):
 		# returns player_leave
 		data = {
 			"gameID": gameID,
@@ -87,8 +92,9 @@ class StartPackets(Packets):
 		}
 		return self.create_packet("GROUP_UPDATE", data)
 
-	def update_game(self, gameInfo: dict):
+	def update_game(self, gameInfo: dict, gameID: str):
 		data = {
+			"gameID": gameID,
 			"game": gameInfo
 		}
 		return self.create_packet("GAME_UPDATE", data)
