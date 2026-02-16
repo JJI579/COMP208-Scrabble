@@ -55,6 +55,7 @@ class Game:
 				hasGroup = False
 				for i, group in enumerate(self.groups):
 					if len(group) == 0:
+						# TODO: this needs to adjust for any index not just this scenario
 						self.groups[i].append(player.userID)
 						hasGroup = True
 						break

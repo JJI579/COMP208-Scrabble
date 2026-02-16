@@ -71,6 +71,10 @@ class GameHandler:
 			print(f"error: {er}")
 			# TODO: send error message
 			return False
+		try:
+			manager.set_game(userID, game.id)
+		except Exception as er:
+			print("trying to set user game but error: ", er)
 		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
 		await GameHandler.game_update(game.id, websocket)
@@ -115,8 +119,8 @@ class GameHandler:
 		index: int
 
 	@staticmethod
-	async def group_join(data: GroupJoinData, websocket: WebSocket):
-		
+	async def group_join(data: dict, websocket: WebSocket):
+		groupIndex = data['d']['index']
 		
 		userID = websocket.user_id # type: ignore
 		userData = manager.connections[userID]['info']
@@ -134,10 +138,15 @@ class GameHandler:
 		if gameData.hasStarted:
 			print("This is a little problem...")
 			return
-		if userData not in gameData.players:
+		
+		# check if user is in the game
+		ids = [x.userID for x in gameData.players]
+		if userData.userID not in ids:
 			print("they are not in the game...")
 			return
-		gameData.join_group(userData, data['index'])
+
+		gameData.join_group(userData, groupIndex)
+		# TODO: FINISH AS LUCY CAME.
 		packetData = packets.start.join_group(userData.model_dump(mode="json"), gameData.groups)
 		# send back to user aswell to show they have joined.
 		await manager.broadcast_specific(packetData, [x.userID for x in gameData.players])
@@ -183,7 +192,7 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						resp = await GameHandler.player_join(data, websocket)
 						if not resp:
 							continue
-						break #  i think...
+						continue
 					case "PLAYER_LEAVE":
 						print("player left game.")
 						print(userConnection)
@@ -194,11 +203,11 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						if userConnection['game'] != None:
 							userGameCode = userConnection['game']
 							await GameHandler.game_update(userGameCode, websocket)
-						break
+						continue
 					case "GROUP_JOIN":
 						await GameHandler.group_join(data, websocket)
-						break
-						
+						continue
+				
 			else:
 				return
 	
