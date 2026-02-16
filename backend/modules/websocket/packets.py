@@ -131,5 +131,11 @@ class AllPackets:
 		self.start = StartPackets()
 		self.during = DuringPackets()
 		self.authentication = AuthenticationPackets()
-
+	
+	def error(self, text: str):
+		return {
+			"t": "ERROR",
+			"d": text
+		}
+		
 packets = AllPackets()

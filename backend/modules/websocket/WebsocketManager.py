@@ -148,7 +148,7 @@ class WebsocketManager:
 				userID, userInfo = result[0]
 				self.connections[userID] = {
 					"websocket": websocket,
-					"info": userInfo,
+					"info": UserFetch.model_validate(userInfo),
 					"game": None,
 					"session_id": sessionID,
 				}

@@ -95,7 +95,9 @@ class Game:
 				raise Exception("Player not in player list")
 		return True
 	
-		
+	def in_group(self, player: UserFetch, groupIndex: int):
+		return player.userID in self.groups[groupIndex]
+
 	def join_group(self, player: UserFetch, groupIndex: int):
 		if self.hasStarted:
 			raise Exception("Game has already started")
@@ -110,7 +112,13 @@ class Game:
 		Returns:
 			bool: Whether the player was successfully joined
 		"""
-		alreadyinGroup = False
+		alreadyinGroup = self.in_group(player, groupIndex)
+		if alreadyinGroup:
+			return alreadyinGroup
+		
+		# check if adding the player into the group becomes too many.
+		if len(self.groups[groupIndex]) + 1 > 2:
+			raise Exception("Group is full")
 		for i, group in enumerate(self.groups):
 			if player.userID in group:
 				if i != groupIndex: 

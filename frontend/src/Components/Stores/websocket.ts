@@ -242,6 +242,14 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 				case "PLAYER_DISCONNECT":
 					break
+				case "GROUP_JOIN":
+					if (!game.value) {
+						// we should have a game by now.
+						console.log("We should have a game by now | GROUP JOIN")
+						// maybe push request for game update?
+					} else {
+						game.value.setGroups(data.d.groups);
+					}
 			}
 		}
 	}
@@ -250,10 +258,10 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		const packet: WebsocketPacket = {
 			t: type.toUpperCase() as PacketType,
 			d: data
-	}
+		}
 
-	return JSON.stringify(packet)
-}
+		return JSON.stringify(packet)
+	}
 
 
 	function send(type: PacketType, data: any) {

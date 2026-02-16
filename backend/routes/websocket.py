@@ -1,21 +1,15 @@
-from fastapi import APIRouter, WebSocket
-from fastapi import Depends, WebSocketDisconnect
-from modules.database.database import get_session
-from modules.database.database import AsyncSession
+from fastapi import APIRouter, WebSocket, Depends, WebSocketDisconnect
+from modules.database.database import get_session, AsyncSession
 from modules.functions import get_current_user
-from modules.websocket.WebsocketManager import manager
 from modules.logger import WebsocketLogger
 from typing import Annotated, TypedDict
 from modules.database.models import User
-from modules.schema import GameOptions, PacketType
+from modules.schema import GameOptions, PacketType, UserFetch
 from modules.websocket.WebsocketManager import manager
 from modules.scrabble.game import Game
-import secrets
 from sqlmodel import select
-from modules.database.models import User
-from modules.schema import UserFetch
-import asyncio
-import json
+import asyncio, secrets, json
+from modules.websocket.packets import packets
 
 router = APIRouter(
 	prefix="",
@@ -34,9 +28,9 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 		"code": CODE
 	}
 
-wsLogger = WebsocketLogger();
+wsLogger = WebsocketLogger()
 
-from modules.websocket.packets import packets
+
 
 class GameHandler:
 
@@ -144,11 +138,17 @@ class GameHandler:
 		if userData.userID not in ids:
 			print("they are not in the game...")
 			return
-
-		gameData.join_group(userData, groupIndex)
-		# TODO: FINISH AS LUCY CAME.
+		if gameData.in_group(userData, groupIndex):
+			# do not need to acknowledge, already in the group - but maybe perform game_update?
+			return
+		
+		try:
+			gameData.join_group(userData, groupIndex)
+		except Exception as er:
+			toSend = packets.error(er.args[0])
+			await manager.send_message(websocket, json.dumps(toSend))
+			return
 		packetData = packets.start.join_group(userData.model_dump(mode="json"), gameData.groups)
-		# send back to user aswell to show they have joined.
 		await manager.broadcast_specific(packetData, [x.userID for x in gameData.players])
 		
 
