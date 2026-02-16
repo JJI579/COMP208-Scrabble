@@ -1,0 +1,14 @@
+Yaro - you are working on friends / profile page
+hari - dashboard
+yaro - leaderboard
+me - websocket
+
+
+Play - Jason
+Login - Jason
+Leaderboard - Yaro
+Join - Jason
+Home - Hari
+Friend - yaro
+Shop - Jason
+Profile - yaro
