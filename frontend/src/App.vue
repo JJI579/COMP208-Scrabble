@@ -32,6 +32,13 @@ onMounted(() => {
 	height: 100%;
 	margin: auto;
 }
+
+@media (max-width: 999px) {
+	.content {
+		width: 80%;
+	}
+
+}
 </style>
 
 <style>

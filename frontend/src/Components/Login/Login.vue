@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, useTransitionState } from 'vue';
+import { computed, onMounted, ref, useTransitionState, watch } from 'vue';
 import InputField from './InputField.vue';
 import api from '@/api';
 
@@ -22,6 +22,13 @@ const userStore = useUserStore();
 onMounted(() => {
 	if (route.query.register) {
 		currentSelection.value = "register"
+	}
+})
+
+watch(() => userStore.isLoggedIn, () => {
+	if (userStore.isLoggedIn) {
+		// if logged in force to dashboard
+		router.push({ name: "dashboard" })
 	}
 })
 
@@ -74,6 +81,10 @@ async function handleSubmit() {
 		await register();
 	}
 }
+
+const d = computed(() => {
+	return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+})
 </script>
 
 
@@ -81,17 +92,25 @@ async function handleSubmit() {
 <template>
 
 	<!-- Login / register page! -->
+
 	<div class="content">
 		<div class="form">
-			<h2 class="title">Scrabble</h2>
+
+			<div class="title__container">
+				<div class="title__options">
+					<h2 class="title">Let's get you Playing!</h2>
+					<div class="option">
+						<span @click="currentSelection = 'login'" class="clickable">Sign in</span> or <span
+							@click="currentSelection = 'register'" class="clickable">create an account.</span>
+					</div>
+				</div>
+				<div class="logo__container">
+					<img src="" alt="" class="logo">
+				</div>
+
+			</div>
 			<div class="error" v-if="errorMessage.length > 0">
 				{{ errorMessage }}
-			</div>
-			<div class="option">
-				<div class="text"
-					@click="currentSelection == 'login' ? currentSelection = 'register' : currentSelection = 'login'">
-					{{ currentSelection == 'login' ? 'Register' : 'Login' }}
-				</div>
 			</div>
 			<InputField v-model:input="usernameModel" :placeholder="'Username'" :show-error="triedSubmit" />
 			<InputField v-model:input="passwordModel" :placeholder="'Password'" :type="'password'"
@@ -100,6 +119,10 @@ async function handleSubmit() {
 				<div class="submit__text">
 					{{ currentSelection == 'login' ? 'Login' : 'Register' }}
 				</div>
+			</div>
+			<div class="no__lose">
+				<p>Don't lose your progress!</p>
+				<p @click="currentSelection = 'register'" class="clickable">Create an Account!</p>
 			</div>
 		</div>
 	</div>
@@ -134,12 +157,6 @@ async function handleSubmit() {
 	margin-bottom: 3rem;
 }
 
-.option {
-	display: flex;
-	justify-content: left;
-	width: 80%;
-}
-
 .text {
 	margin-right: auto;
 	width: fit-content;
@@ -164,14 +181,64 @@ async function handleSubmit() {
 	padding: 0.6em 0.8em;
 }
 
+
+.title__container {
+	display: flex;
+	justify-content: space-between;
+	align-items: top;
+	/* background-color: pink; */
+	width: 80%;
+	margin-bottom: 2rem;
+}
+
+.title__options {
+	display: flex;
+	flex-direction: column;
+	/* background-color: blue; */
+}
+
+.title {
+	padding: 0;
+	margin: 0;
+	margin-block: 1rem;
+}
+
+.option {
+	display: flex;
+	width: 100%;
+	gap: .25rem;
+}
+
+.logo__container {
+	margin-top: 1rem;
+	height: 48px;
+	width: 48px;
+}
+
+.logo {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.no__lose {
+	text-align: left;
+	width: 80%;
+
+}
+
+.clickable {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
 @media (max-width: 999px) {
 	.content {
 		width: 80%;
-		padding: 1rem;
 	}
 
 	.form {
-		width: 100%;
+		width: 75%;
 	}
 }
 </style>
