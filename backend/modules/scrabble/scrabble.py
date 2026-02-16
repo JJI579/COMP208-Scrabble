@@ -288,7 +288,7 @@ class Scrabble:
 			print()
 
 	def check_word(self, word: str):
-		return asyncio.run(self._check_word(word))
+		return asyncio.run(self._check_word(word)) # type: ignore
 		# return twl.check(word)
 		# resp = requests.get(f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}')
 		# respData = resp.json()

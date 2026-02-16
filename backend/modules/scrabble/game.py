@@ -13,7 +13,7 @@ class Game:
 		self.hasStarted = False
 		if self.type == "GROUP":
 			if options.group_size:
-				self.groups = [[] for _ in range(options.group_size)] # makes array of groups
+				self.groups: list[list[int]] = [[] for _ in range(options.group_size)] # makes array of groups
 			else:
 				raise Exception("Group size not specified")
 		elif self.type == "BOT":
@@ -55,7 +55,7 @@ class Game:
 				hasGroup = False
 				for i, group in enumerate(self.groups):
 					if len(group) == 0:
-						self.groups[i].append(player)
+						self.groups[i].append(player.userID)
 						hasGroup = True
 						break
 				if not hasGroup:
@@ -112,11 +112,11 @@ class Game:
 		for i, group in enumerate(self.groups):
 			if player in group:
 				if i != groupIndex:
-					self.groups[i].remove(player)
+					self.groups[i].remove(player.userID)
 
 		if groupIndex > len(self.groups)-1:
 			raise Exception("Group does not exist")
-		self.groups[groupIndex].append(player)
+		self.groups[groupIndex].append(player.userID)
 		return True
 	
 	def leave_group(self, player: UserFetch):
@@ -124,9 +124,9 @@ class Game:
 			raise Exception("Game has already started")
 		hasGroup = False
 		for i, group in enumerate(self.groups):
-			if player in group:
+			if player.userID in group:
 				hasGroup = True
-				self.groups[i].remove(player)
+				self.groups[i].remove(player.userID)
 		if not hasGroup:
 			raise Exception("Player is not in a group")
 		return True

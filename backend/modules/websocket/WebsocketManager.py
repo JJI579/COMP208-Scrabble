@@ -13,13 +13,26 @@ import secrets
 
 letterChoice = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+from typing import TypedDict
+class Connection(TypedDict):
+	websocket: WebSocket
+	info: UserFetch
+	game: Optional[str]
+	session_id: str
+# {
+# 	"websocket": websocket,
+# 	"info": userInfo,
+# 	"game": None,
+# 	"session_id": sessionID,
+# }
+
 def generateGameCode():
 	return ''.join(secrets.choice(letterChoice) for _ in range(4))
 
 class WebsocketManager:
 
 	def __init__(self) -> None:
-		self.connections = {}
+		self.connections: dict[int, Connection] = {}
 		self.archive = {}
 		# gameID, gameClass
 		self.games = {}
@@ -75,25 +88,25 @@ class WebsocketManager:
 			else:
 				print(f"Unable to send message to {userID} | Message: {message}")
 
-	async def broadcast(self, message, userID: Optional[int]=None):
-		origMessage = message
-		if type(message) == dict:
-			message = json.dumps(message)
-		if userID is not None:
+	# async def broadcast(self, message, userID: Optional[int]=None):
+	# 	origMessage = message
+	# 	if type(message) == dict:
+	# 		message = json.dumps(message)
+	# 	if userID is not None:
 
-			# NEED TO MAKE THIS PERSONALISED PER CONNECTION
-			if userID in self.connections:
-				for toSendID in self.connections[userID]['friends']:
-					if toSendID in self.connections:
-						await self.send_message(self.connections[toSendID]['websocket'], message)
-			if origMessage.get('t') == 'PHOTO_UPDATE':
-				if userID in self.connections:
-					await self.send_message(self.connections[userID]['websocket'], message)
-			else:
-				return
-		else:
-			for connection in self.connections:
-				await self.send_message(self.connections[connection]['websocket'], message)
+	# 		# NEED TO MAKE THIS PERSONALISED PER CONNECTION
+	# 		if userID in self.connections:
+	# 			for toSendID in self.connections[userID]['friends']:
+	# 				if toSendID in self.connections:
+	# 					await self.send_message(self.connections[toSendID]['websocket'], message)
+	# 		if origMessage.get('t') == 'PHOTO_UPDATE':
+	# 			if userID in self.connections:
+	# 				await self.send_message(self.connections[userID]['websocket'], message)
+	# 		else:
+	# 			return
+	# 	else:
+	# 		for connection in self.connections:
+	# 			await self.send_message(self.connections[connection]['websocket'], message)
 
 	async def remove(self, userID: int):
 		
@@ -150,7 +163,7 @@ class WebsocketManager:
 				return self.connections[userID]
 		return False
 	
-	def fetch_connection(self, userID: int):
+	def fetch_connection(self, userID: int) -> Connection | bool:
 		if userID in self.connections:
 			return self.connections[userID]
 		return False
@@ -165,8 +178,8 @@ class WebsocketManager:
 			raise Exception("User not in connection list")
 		
 	async def close_all(self):
-		for connection in self.connections:
-			await connection.close()
+		for connection in self.connections.values():
+			await connection['websocket'].close()
 
 global manager
 manager = WebsocketManager()

@@ -95,7 +95,6 @@ const d = computed(() => {
 
 	<div class="content">
 		<div class="form">
-
 			<div class="title__container">
 				<div class="title__options">
 					<h2 class="title">Let's get you Playing!</h2>

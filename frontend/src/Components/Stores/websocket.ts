@@ -4,14 +4,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import useUserStore from "./user";
 
-function generatePacket(type: PacketType | InitType, data: any) {
-	const packet: WebsocketPacket = {
-		t: type.toUpperCase() as PacketType,
-		d: data
-	}
 
-	return JSON.stringify(packet)
-}
 
 
 type GAME_TYPE = "NORMAL" | "GROUP" | "BOT"
@@ -50,6 +43,7 @@ class Game implements GAME {
 	type: GAME_TYPE;
 	players: Map<Number, UserReturn>;
 	groups: Number[][] = []
+	maxGroupSize: Number = 2;
 	hasStarted: boolean;
 	timeLimit: number;
 	dictionaryAllowed: boolean;
@@ -252,17 +246,20 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		}
 	}
 
-	function join(code: string) {
-		send(generatePacket("PLAYER_JOIN", { code }))
+	function generatePacket(type: PacketType | InitType, data: any) {
+		const packet: WebsocketPacket = {
+			t: type.toUpperCase() as PacketType,
+			d: data
 	}
 
-	function leave() {
-		if (game.value) {
-			console.log(game.value)
-			send(generatePacket("PLAYER_LEAVE", { code: game.value.getId() }))
-			console.log("sent")
-		}
+	return JSON.stringify(packet)
+}
+
+
+	function send(type: PacketType, data: any) {
+		_send(generatePacket(type, data))
 	}
+
 
 	function isLeader() {
 		if (game.value && userStore.userData) {
@@ -273,7 +270,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		}
 	}
 
-	function send(packet: string) {
+	function _send(packet: string) {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
 			// TODO: make this wait until authenticated
 			websocket.value.send(packet)
@@ -289,7 +286,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 
 
-	return { websocket, game, connect, join, leave, isLeader }
+	return { websocket, game, connect, isLeader, generatePacket, send }
 
 
 });

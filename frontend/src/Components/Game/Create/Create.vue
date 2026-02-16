@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router';
 
 
 const gameTypeRef = ref("NORMAL");
-const options = [['NORMAL', "Normal"], ['TEAM', "Team"], ["BOT", "Bot"]]
+const options = [['NORMAL', "Normal"], ['GROUP', "Team"], ["BOT", "Bot"]]
 
 const timeLimitRef = ref("none");
 const timeLimitOptions = [["none", "None"], ["45", "45 Minutes"], ["1", "1 Hour"], ["2", "2 Hours"]]
@@ -15,8 +15,8 @@ const timeLimitOptions = [["none", "None"], ["45", "45 Minutes"], ["1", "1 Hour"
 const useDictionaryRef = ref("false");
 const dictionaryOptions = [["false", "No"], ["true", "Yes"]]
 
-const groupSizeRef = ref("2");
-const groupSizeOptions = [["2", "2"], ["3", "3"]]
+const groupSizeRef = ref("4");
+const groupSizeOptions = [["2", "2"], ["3", "3"], ["4", "4"]]
 
 const router = useRouter();
 
@@ -46,7 +46,7 @@ async function createGame() {
 		<CustomSelect :options="options" :label="'Game Type'" v-model:selected="gameTypeRef" />
 		<CustomSelect :options="timeLimitOptions" :label="'Time Limit'" v-model:selected="timeLimitRef" />
 		<CustomSelect :options="dictionaryOptions" :label="'Dictionary Allowed'" v-model:selected="useDictionaryRef" />
-		<CustomSelect :options="groupSizeOptions" :label="'Group Size'" v-model:selected="groupSizeRef" />
+		<CustomSelect :options="groupSizeOptions" :label="'Number of Groups'" v-model:selected="groupSizeRef" />
 	</div>
 	<button @click="createGame">Create Game</button>
 </template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import CustomOption from './CustomOption.vue';
 
@@ -24,6 +24,20 @@ function toggleMenu() {
 
 const selectedOption = defineModel('selected', { default: "", type: String });
 const indexRef = ref(0);
+
+onMounted(() => {
+	if (selectedOption.value) {
+		const index = props.options.findIndex(option => option[0] === selectedOption.value)
+		if (index == -1) {
+			indexRef.value = 0;
+			return;
+		}
+		indexRef.value = index;
+
+	}
+})
+
+
 function optionClicked(index: number) {
 	selectedOption.value = props.options[index]?.[0] || ""
 	indexRef.value = index;

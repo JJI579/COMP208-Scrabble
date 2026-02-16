@@ -80,12 +80,13 @@ class GameHandler:
 	async def player_leave(data: dict, websocket: WebSocket):
 		userID = websocket.user_id # type: ignore
 		user = manager.fetch_connection(userID)
-		if not user:
+		if type(user) == bool:
 			print("websocket should not be existing...")
 			# TODO: websocket should not be existing...
 			return
 		
-		if not user['game']:
+
+		if user['game'] == None:
 			print("No game exists under the user....")
 			return
 		
@@ -94,7 +95,7 @@ class GameHandler:
 			print("the game doesnt exist...")
 			return 
 		
-		sendPacket = packets.start.leave_game(game.id, user['info'])
+		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
 		game.remove_player(user['info'])
 		
@@ -107,6 +108,7 @@ class GameHandler:
 			# TODO: send error message
 			return False
 		packetData = packets.start.update_game(game.export_data(), game.id)
+		
 		await manager.send_direct_message(packetData, websocket.user_id) # type: ignore
 		
 @router.websocket('/ws1')
@@ -134,6 +136,7 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 			hasIdentified = True
 		else:
 			if hasIdentified:
+				print("RECEIVED: ", packetType)
 				match (packetType):
 
 					case "PLAYER_JOIN":
@@ -148,10 +151,16 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 					case "GAME_UPDATE":
 						# Client requesting full game update
 						userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-						print(userConnection)
-						break
-						# await GameHandler.game_update()
-						
+						if type(userConnection) == bool: # will be false
+							print("USER DOES NOT EIXST, REMOVE WEBSOCKET?")
+						else:
+							print(userConnection)
+							if userConnection['game'] != None:
+								userGameCode = userConnection['game']
+								await GameHandler.game_update(userGameCode, websocket)
+							break
+					case "GROUP_JOIN":
+						pass
 			else:
 				return
 	
