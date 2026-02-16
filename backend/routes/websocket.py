@@ -5,7 +5,7 @@ from modules.database.database import AsyncSession
 from modules.functions import get_current_user
 from modules.websocket.WebsocketManager import manager
 from modules.logger import WebsocketLogger
-from typing import Annotated
+from typing import Annotated, TypedDict
 from modules.database.models import User
 from modules.schema import GameOptions, PacketType
 from modules.websocket.WebsocketManager import manager
@@ -110,7 +110,39 @@ class GameHandler:
 		packetData = packets.start.update_game(game.export_data(), game.id)
 		
 		await manager.send_direct_message(packetData, websocket.user_id) # type: ignore
+	
+	class GroupJoinData(TypedDict):
+		index: int
+
+	@staticmethod
+	async def group_join(data: GroupJoinData, websocket: WebSocket):
 		
+		
+		userID = websocket.user_id # type: ignore
+		userData = manager.connections[userID]['info']
+		
+		gameCode = manager.connections[userID]['game']
+		if gameCode == None:
+			# return game doesnt exist
+			return
+	
+		gameData = manager.fetch_game(gameCode)
+		if type(gameData) == bool:
+			print("game doesnt exist")
+			return
+		
+		if gameData.hasStarted:
+			print("This is a little problem...")
+			return
+		if userData not in gameData.players:
+			print("they are not in the game...")
+			return
+		gameData.join_group(userData, data['index'])
+		packetData = packets.start.join_group(userData.model_dump(mode="json"), gameData.groups)
+		# send back to user aswell to show they have joined.
+		await manager.broadcast_specific(packetData, [x.userID for x in gameData.players])
+		
+
 @router.websocket('/ws1')
 async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	hasIdentified = False
@@ -137,30 +169,36 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 		else:
 			if hasIdentified:
 				print("RECEIVED: ", packetType)
-				match (packetType):
+				userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+				if type(userConnection) == bool: # will be false
+					print("USER DOES NOT EIXST, REMOVE WEBSOCKET?")
+					break # should break to exit while True.
+				# else is Connection class
+				
+				# TODO: should i check for only non-game packets then decide or not?
 
+				# this match case only for games that the user has been validated to be in
+				match (packetType):
 					case "PLAYER_JOIN":
 						resp = await GameHandler.player_join(data, websocket)
 						if not resp:
 							continue
+						break #  i think...
 					case "PLAYER_LEAVE":
 						print("player left game.")
-						userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 						print(userConnection)
+						# TODO: handle???
 						continue
 					case "GAME_UPDATE":
 						# Client requesting full game update
-						userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-						if type(userConnection) == bool: # will be false
-							print("USER DOES NOT EIXST, REMOVE WEBSOCKET?")
-						else:
-							print(userConnection)
-							if userConnection['game'] != None:
-								userGameCode = userConnection['game']
-								await GameHandler.game_update(userGameCode, websocket)
-							break
+						if userConnection['game'] != None:
+							userGameCode = userConnection['game']
+							await GameHandler.game_update(userGameCode, websocket)
+						break
 					case "GROUP_JOIN":
-						pass
+						await GameHandler.group_join(data, websocket)
+						break
+						
 			else:
 				return
 	

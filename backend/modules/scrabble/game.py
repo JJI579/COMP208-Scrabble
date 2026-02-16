@@ -109,14 +109,18 @@ class Game:
 		Returns:
 			bool: Whether the player was successfully joined
 		"""
+		alreadyinGroup = False
 		for i, group in enumerate(self.groups):
-			if player in group:
-				if i != groupIndex:
+			if player.userID in group:
+				if i != groupIndex: 
 					self.groups[i].remove(player.userID)
+				else: 
+					alreadyinGroup = True
 
-		if groupIndex > len(self.groups)-1:
+		if groupIndex > len(self.groups)-1 or groupIndex < 0:
 			raise Exception("Group does not exist")
-		self.groups[groupIndex].append(player.userID)
+		if not alreadyinGroup:
+			self.groups[groupIndex].append(player.userID)
 		return True
 	
 	def leave_group(self, player: UserFetch):

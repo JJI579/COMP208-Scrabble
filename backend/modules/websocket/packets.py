@@ -61,13 +61,10 @@ class StartPackets(Packets):
 		}
 		return self.create_packet("PLAYER_LEAVE", data)
 
-	def join_group(self, gameID: int, user: dict, groupID: int, groups: list[list[int]]):
+	def join_group(self,user: dict, groups: list[list[int]]):
 		# returns group_join
 		data = {
-			"gameID": gameID,
 			"user": user,
-			# this is to show what group was affected
-			"focusedID": groupID,
 			"groups": groups
 		}
 		return self.create_packet("GROUP_JOIN", data)

@@ -22,7 +22,7 @@ const emit = defineEmits(['join-group'])
 const websocket = useWebsocketStore();
 
 function joinGroup() {
-    websocket.send("GROUP_JOIN", {group: props.id})
+    websocket.send("GROUP_JOIN", {index: props.id})
     // TODO: alert to say you have sent it.
 }
 
