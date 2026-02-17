@@ -1,3 +1,4 @@
+import Logger from "@/logging/Logger";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -5,6 +6,8 @@ type AlertData = {
     text: string,
     type: string
 }
+
+const alertLog = new Logger("alert");
 
 const useAlertStore = defineStore("alert", () => {
 	const isActive = ref(false);
@@ -17,23 +20,24 @@ const useAlertStore = defineStore("alert", () => {
         if (isActive.value === true) {
             if (alertData !== null) {
                 alerts.value.push(alertData)
+                alertLog.info("Appended item to queue, already active")
             }
         } else {
             const data = alerts.value.shift()
             if (data === undefined) {
                 if (alertData !== null) {
                     currentAlert.value = alertData
-                    console.log("Active store - set to parameter provided")
+                    alertLog.info("Set current alert to parameter, no queue.")
                 } else {
-                    // exit...?
+                    alertLog.info("Deactivated alert")
                     return;
                 }
             } else {
                 currentAlert.value = data
-                console.log("Active store - set to first item in array")
+                alertLog.info("Set current alert to first item in queue")
             }
             isActive.value = true
-            console.log("Active store - activated")
+            alertLog.info("Activated alert")
             setTimeout(() => {
                 isActive.value = false
                 alert(null)
@@ -43,5 +47,7 @@ const useAlertStore = defineStore("alert", () => {
 
 	return { isActive, alert, currentAlert };
 })
+
+alertLog.debug("Alert store initialized");
 
 export default useAlertStore;

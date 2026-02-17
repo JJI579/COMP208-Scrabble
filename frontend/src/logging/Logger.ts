@@ -6,12 +6,16 @@ type LoggerType =
 class Logger {
     formatString: String = "";
 
-    Logger(name: String) {
-        this.formatString = `[${name}]`
-    }    
+    constructor(name: string) {
+        this.formatString = `[${name.toUpperCase()}]`
+    }
 
     format(type: LoggerType) {
-        return `${this.format} - [${type}] | `
+        return `${this.formatString} | ${type.toUpperCase()} | `
+    }
+
+    info(message: string) {
+        console.log(this.format("info") + message)
     }
 
     debug(message: string) {
