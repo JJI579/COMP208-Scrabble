@@ -15,9 +15,21 @@ type UserReturn = {
 	profilePicture: string | undefined
 }
 
+type Item = {
+	itemID: number,
+	name: string,
+	description: string,
+	xpRequired: number,
+	unlocked: boolean
+}
+
+type UnlockedItemType = Item & {
+	equipped: boolean
+}
+
 type SelfReturn = UserReturn & {
 	friends: UserReturn[];
 }
 
-export type { LoginReturn, UserReturn, SelfReturn };
+export type { LoginReturn, UserReturn, SelfReturn, Item, UnlockedItemType };
 export default debug;
