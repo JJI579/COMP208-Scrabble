@@ -63,15 +63,26 @@ function cellClicked(index: number) {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-	<div class="board">
-		<div class="cells">
-			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
-				<ModifierCell :modifier="value as modifiers" v-if="options.includes(value)" />
-				<GridCell :cell-value="placed.get(i) || value" :score="''" :is-draft="placed.get(i) !== undefined"
-					v-else />
-			</div>
-
+	<div class="main">
+		<div class="players players_1">
+			<div class="player">1</div>
+			<div class="player">1</div>
 		</div>
+		<div class="board">
+			<div class="cells">
+				<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
+					<ModifierCell :modifier="value as modifiers" v-if="options.includes(value)" />
+					<GridCell :cell-value="placed.get(i) || value" :score="''" :is-draft="placed.get(i) !== undefined"
+						v-else />
+				</div>
+
+			</div>
+		</div>
+		<div class="players players_2">
+			<div class="player">1</div>
+			<div class="player">1</div>
+		</div>
+
 	</div>
 
 	<div class="tileset">
@@ -85,15 +96,36 @@ function cellClicked(index: number) {
 
 
 <style lang="css" scoped>
-.board {
+.main {
 	display: flex;
-	justify-content: center;
+}
 
+.players {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	justify-content: space-between;
+}
+
+.players_1 {}
+
+.player {
+	height: 25vh;
+	width: 10rem;
+	background-color: blue;
+	margin: .5rem;
+}
+
+.players_2 {}
+
+.board {
+	width: 100%;
+	margin: auto;
 }
 
 .cells {
 	/* background-color: pink; */
-	width: 70%;
+
 	display: grid;
 	grid-template-columns: repeat(15, 1fr);
 	gap: 0px;
