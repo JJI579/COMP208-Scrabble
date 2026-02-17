@@ -28,14 +28,14 @@ function profileClicked() {
 					<i class="pi pi-bars"></i>
 				</div>
 
-				<RouterLink :to="{ name: 'home' }" class="link">
-					<div class="tiles">
-						<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
-							{{ l }}
-						</div>
-					</div>
-				</RouterLink>
 			</div>
+			<RouterLink :to="{ name: 'home' }" class="link">
+				<div class="tiles">
+					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
+						{{ l }}
+					</div>
+				</div>
+			</RouterLink>
 
 			<div class="end">
 				<button class="user-btn" @click="profileClicked">
