@@ -3,6 +3,8 @@ import { computed, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import Header from './Components/Header/Header.vue';
 import useUserStore from './Components/Stores/user';
+import Alert from './Components/Alert/Alert.vue';
+import useAlertStore from './Components/Stores/alert';
 
 
 onMounted(() => {
@@ -11,11 +13,25 @@ onMounted(() => {
 	if (hasToken) userStore.login();
 
 })
+
+const alertStore = useAlertStore();
+var x = 0;
+function al() {
+	alertStore.alert({
+		text: "test " + x,
+		type: "success"
+	})
+	x++;
+}
+
 </script>
 
 <template>
+	<Alert />
 	<Header />
 	<div class="content">
+		<br><br>
+		<button @click="al">click</button>
 		<RouterView />
 	</div>
 </template>
