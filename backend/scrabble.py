@@ -44,7 +44,7 @@ class Player:
 	def can_make(self, word: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
 		wordMap = {}
 		availableCount = {}
-		# TODO: consider preExisting
+		# TODO: consider preExisting - too late im considering it before you - hari
 		for x in word:
 			if x not in wordMap:
 				wordMap[x] = 1
@@ -58,7 +58,57 @@ class Player:
 			if availableCount[key] < val:
 				return False
 			
-		
+class Bot(Player):
+
+	def __init__(self, name="Bot"):
+		super().__init__()
+		self.name = name
+
+	def choose_move(self, scrabble: "Scrabble"):
+		best_move = None
+		best_score = -1
+		# try to get the cells next to already placed - more efficient that checking every cell xx
+		candidates = self.get_candidate_cells(scrabble)
+		for x, y in candidates:
+			for direction in ["right", "down"]:
+				for word in self.get_possible_words(scrabble):
+					preExisting = self.find_matching_letters(scrabble, word, x, y, direction)
+					# print(f"Testing word: {word} at position: ({x}, {y}) in direction: {direction} with preExisting: {preExisting}")
+					
+					#save board incase we need to revert
+					temp = [row.copy() for row in scrabble.game]
+					scrabble.place_word(word, (x,y), direction, preExisting=preExisting)
+					# coords for calculating points
+					word_coordinates = [[x+i,y] if direction == "right" else [x,y+i] for i in range(len(word))]
+					points = scrabble.calculate_points([[coord, word[i]] for i, coord in enumerate(word_coordinates)], [])
+					if points > best_score:
+						best_score = points
+						best_move = (word, (x,y), direction, preExisting)
+					# restore
+					scrabble.game = temp
+		return best_move
+	
+	''' TODO: get candidate cells, get possible words, find matchingn letters
+				difficulty levels?
+					-> considers intersecting words and considers tile multipliers..
+	'''
+	
+	def get_candidate_cells(self, scrabble: "Scrabble"):
+		pass
+
+	def get_possible_words(self, scrabble: "Scrabble"):
+		possible_words = []
+		pass
+
+	def find_matching_letters(self, scrabble: "Scrabble", word, position, direction):
+		x, y = position
+		preExisting = []
+		pass
+
+
+
+
+
 class Scrabble:
 
 	def __init__(self, players, arr) -> None:
