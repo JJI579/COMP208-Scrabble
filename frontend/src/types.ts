@@ -22,6 +22,7 @@ type InitType = "IDENTIFY" | "DISCONNECT"
 
 type PacketType =
 	| "GAME_INVALID"
+	| "CONFIRM_LEAVE"
 	| "GAME_START"
 	| "RESUME"
 	| "PING"

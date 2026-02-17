@@ -26,6 +26,12 @@ class StartPackets(Packets):
 	def __init__(self) -> None:
 		super().__init__()
 	
+	def confirm_leave(self, gameID: str):
+		data = {
+			"gameID": gameID
+		}
+		return self.create_packet("CONFIRM_LEAVE", data)
+	
 	def start_game(self, gameInfo):
 		gameInfo = False
 		data = {

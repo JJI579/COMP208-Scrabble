@@ -38,11 +38,13 @@ class GameHandler:
 		pass
 
 	@staticmethod
+	async def game_start(data: dict, websocket: WebSocket):
+		pass
+
+
+	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
-		print("player join")
-		print(data)
 		game = manager.fetch_game(data['d']['code'])
-		
 		if type(game) == bool:
 			print("Game does not exist")
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
@@ -95,6 +97,8 @@ class GameHandler:
 		
 		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		leavePacket = packets.start.confirm_leave(game.id)
+		await manager.send_direct_message(leavePacket, userID)
 		game.remove_player(user['info'])
 		
 
@@ -177,16 +181,20 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 			await manager.send_direct_message(packets.authentication.identify(websocket.session_id), userIdentified) # type: ignore
 			hasIdentified = True
 		elif packetType == "RESUME" and not hasIdentified:
-			print("RESUME")
+			
 			resumeResponse = await manager.resume(websocket, data['d']['session_id'])
 			if type(resumeResponse) == bool:
 				wsLogger.error("Not found, closing websocket.")
 				return await websocket.close()
-			print("HAS RESUMED")
+			userData = manager.fetch_connection(resumeResponse)
 			userIdentified = resumeResponse
-			wsLogger.info(f"WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
+			wsLogger.info(f"RESUME | WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
 			websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
 			hasIdentified = True
+			if type(userData) != bool:
+				# send game update to the user.
+				if type(userData['game']) == str:
+					await GameHandler.game_update(userData['game'], websocket)
 		else:
 			if hasIdentified:
 				print("RECEIVED: ", packetType)
@@ -206,8 +214,8 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 							continue
 						continue
 					case "PLAYER_LEAVE":
-						print("player left game.")
-						print(userConnection)
+						print(data)
+						await GameHandler.player_leave(data, websocket)
 						# TODO: handle???
 						continue
 					case "GAME_UPDATE":

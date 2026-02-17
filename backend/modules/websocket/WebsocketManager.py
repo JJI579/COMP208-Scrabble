@@ -76,7 +76,8 @@ class WebsocketManager:
 		if type(message) == dict:
 			message = json.dumps(message)
 		if userID in self.connections:
-			await self.send_message(self.connections[userID]['websocket'], message)
+			if not self.connections[userID]['disconnected']:
+				await self.send_message(self.connections[userID]['websocket'], message)
 
 	async def broadcast_specific(self, message, users: list[int]):
 		originalMessage = message
@@ -84,8 +85,9 @@ class WebsocketManager:
 			message = json.dumps(message)
 		for userID in users:
 			if userID in self.connections:
-				print(f"Sent message: {userID} | Message: {message}")
-				await self.send_message(self.connections[userID]['websocket'], message)
+				if not self.connections[userID]['disconnected']:
+					print(f"Sent message: {userID} | Message: {message}")
+					await self.send_message(self.connections[userID]['websocket'], message)
 			else:
 				print(f"Unable to send message to {userID} | Message: {message}")
 
@@ -98,7 +100,12 @@ class WebsocketManager:
 		self.connections[userID]['websocket'] = websocket
 		await self.send_message(websocket, json.dumps(packets.authentication.identify(session_id)))
 		return userID
-
+	
+	async def disconnect(self, userID: int):
+		if userID in self.connections:
+			self.connections[userID]['disconnected'] = True
+		
+	
 	async def remove(self, userID: int):
 		
 		if userID in self.connections:

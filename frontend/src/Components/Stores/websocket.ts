@@ -3,6 +3,8 @@ import type { InitType, PacketType, SelfReturn, UserReturn, WebsocketPacket } fr
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import useUserStore from "./user";
+import router from "@/router";
+
 
 
 
@@ -193,7 +195,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				// keep sending ping every 30s
 				try {
 					websocket.value?.send(generatePacket("PING", {}))
-					await new Promise(resolve => setTimeout(resolve, 30000))
+					await new Promise(resolve => setTimeout(resolve, 5000))
 				} catch (error) {
 					return
 				}
@@ -202,8 +204,10 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 		websocket.value.onclose = () => {
 			websocket.value = null;
-			connect();
-			console.log("connecting...")
+			setTimeout(() => {
+				connect();
+				console.log("connecting...")
+			}, 6000);
 		}
 
 		websocket.value.onmessage = (event) => {
@@ -266,6 +270,10 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					} else {
 						game.value.setGroups(data.d.groups);
 					}
+				case "CONFIRM_LEAVE":
+					game.value = null;
+					router.replace({ name: "dashboard" })
+					break
 			}
 		}
 	}
@@ -279,6 +287,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 	}
 
 	function send(type: PacketType, data: any) {
+
 		_send(generatePacket(type, data))
 	}
 
