@@ -90,7 +90,7 @@ venv
 extra-stuff/
 
 *.pyc
-
+letter_distribution.py
 work-split.txt
 extra-stuff/
 backend/__pycache__/main.cpython-311.pyc
