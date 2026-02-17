@@ -16,7 +16,7 @@ const useUserStore = defineStore("user", () => {
 			userData.value = resp.data;
 			isLoggedIn.value = true
 		} catch (error) {
-
+			
 		}
 	}
 
