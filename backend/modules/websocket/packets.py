@@ -32,20 +32,19 @@ class StartPackets(Packets):
 		}
 		return self.create_packet("CONFIRM_LEAVE", data)
 	
-	def start_game(self, gameInfo):
-		gameInfo = False
+	def start_game(self, gameID: str):
 		data = {
-			"game": gameInfo
+			"gameID": gameID
 		}
 		return self.create_packet("GAME_START", data)
 
-	def cancel_game(self, gameID: int):
+	def cancel_game(self, gameID: str):
 		data = {
 			"gameID": gameID
 		}
 		return self.create_packet("GAME_CANCEL", data)
 		
-	def invalid_game(self, gameID: int):
+	def invalid_game(self, gameID: str):
 		data = {
 			"gameID": gameID
 		}
