@@ -1,15 +1,6 @@
 <script lang="ts" setup>
-
-
-type potential = {
-	letter: string,
-	score: number
-}
-
-type websocketReturn = {
-	board: Map<string, potential>
-	players: Map<string, string>
-}
+import { pointsMap } from '@/types';
+import { computed } from 'vue';
 
 const props = defineProps({
 	cellValue: {
@@ -19,7 +10,16 @@ const props = defineProps({
 	score: {
 		type: String,
 		required: true
+	},
+	isDraft: {
+		type: Boolean,
+		required: true
 	}
+})
+
+const score = computed(() => {
+	const letter = props.cellValue.toUpperCase();
+	return pointsMap[letter] || ' ';
 })
 
 
@@ -28,8 +28,8 @@ const props = defineProps({
 
 
 <template>
-	<div class="cell">
-		<p class="letter">{{ cellValue }}</p>
+	<div class="cell" :class="{ 'cell--draft': props.isDraft }">
+		<p class="letter">{{ props.cellValue.toUpperCase() }}</p>
 		<p class="score">{{ score }}</p>
 	</div>
 </template>
@@ -38,16 +38,19 @@ const props = defineProps({
 <style lang="css" scoped>
 .cell {
 	user-select: none;
-	background-color: black;
+	background-color: var(--tile-background-colour);
+	color: var(--tile-text-colour);
 	aspect-ratio: 1/1;
 	border: 2px solid var(--scrabble-board);
-	background-color: #fff0cf;
 	display: flex;
 	height: 100%;
 	width: 100%;
 	position: relative;
 	/* border-radius: 8px; */
+}
 
+.cell--draft {
+	color: grey;
 }
 
 .letter {

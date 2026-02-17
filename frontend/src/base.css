@@ -2,6 +2,11 @@
 	--bg-colour: #FAF9F6;
 	--text-colour: #333333;
 	--scrabble-board: #19bcb7;
+
+	/* Scrabble Colours */
+	--tile-background-colour: #f4e2b8;
+	--tile-text-colour: #2c2c2c;
+
 }
 
 html,

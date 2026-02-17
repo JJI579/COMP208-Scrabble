@@ -34,16 +34,24 @@ onMounted(() => {
 	grid.value = initGrid;
 })
 
-const letterFocused = ref<boolean | number>(false);
+const options = ["DOUBLE_WORD", "DOUBLE_LETTER", "TRIPLE_WORD", "TRIPLE_LETTER"]
+const letterFocused = ref<number>(-1);
 const letters = ref<string[]>(['a', 'b', 'c', 'd', 'e']);
+const placed = ref<Map<number, string>>(new Map());
 
 function cellClicked(index: number) {
 	console.log(index)
-	if (letterFocused.value === false) {
+	if (letterFocused.value === -1) {
 		// ignore...
 	} else {
-		if (grid.value[index] != DEFAULT_FILLER) {
-			grid.value[index] = letters.value[letterFocused.value];
+		if (grid.value[index] == DEFAULT_FILLER) {
+			var temp = letters.value[letterFocused.value];
+			if (temp !== undefined) {
+				console.log("placed")
+				placed.value.set(index, temp);
+			}
+		} else {
+			console.log("not placed")
 		}
 
 	}
@@ -58,15 +66,17 @@ function cellClicked(index: number) {
 	<div class="board">
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
-				<ModifierCell :modifier="value as modifiers" v-if="value != DEFAULT_FILLER" />
-				<GridCell :cell-value="value" :score="''" v-else />
+				<ModifierCell :modifier="value as modifiers" v-if="options.includes(value)" />
+				<GridCell :cell-value="placed.get(i) || value" :score="''" :is-draft="placed.get(i) !== undefined"
+					v-else />
 			</div>
 
 		</div>
 	</div>
 
 	<div class="tileset">
-		<div class="tileset__tile" v-for="letter in letters">
+		<div class="tileset__tile" v-for="(letter, ind) in letters" @click="letterFocused = ind"
+			:class="{ 'tileset__tile--selected': letterFocused == ind }">
 			{{ letter }}
 		</div>
 	</div>
@@ -94,10 +104,26 @@ function cellClicked(index: number) {
 .tileset {
 	display: flex;
 	gap: 1rem;
+	justify-content: center;
+	align-items: center;
+	margin-top: 1rem;
 }
 
 .tileset__tile {
-	background-color: var(--);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--tile-background-colour);
+	color: var(--tile-text-colour);
+	padding: 1.5rem;
+	height: 2rem;
+	width: 2rem;
+	font-weight: bold;
+	font-size: larger;
+	border-radius: 8px;
 }
 
+.tileset__tile--selected {
+	border: 2px solid black;
+}
 </style>
