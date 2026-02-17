@@ -1,7 +1,5 @@
 from pathlib import Path
 import json
-import requests
-import twl
 from modules.database.database import get_session
 from sqlalchemy import text
 import asyncio
@@ -157,7 +155,6 @@ class Scrabble:
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
-		print("NEW ONE")
 		tempPlaced = []
 		for i in range(len(word)):
 			if [x,y] not in preExisting:
@@ -169,7 +166,7 @@ class Scrabble:
 				print(preExisting)
 				# TODO: check if there is a word that works otherwise raise an issue.
 				print("cell has already been taken!")
-				for x, y in tempPlaced:
+				for [x, y], letter in tempPlaced:
 					self.game[y][x] = defaultFiller
 				return
 			else:
@@ -177,13 +174,13 @@ class Scrabble:
 				if (x, y) not in preExisting:
 					print("temp placed letter: ", word[i])
 					self.game[y][x] = word[i]
-					tempPlaced.append([x, y])
+					tempPlaced.append([[x, y], word[i]])
 				else:
 					if self.get_cell(x,y) == word[i]:
 						print("missed letter: ", word[i])
 					else:
 						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
-						for x, y in tempPlaced:
+						for [x, y], letter in tempPlaced:
 							self.game[y][x] = defaultFiller
 						return
 
@@ -255,15 +252,13 @@ class Scrabble:
 		
 		if self.firstPlaced:
 			if not hasJoiningWord or not isWord: 
-				pass
+				print("removing placed letters")
 				# remove coordinates placed
-				for x, y in tempPlaced:
+				for [x, y], letter in tempPlaced:
 					self.game[y][x] = defaultFiller
-		# for l in wordOrdered:
-		# 	print(l)
-
-		# have to prove that it is connecting some kind of word to make it work.
-
+				return False
+		
+		print(tempPlaced)
 		
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
 		# THIS FUNCTION DOES NOT CONSIDER DOUBLE WORDS / LETTERS ETC.
@@ -301,8 +296,8 @@ class Scrabble:
 			print(f"Word Found: {result}")
 			return result
 
-# scrab = Scrabble([0, 1], arr)
 
+# scrab = Scrabble(arr)
 # scrab.place_word("protege", (7,4), "down")
 # scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
 # scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])

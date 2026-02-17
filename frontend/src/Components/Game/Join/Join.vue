@@ -40,6 +40,13 @@ function leaveGame() {
 		// TODO: alert to say you are not in a game.
 	}
 }
+function startGame() {
+	if (websocket.game) {
+		websocket.send("GAME_START", {})
+	} else {
+		// TODO: alert to say you are not in a game.
+	}
+}
 </script>
 
 
@@ -68,7 +75,7 @@ function leaveGame() {
 	</div>
 
 	<div class="start" v-if="websocket.isLeader()">
-		<button>Start Game</button>
+		<button @click="startGame">Start Game</button>
 	</div>
 </template>
 

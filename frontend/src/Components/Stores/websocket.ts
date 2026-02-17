@@ -169,15 +169,11 @@ class Game implements GAME {
 
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
-	const websocketURL = 'ws://localhost:8000/ws1'
+	const websocketURL = 'ws://localhost:8000/ws'
 	const websocket = ref<WebSocket | null>(null);
 	const game = ref<Game | null>(null);
 	const userStore = useUserStore();
-
 	const readyToSend = ref(false)
-
-
-
 
 	function connect() {
 		if (websocket.value) return
@@ -185,16 +181,29 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 		websocket.value.onopen = async () => {
 			const token = localStorage.getItem("token")
-			websocket.value?.send(generatePacket("IDENTIFY", { token }))
+			// if session_id send resume rather than identify
+			const session_id = localStorage.getItem('session_id')
+
+			if (session_id != null) {
+				websocket.value?.send(generatePacket("RESUME", { session_id: session_id }))
+			} else {
+				websocket.value?.send(generatePacket("IDENTIFY", { token }))
+			}
 			while (true) {
 				// keep sending ping every 30s
-				websocket.value?.send(generatePacket("PING", {}))
-				await new Promise(resolve => setTimeout(resolve, 30000))
+				try {
+					websocket.value?.send(generatePacket("PING", {}))
+					await new Promise(resolve => setTimeout(resolve, 30000))
+				} catch (error) {
+					return
+				}
 			}
 		}
 
 		websocket.value.onclose = () => {
-			console.log("it has closzed")
+			websocket.value = null;
+			connect();
+			console.log("connecting...")
 		}
 
 		websocket.value.onmessage = (event) => {
@@ -202,7 +211,14 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			console.log(data)
 			switch (data.t) {
 				case "IDENTIFY":
+					localStorage.setItem('session_id', data.d.ID)
 					readyToSend.value = true
+					break
+				case "NOT_FOUND":
+					localStorage.removeItem("session_id")
+					const token = localStorage.getItem("token")
+					websocket.value?.send(generatePacket("IDENTIFY", { token }))
+					break
 				case "GAME_UPDATE":
 					if (!game.value && data.d.game) {
 						console.log("[GAME UPDATE] | Initialising first game")
@@ -259,15 +275,12 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			t: type.toUpperCase() as PacketType,
 			d: data
 		}
-
 		return JSON.stringify(packet)
 	}
-
 
 	function send(type: PacketType, data: any) {
 		_send(generatePacket(type, data))
 	}
-
 
 	function isLeader() {
 		if (game.value && userStore.userData) {
@@ -280,9 +293,9 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 	function _send(packet: string) {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
-			// TODO: make this wait until authenticated
 			websocket.value.send(packet)
 		} else {
+			// TODO: make this wait until authenticated 
 			console.log("waiting till websocket is open..")
 			websocket.value?.addEventListener(
 				"open",
@@ -291,103 +304,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			)
 		}
 	}
-
-
-
 	return { websocket, game, connect, isLeader, generatePacket, send }
-
-
 });
-
-// export const xuseWebsocketStore = defineStore("websocket", () => {
-// 	const userStore = useUserStore();
-// 	const websocketURL = 'ws://localhost:8000/ws'
-// 	const sessionID = ref<string | null>(null)
-// 	const websocket = ref<WebSocket | null>(null)
-// 	const game = ref<Game | null>(null)
-// 	let reconnectTimeout: number | null = null
-
-// 	function connect() {
-// 		if (websocket.value) return
-
-// 		websocket.value = new WebSocket(websocketURL)
-
-// 		websocket.value.onopen = () => {
-// 			console.log("WebSocket opened")
-// 			if (sessionID.value !== null) {
-// 				websocket.value?.send(generatePacket("RESUME", { sessionID: sessionID.value, userID: userStore.userData?.userID }));
-// 			} else {
-// 				// identify for first time
-// 				const token = localStorage.getItem("token")
-// 				websocket.value?.send(generatePacket("IDENTIFY", { token }))
-// 			}
-
-// 		}
-
-// 		websocket.value.onmessage = (event) => {
-// 			const data: WebsocketPacket = JSON.parse(event.data)
-// 			console.log(data)
-// 			console.log(data.t == "GAME_UPDATE")
-// 			switch (data.t) {
-// 				// case "NOT_FOUND":
-// 				// 	const token = localStorage.getItem("token")
-// 				// 	websocket.value?.send(generatePacket("IDENTIFY", { token }))
-// 				// 	break
-// 				case "GAME_UPDATE":
-// 					console.log("game update")
-// 					break
-// 				case "PLAYER_JOIN":
-// 					if (!game.value && data.d.game) {
-// 						game.value = new Game(data.d.gameID, data.d.game)
-// 					} else {
-// 						if (game.value?.players.includes(data.d.user)) return
-// 						console.log("appending new player")
-// 						console.log(data.d.user)
-
-// 						game.value?.getPlayer(data.d.user.userID)
-// 					}
-// 					break
-// 				case "PLAYER_LEAVE":
-// 					game.value?.removePlayer(data.d.user)
-// 					break
-// 				case "IDENTIFY":
-// 					sessionID.value = data.d.ID
-// 					break
-// 			}
-// 		}
-
-// 		websocket.value.onclose = (event) => {
-// 			console.log("WebSocket closed, retrying in 1s", event)
-// 			websocket.value = null
-// 			if (reconnectTimeout) clearTimeout(reconnectTimeout)
-// 			reconnectTimeout = window.setTimeout(connect, 1000)
-// 		}
-// 	}
-
-// 	function disconnect() {
-// 		if (websocket.value?.readyState === WebSocket.OPEN) {
-// 			websocket.value.send(generatePacket("DISCONNECT", {}))
-// 			websocket.value.close()
-// 		}
-// 	}
-
-// 	function send(packet: string) {
-// 		if (websocket.value?.readyState === WebSocket.OPEN) {
-// 			websocket.value.send(packet)
-// 		} else {
-// 			websocket.value?.addEventListener(
-// 				"open",
-// 				() => websocket.value?.send(packet),
-// 				{ once: true }
-// 			)
-// 		}
-// 	}
-
-// 	function join(code: string) {
-// 		send(generatePacket("PLAYER_JOIN", { code }))
-// 	}
-
-// 	return { websocket, game, connect, disconnect, join, sessionID }
-// })
 
 export default useWebsocketStore;

@@ -88,6 +88,19 @@ class WebsocketManager:
 			else:
 				print(f"Unable to send message to {userID} | Message: {message}")
 
+	async def resume(self, websocket: WebSocket, session_id: str):
+		options = [key for key, val in self.connections.items() if val['session_id'] == session_id]
+
+		if not options:
+			await self.send_message(websocket, json.dumps(packets.authentication.not_found()))
+			return False
+
+		userID = options[0]
+		self.connections[userID]['websocket'] = websocket
+		await self.send_message(websocket, json.dumps(packets.authentication.identify(session_id)))
+		return userID
+
+
 	# async def broadcast(self, message, userID: Optional[int]=None):
 	# 	origMessage = message
 	# 	if type(message) == dict:
@@ -115,17 +128,9 @@ class WebsocketManager:
 				# incase websocket already closing.
 				userData = self.connections[userID]
 				if userData['game'] is not None:
-					print("tyhis will be true")
-					# echo to game members of player leave
-					async for session in get_session():
-						print("we are here")
-						resp = await session.execute(select(User).where(User.userID == userID))
-						# they will exist.
-						user = resp.scalar_one()
-						
-						await manager.broadcast_specific(packets.start.leave_game(gameID=userData['game'], user=UserFetch.model_validate(user).model_dump(mode="json")), [x.userID for x in self.games[userData['game']].players if x.userID != userID])
-					
+					await manager.broadcast_specific(packets.start.leave_game(gameID=userData['game'], user=userData['info'].model_dump(mode="json")), [x.userID for x in self.games[userData['game']].players if x.userID != userID])					
 					self.games[userData['game']].remove_player(userID)
+
 				await asyncio.sleep(3)
 				await self.connections[userID]["websocket"].close()
 				self.archive[userID] = self.connections[userID]
