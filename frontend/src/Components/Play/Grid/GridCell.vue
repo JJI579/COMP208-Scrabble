@@ -6,32 +6,38 @@ type potential = {
 	score: number
 }
 
-
 type websocketReturn = {
 	board: Map<string, potential>
 	players: Map<string, string>
 }
 
 const props = defineProps({
-	gridData: {
+	cellValue: {
+		type: String,
+		required: true
+	},
+	score: {
+		type: String,
 		required: true
 	}
 })
+
+
 </script>
 
 
 
 <template>
 	<div class="cell">
-		<p class="letter">J</p>
-		<p class="score">8</p>
+		<p class="letter">{{ cellValue }}</p>
+		<p class="score">{{ score }}</p>
 	</div>
-
 </template>
 
 
 <style lang="css" scoped>
 .cell {
+	user-select: none;
 	background-color: black;
 	aspect-ratio: 1/1;
 	border: 2px solid var(--scrabble-board);
@@ -41,6 +47,7 @@ const props = defineProps({
 	width: 100%;
 	position: relative;
 	/* border-radius: 8px; */
+
 }
 
 .letter {

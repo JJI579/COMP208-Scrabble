@@ -18,5 +18,12 @@ type SelfReturn = UserReturn & {
 	friends: UserReturn[];
 }
 
-export type { LoginReturn, UserReturn, SelfReturn };
+type modifiers =
+	"DOUBLE_WORD" |
+	"TRIPLE_WORD" |
+	"DOUBLE_LETTER" |
+	"TRIPLE_LETTER"
+
+
+export type { LoginReturn, UserReturn, SelfReturn, modifiers };
 export default debug;
