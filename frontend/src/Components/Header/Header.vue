@@ -13,8 +13,7 @@ function toggleMenu() {
 
 
 function profileClicked() {
-	/* in future go to profile page if signed 
-	in or go to login page if not signed in */
+	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
 	console.log("pfp button clicked");
 }
 
@@ -43,7 +42,7 @@ function profileClicked() {
 					<div class="user">
 
 						<!-- TODO: eventually add functionality for custom pfps etc..-->
-						<img :src="userStore.profilePicture || '/profile.png'" alt="User Profile Picture" />
+						<img :src="userStore.userData?.profilePicture || '/profile.png'" alt="User Profile Picture" />
 					</div>
 				</button>
 			</div>
@@ -165,7 +164,8 @@ function profileClicked() {
 
 .menu__container {
 	height: 100%;
-	width: 25%;
+	padding-inline: 2rem;
+	padding-right: 3.5rem;
 	background-color: var(--clr-surface-a10);
 	position: absolute;
 	top: 0;
@@ -179,7 +179,7 @@ function profileClicked() {
 }
 
 .menu {
-	margin: 1rem;
+	margin-inline: 0;
 	margin-block: 2rem;
 	display: flex;
 	flex-direction: column;

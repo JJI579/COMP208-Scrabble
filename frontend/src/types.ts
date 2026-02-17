@@ -12,6 +12,7 @@ type UserReturn = {
 	userID: string
 	userName: string
 	userCreatedAt: string
+	profilePicture: string | undefined
 }
 
 type SelfReturn = UserReturn & {
