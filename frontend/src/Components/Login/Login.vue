@@ -159,7 +159,7 @@ async function handleSubmit() {
 	font-weight: 600;
 	font-size: 1rem;
 	padding: 0.75em;
-	transition: 0.2s;
+	transition: 0.2s ease all;
 }
 
 .submit:hover {
