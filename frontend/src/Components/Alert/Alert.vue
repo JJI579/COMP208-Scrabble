@@ -7,8 +7,15 @@ const alertStore = useAlertStore();
 
 
 <template>
-    <div class="alert" :class="{'alert--active': alertStore.isActive}">
-        {{ alertStore.currentAlert?.text }}
+    <div
+        class="alert"
+        :class="[
+            { 'alert--active': alertStore.isActive },
+            alertStore.currentAlert?.type && `alert--${alertStore.currentAlert.type}`
+        ]"
+    >
+        <div class="alert__accent"></div>
+        <span>{{ alertStore.currentAlert?.text }}</span>
     </div>
 </template>
 
@@ -16,21 +23,61 @@ const alertStore = useAlertStore();
 <style lang='css' scoped>
     .alert {
         position: fixed;
-        right: -35%;
-        top: 5%;
+        right: -40%;
+        top: 10%;
         z-index: 100000000;
-        height: 3.5rem;
-        min-width: 30%;
+        height: auto;
+        min-width: 280px;
+        max-width: 380px;
+        gap: .75rem;
         line-height: 1.5em;
-        background-color: blue;
-        transition: 0.2s ease-in all;
         display: flex;
         align-items: center;
-        padding-left: 1rem;
-        border-radius: 10px;
+        padding: .75rem 1rem;
+        border-radius: 14px;
+        font-size: .9rem;
+        font-weight: 500;
+        letter-spacing: .2px;
+        color: white;
+        background: rgba(40, 40, 60, 0.85);
+        backdrop-filter: blur(12px);
+        box-shadow: 
+            0 10px 25px rgba(0, 0, 0, .35),
+            inset 0 0 0 1px rgba(255, 255, 255, .08);
+        transform: translateX(20px);
+        opacity: 0;
+        transition:
+            right 0.35s cubic-bezier(.22,1,.36,1),
+            transform 0.35s cubic-bezier(.22,1,.36,1),
+            opacity 0.25s ease;
     }
 
     .alert--active {
-        right: 10%;
+        right: 2rem;
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .alert__accent {
+        width: 6px;
+        height: 70%;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #60a5fa, #3b82f6);
+    }
+
+    .alert--success .alert__accent {
+        background: linear-gradient(180deg,#4ade80,#22c55e);
+    }
+
+    .alert--error .alert__accent {
+        background: linear-gradient(180deg,#f87171,#ef4444);
+    }
+
+    .alert--warning .alert__accent {
+        background: linear-gradient(180deg,#facc15,#eab308);
+    }
+    
+    .alert--info .alert__accent {
+        background: linear-gradient(180deg,#60a5fa,#3b82f6);
     }
 </style>
