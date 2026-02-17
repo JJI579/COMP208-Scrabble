@@ -15,13 +15,11 @@ onMounted(() => {
 })
 
 const alertStore = useAlertStore();
-var x = 0;
 function al() {
 	alertStore.alert({
-		text: "test " + x,
+		text: "test",
 		type: "success"
 	})
-	x++;
 }
 
 </script>
