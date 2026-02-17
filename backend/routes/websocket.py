@@ -39,7 +39,24 @@ class GameHandler:
 
 	@staticmethod
 	async def game_start(data: dict, websocket: WebSocket):
-		pass
+		data = data['d']
+		if 'code' not in data:
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['code'])))
+			return
+		
+		game = manager.fetch_game(data['code'])
+		if type(game) == bool:
+			print("Game does not exist")
+			# TODO: send error message
+			return False
+		
+		if game.leader != websocket.user_id: # type: ignore	
+			# TODO: change the packet send so only the game leader can start the game.
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['code'])))
+			return
+
+		game.start_game()
+		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
 
 
 	@staticmethod
@@ -130,11 +147,13 @@ class GameHandler:
 	
 		gameData = manager.fetch_game(gameCode)
 		if type(gameData) == bool:
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(gameCode)))
 			print("game doesnt exist")
 			return
 		
 		if gameData.hasStarted:
 			print("This is a little problem...")
+			await manager.send_message(websocket, json.dumps(packets.error("Game has already started...")))
 			return
 		
 		# check if user is in the game
@@ -228,7 +247,8 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						await GameHandler.group_join(data, websocket)
 						continue
 					case "GAME_START":
-						break
+						await GameHandler.game_start(data, websocket)
+						continue
 				
 			else:
 				return

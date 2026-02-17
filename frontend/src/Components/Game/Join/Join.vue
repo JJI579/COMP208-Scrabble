@@ -42,7 +42,7 @@ function leaveGame() {
 }
 function startGame() {
 	if (websocket.game) {
-		websocket.send("GAME_START", {})
+		websocket.send("GAME_START", {code: websocket.game.getId()})
 	} else {
 		// TODO: alert to say you are not in a game.
 	}

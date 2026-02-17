@@ -259,7 +259,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					break
 				case "PLAYER_LEAVE":
 					break
-
 				case "PLAYER_DISCONNECT":
 					break
 				case "GROUP_JOIN":
@@ -270,10 +269,22 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					} else {
 						game.value.setGroups(data.d.groups);
 					}
+					break;
 				case "CONFIRM_LEAVE":
 					game.value = null;
 					router.replace({ name: "dashboard" })
 					break
+				case "GAME_START":
+					// move user to game page
+					if (data.d.gameID != game.value?.getId()) {
+						console.log("Game ID mismatch")
+						return
+					} else {
+						router.push({name: "play"})
+					}
+					break
+
+				
 			}
 		}
 	}
