@@ -124,8 +124,6 @@ function cellClicked(index: number) {
 }
 
 .cells {
-	/* background-color: pink; */
-
 	display: grid;
 	grid-template-columns: repeat(15, 1fr);
 	gap: 0px;
