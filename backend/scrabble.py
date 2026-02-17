@@ -77,17 +77,16 @@ class Bot(Player):
 					
 					#save board incase we need to revert
 					temp = [row.copy() for row in scrabble.game]
-					scrabble.place_word(word, (x,y), direction, preExisting=preExisting)
+
 					# coords for calculating points
-					word_coordinates = [[x+i,y] if direction == "right" else [x,y+i] for i in range(len(word))]
-					points = scrabble.calculate_points([[coord, word[i]] for i, coord in enumerate(word_coordinates)], [])
+					points = scrabble.draft_place_word(word, (x,y), direction, blanks=[], preExisting=preExisting, draft=True)
 					if points > best_score:
 						best_score = points
 						best_move = (word, (x,y), direction, preExisting)
 					# restore
 					scrabble.game = temp
 		return best_move
-	
+	# check bots placed tiles...
 	''' TODO: get candidate cells, get possible words, find matchingn letters
 				difficulty levels?
 					-> considers intersecting words and considers tile multipliers..
