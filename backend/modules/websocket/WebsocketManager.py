@@ -19,6 +19,7 @@ class Connection(TypedDict):
 	info: UserFetch
 	game: Optional[str]
 	session_id: str
+	disconnected: bool
 # {
 # 	"websocket": websocket,
 # 	"info": userInfo,
@@ -90,36 +91,13 @@ class WebsocketManager:
 
 	async def resume(self, websocket: WebSocket, session_id: str):
 		options = [key for key, val in self.connections.items() if val['session_id'] == session_id]
-
 		if not options:
 			await self.send_message(websocket, json.dumps(packets.authentication.not_found()))
 			return False
-
 		userID = options[0]
 		self.connections[userID]['websocket'] = websocket
 		await self.send_message(websocket, json.dumps(packets.authentication.identify(session_id)))
 		return userID
-
-
-	# async def broadcast(self, message, userID: Optional[int]=None):
-	# 	origMessage = message
-	# 	if type(message) == dict:
-	# 		message = json.dumps(message)
-	# 	if userID is not None:
-
-	# 		# NEED TO MAKE THIS PERSONALISED PER CONNECTION
-	# 		if userID in self.connections:
-	# 			for toSendID in self.connections[userID]['friends']:
-	# 				if toSendID in self.connections:
-	# 					await self.send_message(self.connections[toSendID]['websocket'], message)
-	# 		if origMessage.get('t') == 'PHOTO_UPDATE':
-	# 			if userID in self.connections:
-	# 				await self.send_message(self.connections[userID]['websocket'], message)
-	# 		else:
-	# 			return
-	# 	else:
-	# 		for connection in self.connections:
-	# 			await self.send_message(self.connections[connection]['websocket'], message)
 
 	async def remove(self, userID: int):
 		
@@ -156,6 +134,7 @@ class WebsocketManager:
 					"info": UserFetch.model_validate(userInfo),
 					"game": None,
 					"session_id": sessionID,
+					"disconnected": False
 				}
 				return userID
 	
