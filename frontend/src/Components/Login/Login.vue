@@ -40,12 +40,12 @@ async function login() {
 	const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
 	// Remember me logic
 	if (rememberMe.value) {
-	localStorage.setItem("token", token)
-	localStorage.setItem("refresh_token", refresh_token)
+		localStorage.setItem("token", token)
+		localStorage.setItem("refresh_token", refresh_token)
 	} else {
-	sessionStorage.setItem("token", token)
-	sessionStorage.setItem("refresh_token", refresh_token)
-	
+		sessionStorage.setItem("token", token)
+		sessionStorage.setItem("refresh_token", refresh_token)
+
 	}
 	router.push({ name: "dashboard" })
 	// This should work as all tokens have been pushed etc
@@ -121,71 +121,68 @@ async function handleSubmit() {
 
 <style lang="css" scoped>
 .form {
-width: 100%;
-display: flex;
-align-items: center;
-flex-direction: column;
-gap: 1rem;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	gap: 1rem;
 }
 
 .title {
-display: none;
+	display: none;
 }
 
 .option {
-width: 100%;
+	width: 100%;
 }
 
 .text {
-margin-right: auto;
-padding: .4rem .6rem;
-border-radius: 8px;
-color: #9aa4ff;
-cursor: pointer;
-transition: 0.2s;
+	margin-right: auto;
+	padding: .4rem .6rem;
+	border-radius: 8px;
+	color: #9aa4ff;
+	cursor: pointer;
+	transition: 0.2s;
 }
 
 .text:hover {
-background: rgba(255,255,255,0.1);
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .submit {
-margin-top: 1rem;
-width: 100%;
-border-radius: 12px;
-background: linear-gradient(135deg,#5865f2,#7b86ff);
-color: white;
-cursor: pointer;
-font-weight: 600;
-font-size: 1rem;
-padding: 0.75em;
-transition: 0.2s;
+	margin-top: 1rem;
+	width: 100%;
+	border-radius: 12px;
+	background: linear-gradient(135deg, #5865f2, #7b86ff);
+	color: white;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 1rem;
+	padding: 0.75em;
+	transition: 0.2s;
 }
 
 .submit:hover {
-transform: translateY(-2px);
-box-shadow: 0 8px 20px rgba(88,101,242,0.4);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(88, 101, 242, 0.4);
 }
 
 .error {
-width: 100%;
-background: rgba(255,0,0,0.15);
-border: 1px solid rgba(255,0,0,0.3);
-color: #ffb3b3;
-padding: .6rem;
-border-radius: 8px;
+	width: 100%;
+	background: rgba(255, 0, 0, 0.15);
+	border: 1px solid rgba(255, 0, 0, 0.3);
+	color: #ffb3b3;
+	padding: .6rem;
+	border-radius: 8px;
 }
 
 .remember {
-width: 100%;
-display: flex;
-align-items:center;
-gap: .5rem;
-color: #9aa4ff;
-font-size: 0.9rem;
-margin-top: .5rem;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	color: #9aa4ff;
+	font-size: 0.9rem;
+	margin-top: .5rem;
 }
-
-
-
 </style>
