@@ -6,6 +6,7 @@ import api from '@/api';
 import type { LoginReturn } from '@/types';
 import { useRoute, useRouter } from 'vue-router';
 import useUserStore from '../Stores/user';
+import Logger from '@/logging/Logger';
 
 const usernameModel = ref('');
 const passwordModel = ref('');
@@ -25,8 +26,9 @@ onMounted(() => {
 	}
 })
 
+
 async function login() {
-	console.log("Tried")
+	const loginLogger = new Logger("login")	
 	if (usernameModel.value.length == 0 || passwordModel.value.length == 0) return triedSubmit.value = true;
 	const data = {
 		username: usernameModel.value,
@@ -34,18 +36,22 @@ async function login() {
 	}
 
 	const resp = await api.post('/auth/login', data);
-	console.log(resp)
+	loginLogger.info("Login successful")
 	const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
 	localStorage.setItem("refresh_token", refresh_token)
 	localStorage.setItem("token", token)
+	loginLogger.info("")
 	router.push({ name: "dashboard" })
+	loginLogger.info("Taken to dashboard")
 	// This should work as all tokens have been pushed etc
 	setTimeout(() => {
 		userStore.login()
 	}, 500);
 }
 
+
 async function register() {
+	const registerLogger = new Logger("register")
 	if (usernameModel.value.length == 0 || passwordModel.value.length == 0) return triedSubmit.value = true;
 	const data = {
 		username: usernameModel.value,
@@ -53,6 +59,7 @@ async function register() {
 	}
 	try {
 		const resp = await api.post('/auth/register', data);
+		registerLogger.info("Register successful | " + resp)
 		return await login();
 	} catch (error: any) {
 		const errorData = error.response?.data;
@@ -60,9 +67,10 @@ async function register() {
 			const errorDetail = errorData.detail;
 			if (errorDetail) {
 				errorMessage.value = errorDetail
+				registerLogger.error("Error: " + errorMessage.value)
 			}
 		} else {
-			console.log(error);
+			registerLogger.error("Error: " + error)
 		}
 	}
 }

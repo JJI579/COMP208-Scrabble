@@ -1,7 +1,8 @@
 type LoggerType = 
-    "info" |
+    "info"  |
     "debug" |
-    "error"
+    "error" |
+    "warn"
 
 class Logger {
     formatString: String = "";
@@ -24,6 +25,10 @@ class Logger {
 
     error(message: string) {
         console.log(this.format("error") + message)
+    }
+    
+    warn(message: string) {
+        console.log(this.format("warn") + message)
     }
 }
 
