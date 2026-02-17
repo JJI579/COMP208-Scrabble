@@ -120,8 +120,8 @@ function profileClicked() {
 	width: 24px;
 	height: 24px;
 	font-size: 0.8rem;
-	background: #f4e2b8;
-	color: #2c2c2c;
+	background-color: var(--tile-background-colour);
+	color: var(--tile-text-colour);
 	font-weight: bold;
 	border-radius: 4px;
 	display: flex;

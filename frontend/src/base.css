@@ -1,4 +1,9 @@
 :root {
+
+	/* Scrabble Colours */
+	--tile-background-colour: #f4e2b8;
+	--tile-text-colour: #2c2c2c;
+
 	/** Base colors */
 	--clr-dark-a0: #000000;
 	--clr-light-a0: #ffffff;
