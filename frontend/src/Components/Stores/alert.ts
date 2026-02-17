@@ -4,7 +4,8 @@ import { ref } from "vue";
 
 type AlertData = {
     text: string,
-    type: string
+    type: string,
+    persistent?: boolean
 }
 
 const alertLog = new Logger("alert");
@@ -38,14 +39,23 @@ const useAlertStore = defineStore("alert", () => {
             }
             isActive.value = true
             alertLog.info("Activated alert")
-            setTimeout(() => {
-                isActive.value = false
-                alert(null)
-            }, ALERT_DURATION);
+            if(!currentAlert.value?.persistent) {
+                setTimeout(() => {
+                    isActive.value = false
+                    alert(null)
+                }, ALERT_DURATION);
+            }
         }
     }
+    
+    function dismiss(){
+        isActive.value = false;
+        setTimeout(() => {
+            alert(null)
+        }, 200);
+    }
 
-	return { isActive, alert, currentAlert };
+	return { isActive, alert, currentAlert, dismiss };
 })
 
 alertLog.debug("Alert store initialized");

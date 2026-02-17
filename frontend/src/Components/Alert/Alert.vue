@@ -14,8 +14,12 @@ const alertStore = useAlertStore();
             alertStore.currentAlert?.type && `alert--${alertStore.currentAlert.type}`
         ]"
     >
+        <i class="pi pi-bell alert__icon"></i>
         <div class="alert__accent"></div>
-        <span>{{ alertStore.currentAlert?.text }}</span>
+        <span class="alert__text">
+            {{ alertStore.currentAlert?.text }}
+        </span>
+        <i class="pi pi-times alert__close" @click.stop="alertStore.dismiss()"></i>
     </div>
 </template>
 
@@ -50,6 +54,22 @@ const alertStore = useAlertStore();
             right 0.35s cubic-bezier(.22,1,.36,1),
             transform 0.35s cubic-bezier(.22,1,.36,1),
             opacity 0.25s ease;
+    }
+
+    .alert__icon {
+        font-size: 1.25rem;
+        opacity: .9;
+    }
+
+    .alert__text {
+        flex: 1;
+    }
+
+    .alert__close {
+        font-size: .9rem;
+        opacity: .6;
+        cursor: pointer;
+        transition: 0.2s ease;
     }
 
     .alert--active {
