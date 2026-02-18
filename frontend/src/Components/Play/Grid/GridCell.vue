@@ -33,10 +33,7 @@ const score = computed(() => {
 
 // center highlight
 const bgColour = computed(() => {
-	if (props.x === 7 && props.y === 7) {
-		return '#FFD700';
-	}
-	return '#8ED6FF';
+	return '#37a8bd';
 })
 
 </script>
@@ -53,6 +50,14 @@ const bgColour = computed(() => {
 
 
 <style lang="css" scoped>
+.center-cell {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 28px;
+	color: white;
+}
+
 .cell {
 	user-select: none;
 	aspect-ratio: 1/1;
@@ -68,7 +73,13 @@ const bgColour = computed(() => {
 }
 
 .scrabble--placed {
-	border-radius: 8px;
+background:linear-gradient(145deg,#f3d28a,#d1a652);
+border-radius:6px;
+box-shadow:
+	inset 0 2px 2px rgba(255,255,255,0.4),
+	inset 0 -2px 3px rgba(0,0,0,0.3),
+	0 3px 5px rgba(0,0,0,0.4);
+border:1px solid #a87e3a;
 }
 
 .cell--draft {
@@ -93,4 +104,5 @@ const bgColour = computed(() => {
 	font-size: 12px;
 	margin: 0;
 }
+
 </style>

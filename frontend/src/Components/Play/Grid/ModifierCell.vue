@@ -19,6 +19,8 @@ const convertedLabel = computed(() => {
 			return 'Double Word';
 		case 'TRIPLE_WORD':
 			return 'Triple Word';
+		case 'CENTER':
+			return '★';
 		default:
 			return '';
 	}
@@ -27,15 +29,17 @@ const convertedLabel = computed(() => {
 const bgColour = computed(() => {
 	switch (props.modifier) {
 		case 'DOUBLE_LETTER':
-			return '#00008B';
+			return '#242050';
 		case 'TRIPLE_LETTER':
-			return '#FF1493';
+			return '#db005a';
 		case 'DOUBLE_WORD':
-			return '#FFD700';
+			return '#ebc728';
 		case 'TRIPLE_WORD':
-			return '#00A86B';
+			return '#c5d14a';
+		case 'CENTER':
+			return '#f1bc4c';
 		default:
-			return '#8ED6FF';
+			return '#2c8595';
 	}
 })
 
@@ -45,7 +49,10 @@ const bgColour = computed(() => {
 
 <template>
 	<div class="modifier_cell" :style="{ backgroundColor: bgColour }">
-		<p class="letter">{{ convertedLabel }}</p>
+		<p class="letter" :class="{ star: modifier === 'CENTER' }">
+			{{ convertedLabel }}
+		</p>
+
 	</div>
 
 </template>
@@ -81,6 +88,15 @@ const bgColour = computed(() => {
 }
 
 .score {
+	position: absolute;
+	bottom: 2px;
+	right: 2px;
+	font-size: 10px;
+	color: white;
+}
 
+.star {
+	font-size: 24px;
+	color: black;
 }
 </style>
