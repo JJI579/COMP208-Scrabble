@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GridCell from './Grid/GridCell.vue';
 import ModifierCell from './Grid/ModifierCell.vue';
 import type { modifiers } from '@/types';
@@ -37,18 +37,28 @@ onMounted(() => {
 const options = ["DOUBLE_WORD", "DOUBLE_LETTER", "TRIPLE_WORD", "TRIPLE_LETTER"]
 const letterFocused = ref<number>(-1);
 const letters = ref<string[]>(['a', 'b', 'c', 'd', 'e']);
-const placed = ref<Map<number, string>>(new Map());
+const placed = ref<Map<number, [number, string]>>(new Map());
+const placedIndexes = computed(() => {
+	const values = placed.value.values();
+	return Array.from(values).map((value) => value[0]);
+})
+
+const orderPlacement = ref<number[]>([]);
+
 
 function cellClicked(index: number) {
 	console.log(index)
 	if (letterFocused.value === -1) {
 		// ignore...
+	} else if (placedIndexes.value.includes(index)) {
+		letterFocused.value = -1
 	} else {
 		if (grid.value[index] == DEFAULT_FILLER) {
-			var temp = letters.value[letterFocused.value];
-			if (temp !== undefined) {
-				console.log("placed")
-				placed.value.set(index, temp);
+			var letter = letters.value[letterFocused.value];
+			if (letter !== undefined) {
+				placed.value.set(index, [letterFocused.value, letter]);
+				orderPlacement.value.push(index)
+				letterFocused.value = -1
 			}
 		} else {
 			console.log("not placed")
@@ -56,6 +66,38 @@ function cellClicked(index: number) {
 
 	}
 }
+
+function undo() {
+	const last = orderPlacement.value.pop();
+	console.log(last)
+	if (last !== undefined) {
+		const x = placed.value.delete(last);
+	}
+}
+
+function handleKeyboardPress(event: KeyboardEvent) {
+	switch (event.key) {
+		case "1":
+		case "2":
+		case "3":
+		case "4":
+		case "5":
+			letterFocused.value = Number(event.key) - 1
+			break;
+		case "Backspace":
+			event.preventDefault();
+			undo(); 1
+			break;
+	}
+}
+
+onMounted(() => {
+	window.addEventListener("keyup", handleKeyboardPress)
+})
+
+onUnmounted(() => {
+	window.removeEventListener("keyup", handleKeyboardPress)
+});
 </script>
 
 
@@ -72,8 +114,8 @@ function cellClicked(index: number) {
 			<div class="cells">
 				<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
 					<ModifierCell :modifier="value as modifiers" v-if="options.includes(value)" />
-					<GridCell :cell-value="placed.get(i) || value" :score="''" :is-draft="placed.get(i) !== undefined"
-						v-else />
+					<GridCell :cell-value="placed.get(i)?.[1] || value" :score="''"
+						:is-draft="placed.get(i) !== undefined" :x="i % 15" :y="Math.floor(i / 15)" v-else />
 				</div>
 
 			</div>
@@ -87,8 +129,11 @@ function cellClicked(index: number) {
 
 	<div class="tileset">
 		<div class="tileset__tile" v-for="(letter, ind) in letters" @click="letterFocused = ind"
-			:class="{ 'tileset__tile--selected': letterFocused == ind }">
+			:class="{ 'tileset__tile--selected': letterFocused == ind, 'tileset__tile--used': placedIndexes.includes(ind) }">
 			{{ letter }}
+		</div>
+		<div class="tileset__tile" @click="undo()">
+			<i class="pi pi-undo"></i>
 		</div>
 	</div>
 
@@ -155,5 +200,9 @@ function cellClicked(index: number) {
 
 .tileset__tile--selected {
 	border: 2px solid black;
+}
+
+.tileset__tile--used {
+	opacity: 0.5;
 }
 </style>

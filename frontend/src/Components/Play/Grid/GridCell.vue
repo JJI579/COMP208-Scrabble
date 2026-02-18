@@ -23,6 +23,7 @@ const props = defineProps({
 		type: Number,
 		required: true
 	}
+
 })
 
 const score = computed(() => {
@@ -43,42 +44,42 @@ const bgColour = computed(() => {
 
 
 <template>
-	<div class="cell" :class="{ 'cell--draft': isDraft }" :style="{ backgroundColor: bgColour }">
+	<div class="cell" :class="{ 'scrabble--placed': cellValue.length > 1, 'cell--draft': isDraft }"
+		:style="{ backgroundColor: bgColour }">
 		<p class="letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
-    	<p class="score" v-if="cellValue !== '|'">{{ score }}</p>
+		<p class="score" v-if="cellValue !== '|'">{{ score }}</p>
 	</div>
 </template>
 
 
 <style lang="css" scoped>
 .cell {
-user-select: none;
-aspect-ratio: 1/1;
-border: 1px solid white;
-display: flex;
-justify-content: center;
-align-items: center;
-position: relative;
-font-weight: bold;
-font-size: 20px;
-color: #000; 
+	user-select: none;
+	aspect-ratio: 1/1;
+	border: 1px solid white;
+	position: relative;
+	font-weight: bold;
+	font-size: 20px;
+	color: #000;
 }
 
 .cell:hover {
-  transform: scale(1.05);
+	transform: scale(1.05);
+}
+
+.scrabble--placed {
+	border-radius: 8px;
 }
 
 .cell--draft {
-	opacity: .5;
+	background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
 .letter {
-	font-size: 24px;
-	max-width: 90%;
+	margin: 0;
 	max-height: 90%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	max-width: 90%;
+	font-size: 24px;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -86,9 +87,10 @@ color: #000;
 }
 
 .score {
-  position: absolute;
-  right: 4px;
-  bottom: 2px;
-  font-size: 12px;
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	font-size: 12px;
+	margin: 0;
 }
 </style>
