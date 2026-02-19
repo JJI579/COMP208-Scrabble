@@ -22,19 +22,18 @@ import Login from "./Login.vue"
 
 <style scoped>
 .page {
-height: 100vh;
-width: 100vw;
-background-image: url('/scrabble-bg.png');
-background-size: 300px;
-background-repeat: repeat;
-background-position: center;
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-position: fixed;
-inset: 0;
-z-index: 0;
+  height: 100vh;
+  width: 100vw;
+  background-image: url('/scrabble-bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
 }
 
 .overlay {
