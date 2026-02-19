@@ -48,7 +48,8 @@ type modifiers =
 	"DOUBLE_WORD" |
 	"TRIPLE_WORD" |
 	"DOUBLE_LETTER" |
-	"TRIPLE_LETTER"
+	"TRIPLE_LETTER" |
+	"CENTER"
 
 const pointsMap: Record<string, number> = {
 	"A": 1,
