@@ -96,7 +96,7 @@ const placedIndexes = computed(() => {
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
 	<div class="content">
-		<div class="layout">
+		<div class="content__flex">
 			<div class="player__column left">
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
@@ -139,19 +139,15 @@ const placedIndexes = computed(() => {
 
 <style lang="css" scoped>
 .content {
-	min-height: 80vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-
 }
 
-.layout {
-	display: grid;
-	grid-template-columns: auto auto auto;
-	justify-content: center;
-	align-items: center;
+.content__flex {
+	display: flex;
 	gap: 2rem;
+	align-items: center;
 }
 
 .player__column {
