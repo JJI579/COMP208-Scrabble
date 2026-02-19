@@ -73,13 +73,13 @@ const bgColour = computed(() => {
 }
 
 .scrabble--placed {
-background:linear-gradient(145deg,#f3d28a,#d1a652);
-border-radius:6px;
-box-shadow:
-	inset 0 2px 2px rgba(255,255,255,0.4),
-	inset 0 -2px 3px rgba(0,0,0,0.3),
-	0 3px 5px rgba(0,0,0,0.4);
-border:1px solid #a87e3a;
+	background: linear-gradient(145deg, #f3d28a, #d1a652);
+	border-radius: 6px;
+	box-shadow:
+		inset 0 2px 2px rgba(255, 255, 255, 0.4),
+		inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+		0 3px 5px rgba(0, 0, 0, 0.4);
+	border: 1px solid #a87e3a;
 }
 
 .cell--draft {
@@ -104,5 +104,4 @@ border:1px solid #a87e3a;
 	font-size: 12px;
 	margin: 0;
 }
-
 </style>

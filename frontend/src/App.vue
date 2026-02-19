@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { RouterView } from 'vue-router';
+import { onMounted } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 import Header from './Components/Header/Header.vue';
 import useUserStore from './Components/Stores/user';
 import useWebsocketStore from './Components/Stores/websocket';
+const route = useRoute();
 
 const websocket = useWebsocketStore()
 onMounted(() => {
@@ -20,7 +21,7 @@ onMounted(() => {
 
 <template>
 	<Header />
-	<div class="content">
+	<div class="content" :class="{ 'content--playing': route.name == 'play' }">
 		<RouterView />
 	</div>
 </template>
@@ -31,6 +32,10 @@ onMounted(() => {
 	width: 60%;
 	height: 100%;
 	margin: auto;
+}
+
+.content--playing {
+	width: 100%;
 }
 
 @media (max-width: 999px) {
@@ -44,7 +49,6 @@ onMounted(() => {
 		width: 100%;
 	}
 }
-
 </style>
 
 <style>

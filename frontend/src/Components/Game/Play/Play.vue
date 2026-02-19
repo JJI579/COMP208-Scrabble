@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-
 import type { modifiers } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
@@ -96,37 +95,40 @@ const placedIndexes = computed(() => {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-	<div class="game-wrapper">
+	<div class="content">
 		<div class="layout">
-			<div class="player-column left">
+			<div class="player__column left">
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 			</div>
-			<div class="center-area">
+			<div class="center__wrapper">
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
 					@cell-clicked="letterFocused = -1" :placed="placed" />
 				<div class="rack">
-					<div class="tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
+					<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
 						:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
-						{{ letter }}
+						{{ letter.toUpperCase() }}
 					</div>
 				</div>
 				<div class="actions">
-					<button @click="undo()">Undo</button>
-					<button>Swap</button>
-					<button>Submit</button>
-					<button @click="chatOpen = !chatOpen">Chat</button>
-					<button>Forfeit</button>
+					<button class="action" @click="undo()">Undo</button>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }">Swap</button>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }">Submit</button>
+					<button class="action" @click="chatOpen = !chatOpen">Chat</button>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }">Forfeit</button>
 				</div>
 
 			</div>
-			<div class="player-column right">
+			<div class="player__column right">
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 			</div>
-			<div class="chat-panel" :class="{ open: chatOpen }">
-				<button class="close" @click="chatOpen = false">✕</button>
+			<div class="chat__panel" :class="{ open: chatOpen }">
+				<button class="panel__close" @click="chatOpen = false">✕</button>
 				<p>Chat here</p>
 			</div>
 		</div>
@@ -136,11 +138,12 @@ const placedIndexes = computed(() => {
 
 
 <style lang="css" scoped>
-.game-wrapper {
+.content {
 	min-height: 80vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+
 }
 
 .layout {
@@ -151,7 +154,7 @@ const placedIndexes = computed(() => {
 	gap: 2rem;
 }
 
-.player-column {
+.player__column {
 	display: flex;
 	flex-direction: column;
 	gap: 2rem;
@@ -159,7 +162,7 @@ const placedIndexes = computed(() => {
 }
 
 
-.center-area {
+.center__wrapper {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -176,7 +179,7 @@ const placedIndexes = computed(() => {
 	box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.4);
 }
 
-.tile {
+.rack__tile {
 	width: 50px;
 	height: 50px;
 	background: #f1bc4c;
@@ -191,7 +194,7 @@ const placedIndexes = computed(() => {
 	transition: 0.2s;
 }
 
-.tile:hover {
+.rack__tile:hover {
 	transform: translateY(-3px);
 }
 
@@ -208,7 +211,7 @@ const placedIndexes = computed(() => {
 	gap: 1rem;
 }
 
-.actions button {
+.action {
 	padding: 12px 20px;
 	border: none;
 	border-radius: 8px;
@@ -216,9 +219,16 @@ const placedIndexes = computed(() => {
 	font-weight: bold;
 	cursor: pointer;
 	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+	transition: 0.5s ease-in all;
+
 }
 
-.chat-panel {
+.action--disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.chat__panel {
 	position: fixed;
 	right: -320px;
 	top: 0;
@@ -232,11 +242,11 @@ const placedIndexes = computed(() => {
 	box-shadow: -5px 0 15px rgba(0, 0, 0, 0.4);
 }
 
-.chat-panel.open {
+.chat__panel.open {
 	right: 0;
 }
 
-.close {
+.panel__close {
 	background: none;
 	border: none;
 	color: white;
