@@ -71,7 +71,9 @@ function handleKeyboardPress(event: KeyboardEvent) {
 }
 
 function handleTileClick(index: number) {
-	console.log(index);
+	if (placedIndexes.value.includes(index)) {
+		return
+	}
 	letterFocused.value = index;
 }
 onMounted(() => {
@@ -80,6 +82,11 @@ onMounted(() => {
 
 onUnmounted(() => {
 	window.removeEventListener("keyup", handleKeyboardPress)
+});
+
+const placedIndexes = computed(() => {
+	const values = placed.value.values();
+	return Array.from(values).map((value) => value[0]);
 });
 </script>
 
@@ -101,7 +108,7 @@ onUnmounted(() => {
 					@cell-clicked="letterFocused = -1" :placed="placed" />
 				<div class="rack">
 					<div class="tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
-						:class="{ 'tile--selected': letterFocused == ind }">
+						:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
 						{{ letter }}
 					</div>
 				</div>
@@ -190,6 +197,10 @@ onUnmounted(() => {
 
 .tile--selected {
 	transform: translateY(-3px);
+}
+
+.tile--used {
+	opacity: 0.5;
 }
 
 .actions {

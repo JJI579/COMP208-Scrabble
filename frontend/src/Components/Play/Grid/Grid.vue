@@ -32,20 +32,21 @@ const props = defineProps({
 
 
 function cellClicked(index: number) {
+	console.log(index)
 	if (letterFocused.value === -1) {
 		// ignore...
 	} else if (placedIndexes.value.includes(letterFocused.value)) {
 		letterFocused.value = -1
 	} else {
-		if (grid.value[index] == props.filler) {
+		if (grid.value[index] == props.filler || OPTIONS.includes(grid.value[index] || "")) {
 			var letter = letters.value[letterFocused.value];
 			if (letter !== undefined) {
 				placed.value.set(index, [letterFocused.value, letter]);
-				orderPlacement.value.push(index);
+				orderPlacement.value.push(index)
 				emit('cellClicked')
 			}
 		} else {
-			console.log("not placed")
+
 		}
 
 	}
@@ -59,7 +60,7 @@ function cellClicked(index: number) {
 	<div class="board-frame" :class="{ active: activePlayer === 1 }">
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
-				<ModifierCell :modifier="value as modifiers" v-if="OPTIONS.includes(value)" />
+				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />
 				<GridCell :cell-value="placed.get(i)?.[1] || value" :score="''" :is-draft="placed.get(i) !== undefined"
 					:x="i % 15" :y="Math.floor(i / 15)" v-else />
 			</div>
