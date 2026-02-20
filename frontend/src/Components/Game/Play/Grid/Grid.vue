@@ -93,6 +93,7 @@ function cellClicked(index: number) {
 	grid-template-columns: repeat(15, 40px);
 	grid-template-rows: repeat(15, 40px);
 	gap: 0;
+
 	box-shadow:
 		inset 0 0 25px rgba(0, 0, 0, 0.3),
 		0 8px 20px rgba(0, 0, 0, 0.4);

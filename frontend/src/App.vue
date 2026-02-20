@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import Header from './Components/Header/Header.vue';
 import useUserStore from './Components/Stores/user';
@@ -12,10 +12,16 @@ onMounted(() => {
 	const userStore = useUserStore();
 	if (hasToken) userStore.login();
 	if (!websocket.websocket) {
-		console.log("going to try connecitng.")
+		console.log("Try to connect...")
 		websocket.connect()
 	}
-
+	watch(() => userStore.isLoggedIn, () => {
+		if (userStore.isLoggedIn) {
+			if (!websocket.websocket) {
+				websocket.connect()
+			}
+		}
+	})
 })
 </script>
 

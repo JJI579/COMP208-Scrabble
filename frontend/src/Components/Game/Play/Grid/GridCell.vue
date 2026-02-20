@@ -43,21 +43,13 @@ const bgColour = computed(() => {
 <template>
 	<div class="cell" :class="{ 'scrabble--placed': cellValue.length > 1, 'cell--draft': isDraft }"
 		:style="{ backgroundColor: bgColour }">
-		<p class="letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
-		<p class="score" v-if="cellValue !== '|'">{{ score }}</p>
+		<p class="cell__letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
+		<p class="cell__score" v-if="cellValue !== '|'">{{ score }}</p>
 	</div>
 </template>
 
 
 <style lang="css" scoped>
-.center-cell {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	font-size: 28px;
-	color: white;
-}
-
 .cell {
 	user-select: none;
 	aspect-ratio: 1/1;
@@ -86,7 +78,7 @@ const bgColour = computed(() => {
 	background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
-.letter {
+.cell__letter {
 	margin: 0;
 	max-height: 90%;
 	max-width: 90%;
@@ -97,10 +89,10 @@ const bgColour = computed(() => {
 	transform: translate(-50%, -50%);
 }
 
-.score {
+.cell__score {
 	position: absolute;
-	bottom: 5px;
-	right: 5px;
+	bottom: 3px;
+	right: 3px;
 	font-size: 12px;
 	margin: 0;
 }

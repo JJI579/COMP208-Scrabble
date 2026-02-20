@@ -62,17 +62,16 @@ const bgColour = computed(() => {
 .modifier_cell {
 	user-select: none;
 	aspect-ratio: 1/1;
-	border: 2px solid white;
+	border: 1px solid white;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	text-align: center;
-	height: 100%;
-	width: 100%;
+
 	position: relative;
 	font-weight: bold;
 	font-size: 12px;
-	line-height: 1;
+	line-height: 1.25em;
 	color: white;
 	box-shadow: 1px 1px 3px rbga(0, 0, 0, 0.3);
 	transition: transform 0.2s;

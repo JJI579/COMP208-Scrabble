@@ -37,7 +37,8 @@ type PacketType =
 	| "GAME_REPLACE"
 	| "GAME_UPDATE"
 	| "NOT_FOUND"
-	| "GAME_TURN";
+	| "GAME_TURN"
+	| "CHAT_MESSAGE"
 
 type WebsocketPacket = {
 	t: PacketType | InitType

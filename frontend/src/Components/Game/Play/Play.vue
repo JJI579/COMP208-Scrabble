@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import type { modifiers } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
+import Chat from './Chat/Chat.vue';
 
 const DEFAULT_FILLER = "";
 
@@ -95,8 +96,8 @@ const placedIndexes = computed(() => {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-	<div class="content">
-		<div class="content__flex">
+	<div class="wrapper">
+		<div class="wrapper__flex">
 			<div class="player__column left">
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
 				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
@@ -105,14 +106,25 @@ const placedIndexes = computed(() => {
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
 					@cell-clicked="letterFocused = -1" :placed="placed" />
-				<div class="rack">
-					<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
-						:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
-						{{ letter.toUpperCase() }}
-					</div>
-				</div>
+
 				<div class="actions">
-					<button class="action" @click="undo()">Undo</button>
+					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }"><i
+							class="pi pi-arrow-right-arrow-left"></i></button>
+					<div class="rack">
+						<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
+							:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
+							{{ letter.toUpperCase() }}
+						</div>
+					</div>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }"><i class="pi pi-check "></i></button>
+					<button class="action" :disabled="activePlayer == 0"
+						:class="{ 'action--disabled': activePlayer == 0 }"><i class="pi pi-flag"></i></button>
+				</div>
+				<!-- <div class="actions">
+
 					<button class="action" :disabled="activePlayer == 0"
 						:class="{ 'action--disabled': activePlayer == 0 }">Swap</button>
 					<button class="action" :disabled="activePlayer == 0"
@@ -120,7 +132,7 @@ const placedIndexes = computed(() => {
 					<button class="action" @click="chatOpen = !chatOpen">Chat</button>
 					<button class="action" :disabled="activePlayer == 0"
 						:class="{ 'action--disabled': activePlayer == 0 }">Forfeit</button>
-				</div>
+				</div> -->
 
 			</div>
 			<div class="player__column right">
@@ -129,7 +141,7 @@ const placedIndexes = computed(() => {
 			</div>
 			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
-				<p>Chat here</p>
+				<Chat />
 			</div>
 		</div>
 	</div>
@@ -138,13 +150,16 @@ const placedIndexes = computed(() => {
 
 
 <style lang="css" scoped>
-.content {
+.wrapper {
 	display: flex;
-	align-items: center;
 	justify-content: center;
+	height: 100%;
+	width: 100%;
 }
 
-.content__flex {
+.wrapper__flex {
+	margin-top: 1rem;
+	height: fit-content;
 	display: flex;
 	gap: 2rem;
 	align-items: center;
@@ -160,6 +175,8 @@ const placedIndexes = computed(() => {
 
 .center__wrapper {
 	display: flex;
+	/* background-color: blue; */
+	flex: 1;
 	flex-direction: column;
 	align-items: center;
 	gap: 1.5rem;
@@ -205,14 +222,18 @@ const placedIndexes = computed(() => {
 .actions {
 	display: flex;
 	gap: 1rem;
+	align-items: center;
+	margin: auto;
 }
 
 .action {
 	padding: 12px 20px;
+	font-size: large;
+	height: fit-content;
 	border: none;
 	border-radius: 8px;
 	background: #f1bc4c;
-	font-weight: bold;
+
 	cursor: pointer;
 	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
 	transition: 0.5s ease-in all;
