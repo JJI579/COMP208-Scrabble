@@ -1,179 +1,15 @@
 import api from "@/api";
 import type { InitType, PacketType, SelfReturn, UserReturn, WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import useUserStore from "./user";
 import router from "@/router";
-
-
-
-
-
-type GAME_TYPE = "NORMAL" | "GROUP" | "BOT"
-
-type GAME = {
-	id: number,
-	type: GAME_TYPE,
-	players: Map<Number, UserReturn>,
-	leader: Number,
-	groups: Number[][],
-	hasStarted: boolean,
-	timeLimit: number,
-	dictionaryAllowed: boolean
-}
-
-
-type gameOptions = {
-	game_type: GAME_TYPE,
-	group_size: number,
-	time_limit: string,
-	dictionary: boolean
-}
-type initData = {
-	game_type: GAME_TYPE,
-	players: UserReturn[],
-	has_started: boolean,
-	options: gameOptions,
-	groups?: Number[][]
-	leader: number
-}
-
-
-class Game implements GAME {
-	id: number;
-	leader: number;
-	type: GAME_TYPE;
-	players: Map<Number, UserReturn>;
-	groups: Number[][] = []
-	maxGroupSize: Number = 2;
-	hasStarted: boolean;
-	timeLimit: number;
-	dictionaryAllowed: boolean;
-
-	constructor(gameCode: number, dictionary: initData) {
-		this.id = gameCode;
-		this.type = dictionary.game_type;
-		this.players = new Map<Number, UserReturn>();
-		this.leader = dictionary.leader;
-
-		for (let i = 0; i < dictionary.players.length; i++) {
-			var player = dictionary.players[i];
-			if (player !== undefined) {
-				this.players.set(Number(player.userID), player);
-			}
-		}
-
-		if (dictionary.groups) {
-			this.groups = dictionary.groups;
-		}
-		this.hasStarted = dictionary.has_started;
-		console.log(dictionary.options.time_limit)
-		// TODO: convert time_limit to actual time limit
-		this.timeLimit = 999999999999999999;
-		this.dictionaryAllowed = dictionary.options.dictionary;
-	}
-
-	isLeader(userID: number): boolean {
-
-		return userID == this.leader;
-
-	}
-	getId(): number {
-		return this.id;
-	}
-
-	getType(): GAME_TYPE {
-		return this.type;
-	}
-
-	getPlayers(): UserReturn[] {
-		return Array.from(this.players.values());
-	}
-
-	getPlayer(userID: number) {
-		const user = this.players.get(userID)
-		if (user !== undefined) {
-			return user
-		}
-		return false;
-	}
-
-	getGroups(): Number[][] {
-		return this.groups;
-	}
-
-	getHasStarted(): boolean {
-		return this.hasStarted;
-	}
-
-	getTimeLimit(): number {
-		return this.timeLimit;
-	}
-
-	getDictionaryAllowed(): boolean {
-		return this.dictionaryAllowed;
-	}
-
-	setId(id: number): void {
-		this.id = id;
-	}
-
-	setType(type: GAME_TYPE): void {
-		this.type = type;
-	}
-
-	setPlayers(players: UserReturn[]): void {
-		this.players = new Map();
-		for (let i = 0; i < players.length; i++) {
-			var player = players[i];
-			if (player !== undefined) {
-				this.players.set(player.userID, player);
-			}
-		}
-	}
-
-	addPlayer(player: UserReturn): void {
-		if (this.hasStarted) {
-			throw new Error("Game has already started");
-		}
-		const hasPlayer = this.players.get(player.userID);
-
-		if (hasPlayer !== undefined) {
-			throw new Error("Player already in game");
-		} else {
-			this.players.set(player.userID, player);
-		}
-
-	}
-
-	removePlayer(player: UserReturn) {
-		// returns if removed or not
-		return this.players.delete(player.userID);
-	}
-
-	setGroups(groups: Number[][]): void {
-		this.groups = groups;
-	}
-
-	setHasStarted(hasStarted: boolean): void {
-		this.hasStarted = hasStarted;
-	}
-
-	setTimeLimit(timeLimit: number): void {
-		this.timeLimit = timeLimit;
-	}
-
-	setDictionaryAllowed(dictionaryAllowed: boolean): void {
-		this.dictionaryAllowed = dictionaryAllowed;
-	}
-
-}
-
+import Game from "./Game";
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
 	const websocket = ref<WebSocket | null>(null);
-	const game = ref<Game | null>(null);
+	const game = reactive<Game>(new Game(0, {}));
 	const userStore = useUserStore();
 	const readyToSend = ref(false)
 
@@ -224,18 +60,19 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					websocket.value?.send(generatePacket("IDENTIFY", { token }))
 					break
 				case "GAME_UPDATE":
-					if (!game.value && data.d.game) {
+					if (!game && data.d.game) {
 						console.log("[GAME UPDATE] | Initialising first game")
-						game.value = new Game(data.d.gameID, data.d.game)
+						// it will be there.
 					} else {
-						if (game.value) {
-							if (data.d.gameID != game.value.getId()) {
+						if (game) {
+							if (data.d.gameID != game.id) {
 								// new game, sync to new content
 								console.log("[GAME UPDATE] | New game, reset the dictionary")
-								game.value = new Game(data.d.gameID, data.d.game)
+								game.updateContent(data.d)
 							} else {
 								// update game content
 								console.log("[GAME UPDATE] | Update current game data")
+								game.updateContent(data.d)
 							}
 						}
 					}
@@ -244,14 +81,14 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					// TODO: implement into alert
 					break
 				case "PLAYER_JOIN":
-					if (!game.value) {
+					if (!game) {
 						// we should have a game by now.
 						console.log("We should have a game by now | PLAYER JOIN")
 						// maybe push request for game update?
 					} else {
 						console.log("Added player")
 						try {
-							game.value.addPlayer(data.d.user)
+							game.addPlayer(data.d.user)
 						} catch (error) {
 							console.log(`ADD PLAYER EXCEPTION: ${error}`)
 						}
@@ -262,29 +99,29 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				case "PLAYER_DISCONNECT":
 					break
 				case "GROUP_JOIN":
-					if (!game.value) {
+					if (!game) {
 						// we should have a game by now.
 						console.log("We should have a game by now | GROUP JOIN")
 						// maybe push request for game update?
 					} else {
-						game.value.setGroups(data.d.groups);
+						game.setGroups(data.d.groups);
 					}
 					break;
 				case "CONFIRM_LEAVE":
-					game.value = null;
+					// game = null;
 					router.replace({ name: "dashboard" })
 					break
 				case "GAME_START":
 					// move user to game page
-					if (data.d.gameID != game.value?.getId()) {
+					if (data.d.gameID != game?.id) {
 						console.log("Game ID mismatch")
 						return
 					} else {
-						router.push({name: "play"})
+						router.push({ name: "play" })
 					}
 					break
 
-				
+
 			}
 		}
 	}
@@ -302,15 +139,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		_send(generatePacket(type, data))
 	}
 
-	function isLeader() {
-		if (game.value && userStore.userData) {
-			return game.value.isLeader(Number(userStore.userData.userID));
-		} else {
-			return false;
-
-		}
-	}
-
 	function _send(packet: string) {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
 			websocket.value.send(packet)
@@ -324,7 +152,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			)
 		}
 	}
-	return { websocket, game, connect, isLeader, generatePacket, send }
+	return { websocket, game, connect, generatePacket, send }
 });
 
 export default useWebsocketStore;

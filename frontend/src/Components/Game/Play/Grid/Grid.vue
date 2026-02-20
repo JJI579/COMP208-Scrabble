@@ -3,6 +3,7 @@ import type { modifiers } from '@/types';
 import { computed, ref } from 'vue';
 import GridCell from './GridCell.vue';
 import ModifierCell from './ModifierCell.vue';
+import useUserStore from '@/Components/Stores/user';
 
 const emit = defineEmits(['cellClicked']);
 
@@ -30,6 +31,7 @@ const props = defineProps({
 	}
 })
 
+const userStore = useUserStore();
 
 function cellClicked(index: number) {
 	console.log(index)
@@ -57,7 +59,7 @@ function cellClicked(index: number) {
 
 
 <template>
-	<div class="board-frame" :class="{ active: activePlayer === 1 }">
+	<div class="board-frame" :class="{ active: activePlayer === userStore.userData?.userID }">
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
 				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />

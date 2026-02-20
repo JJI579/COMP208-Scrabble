@@ -4,6 +4,12 @@ import type { modifiers } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
 import Chat from './Chat/Chat.vue';
+import useWebsocketStore from '@/Components/Stores/websocket';
+import router from '@/router';
+import { isReturnStatement } from 'typescript';
+import useUserStore from '@/Components/Stores/user';
+import { TemplateGenerativeModel } from 'firebase/ai';
+import type { GameUser } from '@/game_types';
 
 const DEFAULT_FILLER = "";
 
@@ -42,9 +48,32 @@ onMounted(() => {
 	grid.value = initGrid;
 })
 
+// Stores
+const websocketStore = useWebsocketStore();
+const userStore = useUserStore();
+
+
+// Game Active
+
+const activePlayer = computed(() => {
+	if (websocketStore.game === null) {
+		return -1
+	}
+	return websocketStore.game.gameTurn
+})
 
 const chatOpen = ref(false);
-const activePlayer = ref(0);
+
+
+onMounted(() => {
+	if (websocketStore.game === null) {
+		router.replace({ name: "dashboard" })
+		return
+	}
+	console.log(websocketStore.game.players)
+	console.log(websocketStore.game.gameTurn)
+})
+
 
 function undo() {
 	const last = orderPlacement.value.pop();
@@ -53,7 +82,6 @@ function undo() {
 		placed.value.delete(last);
 	}
 }
-
 
 function handleKeyboardPress(event: KeyboardEvent) {
 	switch (event.key) {
@@ -88,6 +116,31 @@ const placedIndexes = computed(() => {
 	const values = placed.value.values();
 	return Array.from(values).map((value) => value[0]);
 });
+
+const players = computed(() => {
+	const tempPlayers = Array.from(websocketStore.game?.players.values() ?? [])
+	const ret: GameUser[][] = []
+	if (tempPlayers !== undefined) {
+		var count = 0;
+		var temp = [];
+
+		while (count != 4) {
+			var player = tempPlayers[count]
+			if (player !== undefined) {
+				temp.push(player)
+				count++;
+			} else {
+				ret.push(temp)
+				break
+			}
+			if (count % 2 == 0 && count != 0) {
+				ret.push(temp)
+				temp = []
+			}
+		}
+	}
+	return ret
+})
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -99,9 +152,11 @@ const placedIndexes = computed(() => {
 	<div class="wrapper">
 		<div class="wrapper__flex">
 			<div class="player__column left">
-				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
-				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
+				<Player :active-player="activePlayer" :user-game-data="player"
+					v-for="player in (players.length > 0 ? players[0] : [])" />
 			</div>
+
+			{{ activePlayer }}
 			<div class="center__wrapper">
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
@@ -109,8 +164,8 @@ const placedIndexes = computed(() => {
 
 				<div class="actions">
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }"><i
+					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-arrow-right-arrow-left"></i></button>
 					<div class="rack">
 						<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
@@ -118,26 +173,17 @@ const placedIndexes = computed(() => {
 							{{ letter.toUpperCase() }}
 						</div>
 					</div>
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }"><i class="pi pi-check "></i></button>
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }"><i class="pi pi-flag"></i></button>
+					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
+							class="pi pi-check "></i></button>
+					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
+							class="pi pi-flag"></i></button>
 				</div>
-				<!-- <div class="actions">
-
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }">Swap</button>
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }">Submit</button>
-					<button class="action" @click="chatOpen = !chatOpen">Chat</button>
-					<button class="action" :disabled="activePlayer == 0"
-						:class="{ 'action--disabled': activePlayer == 0 }">Forfeit</button>
-				</div> -->
-
 			</div>
 			<div class="player__column right">
-				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
-				<Player :active-player="activePlayer" :user-game-data="{ name: 'Jeremy', score: 10, timer: '05:53' }" />
+				<Player :active-player="activePlayer" :user-game-data="player"
+					v-for="player in (players.length > 1 ? players[1] : [])" />
 			</div>
 			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>

@@ -11,15 +11,15 @@ function toGameUser(user: UserReturn): GameUser {
 }
 
 type GAME = {
-	id: Ref<number>,
-	type: Ref<GAME_TYPE>,
-	players: Ref<Map<Number, GameUser>>,
-	leader: Ref<number>,
-	groups: Ref<Number[][]>,
-	hasStarted: Ref<boolean>,
-	timeLimit: Ref<number>,
-	dictionaryAllowed: Ref<boolean>,
-	gameTurn: Ref<number>
+	id: number,
+	type: GAME_TYPE,
+	players: Map<Number, GameUser>,
+	leader: number,
+	groups: number[][],
+	hasStarted: boolean,
+	timeLimit: number,
+	dictionaryAllowed: boolean,
+	gameTurn: number
 }
 
 
@@ -34,85 +34,102 @@ type initData = {
 	players: UserReturn[],
 	has_started: boolean,
 	options: gameOptions,
-	groups?: Number[][]
+	groups?: number[][]
 	leader: number,
 	turn?: number
 }
 
 
 class Game implements GAME {
-	gameTurn = ref<number>(-1);
-	id = ref<number>(0);
-	leader = ref<number>(0);
-	type = ref<GAME_TYPE>("NORMAL");
-	players = ref<Map<Number, GameUser>>(new Map());
-	groups = ref<Number[][]>([]);
-	maxGroupSize = ref<number>(2);
-	hasStarted = ref<boolean>(false);
-	timeLimit = ref<number>(0);
-	dictionaryAllowed = ref<boolean>(false);
+	gameTurn: number = -1;
+	id: number = 0;
+	leader: number = 0;
+	type: GAME_TYPE = "NORMAL";
+	players: Map<number, GameUser> = new Map();
+	groups: number[][] = [];
+	maxGroupSize: number = 2;
+	hasStarted: boolean = false;
+	timeLimit: number = 0;
+	dictionaryAllowed: boolean = false;
 
 
 
-	constructor(gameCode: number, dictionary: initData) {
+	constructor(gameCode: number, dictionary: any | initData) {
+		if (gameCode == 0) {
+			return
+		}
 		console.log(dictionary)
 		if (dictionary.turn !== undefined && dictionary.turn != -1) {
 			console.log("here")
 			console.log(dictionary.turn)
-			this.gameTurn.value = dictionary.turn
+			this.gameTurn = dictionary.turn
 		}
-		this.id.value = gameCode;
-		this.type.value = dictionary.game_type;
-		this.players.value = new Map<Number, GameUser>();
-		this.leader.value = dictionary.leader;
+		this.id = gameCode;
+		this.type = dictionary.game_type;
+		this.players = new Map<number, GameUser>();
+		this.leader = dictionary.leader;
 		for (let i = 0; i < dictionary.players.length; i++) {
 			var player = dictionary.players[i];
 			if (player !== undefined) {
-				this.players.value.set(Number(player.userID), toGameUser(player));
+				this.players.set(Number(player.userID), toGameUser(player));
 			}
 		}
 		if (dictionary.groups) {
-			this.groups.value = dictionary.groups;
+			this.groups = dictionary.groups;
 		}
-		this.hasStarted.value = dictionary.has_started;
+		this.hasStarted = dictionary.has_started;
 		// TODO: convert time_limit to actual time limit
-		this.timeLimit.value = 999999999999999999;
-		this.dictionaryAllowed.value = dictionary.options.dictionary;
+		this.timeLimit = 999999999999999999;
+		this.dictionaryAllowed = dictionary.options.dictionary;
 	}
 
 
 
-	updateContent(dictionary: initData) {
+	updateContent(allData: any) {
+
+		var dictionary: initData = allData.game
+		var gameID = allData.gameID
+
 		if (dictionary.turn !== undefined) {
-			this.gameTurn.value = dictionary.turn
+			this.gameTurn = dictionary.turn
 		}
-		this.leader.value = dictionary.leader
-		this.hasStarted.value = dictionary.has_started
-
-		console.log("new game turn" + this.gameTurn)
-
+		this.id = gameID;
+		this.type = dictionary.game_type;
+		this.leader = dictionary.leader;
+		this.players.clear();
+		for (let i = 0; i < dictionary.players.length; i++) {
+			var player = dictionary.players[i];
+			if (player !== undefined) {
+				this.players.set(Number(player.userID), toGameUser(player));
+			}
+		}
+		if (dictionary.groups) {
+			this.groups = dictionary.groups;
+		}
+		this.hasStarted = dictionary.has_started;
+		this.dictionaryAllowed = dictionary.options.dictionary;
 	}
 	isLeader(userID: number): boolean {
-		return userID == this.leader.value;
+		return userID == this.leader;
 	}
 	getId(): number {
-		return this.id.value;
+		return this.id;
 	}
 
 	getTurn(): number {
-		return this.gameTurn.value;
+		return this.gameTurn;
 	}
 
 	getType(): GAME_TYPE {
-		return this.type.value;
+		return this.type;
 	}
 
 	getPlayers(): GameUser[] {
-		return Array.from(this.players.value.values());
+		return Array.from(this.players.values());
 	}
 
 	getPlayer(userID: number): GameUser | false {
-		const user = this.players.value.get(userID)
+		const user = this.players.get(userID)
 		if (user !== undefined) {
 			return user
 		}
@@ -120,27 +137,27 @@ class Game implements GAME {
 	}
 
 	getGroups(): Number[][] {
-		return this.groups.value;
+		return this.groups;
 	}
 
 	getHasStarted(): boolean {
-		return this.hasStarted.value;
+		return this.hasStarted;
 	}
 
 	getTimeLimit(): number {
-		return this.timeLimit.value;
+		return this.timeLimit;
 	}
 
 	getDictionaryAllowed(): boolean {
-		return this.dictionaryAllowed.value;
+		return this.dictionaryAllowed;
 	}
 
 	setId(id: number): void {
-		this.id.value = id;
+		this.id = id;
 	}
 
 	setType(type: GAME_TYPE): void {
-		this.type.value = type;
+		this.type = type;
 	}
 
 	setPlayers(players: UserReturn[]): void {
@@ -152,42 +169,42 @@ class Game implements GAME {
 			}
 		}
 		// set all at once rather than reactive response per player add.
-		this.players.value = x;
+		this.players = x;
 	}
 
 	addPlayer(player: UserReturn): void {
 		if (this.hasStarted) {
 			throw new Error("Game has already started");
 		}
-		const hasPlayer = this.players.value.get(player.userID);
+		const hasPlayer = this.players.get(player.userID);
 
 		if (hasPlayer !== undefined) {
 			throw new Error("Player already in game");
 		} else {
-			this.players.value.set(player.userID, toGameUser(player));
+			this.players.set(player.userID, toGameUser(player));
 		}
 
 	}
 
 	removePlayer(player: UserReturn) {
 		// returns if removed or not
-		return this.players.value.delete(player.userID);
+		return this.players.delete(player.userID);
 	}
 
-	setGroups(groups: Number[][]): void {
-		this.groups.value = groups;
+	setGroups(groups: number[][]): void {
+		this.groups = groups;
 	}
 
 	setHasStarted(hasStarted: boolean): void {
-		this.hasStarted.value = hasStarted;
+		this.hasStarted = hasStarted;
 	}
 
 	setTimeLimit(timeLimit: number): void {
-		this.timeLimit.value = timeLimit;
+		this.timeLimit = timeLimit;
 	}
 
 	setDictionaryAllowed(dictionaryAllowed: boolean): void {
-		this.dictionaryAllowed.value = dictionaryAllowed;
+		this.dictionaryAllowed = dictionaryAllowed;
 	}
 
 }

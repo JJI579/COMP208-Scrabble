@@ -9,7 +9,7 @@ type LoginReturn = {
 }
 
 type UserReturn = {
-	userID: Number
+	userID: number
 	userName: string
 	userCreatedAt: string
 }

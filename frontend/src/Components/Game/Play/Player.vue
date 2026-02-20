@@ -1,19 +1,19 @@
 <script lang="ts" setup>
+import type { GameUser } from '@/game_types';
+import type { UserReturn } from '@/types';
 import type { PropType } from 'vue';
 
+// userID: number
+// 	userName: string
+// 	userCreatedAt: string
 
-type UserGameData = {
-	name: string,
-	score: number,
-	timer: string
-}
 const props = defineProps({
 	activePlayer: {
 		type: Number,
 		required: true
 	},
 	userGameData: {
-		type: Object as PropType<UserGameData>,
+		type: Object as PropType<GameUser>,
 		required: true
 	}
 })
@@ -26,9 +26,9 @@ const props = defineProps({
 	<div class="player-card" :class="{ active: activePlayer === 1 }">
 		<img class="pfp" src="https://i.pravatar.cc/40?img=4" />
 		<div class="player-info">
-			<p class="name">{{ props.userGameData.name }}</p>
-			<p class="score">Score: {{ props.userGameData.score }}</p>
-			<p class="timer">{{ props.userGameData.timer }}</p>
+			<p class="name">{{ props.userGameData.userName }}</p>
+			<p class="score">Score: {{ props.userGameData.points }}</p>
+			<p class="timer">TODO</p>
 		</div>
 	</div>
 </template>

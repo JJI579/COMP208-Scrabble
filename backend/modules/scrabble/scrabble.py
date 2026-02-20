@@ -53,51 +53,51 @@ class Player:
 			if availableCount[key] < val:
 				return False
 			
-class Bot(Player):
+# class Bot(Player):
 
-	def __init__(self, name="Bot"):
-		super().__init__()
-		self.name = name
+# 	def __init__(self, name="Bot"):
+# 		super().__init__()
+# 		self.name = name
 
-	def choose_move(self, scrabble: "Scrabble"):
-		best_move = None
-		best_score = -1
-		# try to get the cells next to already placed - more efficient that checking every cell xx
-		candidates = self.get_candidate_cells(scrabble)
-		for x, y in candidates:
-			for direction in ["right", "down"]:
-				for word in self.get_possible_words(scrabble):
-					preExisting = self.find_matching_letters(scrabble, word, x, y, direction)
-					# print(f"Testing word: {word} at position: ({x}, {y}) in direction: {direction} with preExisting: {preExisting}")
+# 	def choose_move(self, scrabble: "Scrabble"):
+# 		best_move = None
+# 		best_score = -1
+# 		# try to get the cells next to already placed - more efficient that checking every cell xx
+# 		candidates = self.get_candidate_cells(scrabble)
+# 		for x, y in candidates:
+# 			for direction in ["right", "down"]:
+# 				for word in self.get_possible_words(scrabble):
+# 					preExisting = self.find_matching_letters(scrabble, word, x, y, direction)
+# 					# print(f"Testing word: {word} at position: ({x}, {y}) in direction: {direction} with preExisting: {preExisting}")
 					
-					#save board incase we need to revert
-					temp = [row.copy() for row in scrabble.game]
+# 					#save board incase we need to revert
+# 					temp = [row.copy() for row in scrabble.game]
 
-					# coords for calculating points
-					points = scrabble.draft_place_word(word, (x,y), direction, blanks=[], preExisting=preExisting, draft=True)
-					if points > best_score:
-						best_score = points
-						best_move = (word, (x,y), direction, preExisting)
-					# restore
-					scrabble.game = temp
-		return best_move
-	# check bots placed tiles...
-	''' TODO: get candidate cells, get possible words, find matchingn letters
-				difficulty levels?
-					-> considers intersecting words and considers tile multipliers..
-	'''
+# 					# coords for calculating points
+# 					points = scrabble.draft_place_word(word, (x,y), direction, blanks=[], preExisting=preExisting, draft=True)
+# 					if points > best_score:
+# 						best_score = points
+# 						best_move = (word, (x,y), direction, preExisting)
+# 					# restore
+# 					scrabble.game = temp
+# 		return best_move
+# 	# check bots placed tiles...
+# 	''' TODO: get candidate cells, get possible words, find matchingn letters
+# 				difficulty levels?
+# 					-> considers intersecting words and considers tile multipliers..
+# 	'''
 	
-	def get_candidate_cells(self, scrabble: "Scrabble"):
-		pass
+# 	def get_candidate_cells(self, scrabble: "Scrabble"):
+# 		pass
 
-	def get_possible_words(self, scrabble: "Scrabble"):
-		possible_words = []
-		pass
+# 	def get_possible_words(self, scrabble: "Scrabble"):
+# 		possible_words = []
+# 		pass
 
-	def find_matching_letters(self, scrabble: "Scrabble", word, position, direction):
-		x, y = position
-		preExisting = []
-		pass
+# 	def find_matching_letters(self, scrabble: "Scrabble", word, position, direction):
+# 		x, y = position
+# 		preExisting = []
+# 		pass
 
 
 

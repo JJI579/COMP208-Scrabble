@@ -6,7 +6,7 @@ import api from '@/api';
 import { useRouter } from 'vue-router';
 
 
-const gameTypeRef = ref("GROUP");
+const gameTypeRef = ref("NORMAL");
 const options = [['NORMAL', "Normal"], ['GROUP', "Team"], ["BOT", "Bot"]]
 
 const timeLimitRef = ref("none");

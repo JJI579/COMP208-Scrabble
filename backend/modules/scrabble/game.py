@@ -1,5 +1,18 @@
 from .scrabble import Scrabble, arr
 from modules.schema import UserFetch, GAME_TYPE, GameOptions
+from pydantic import BaseModel
+
+class Tile(BaseModel):
+	letter: str
+	points: int
+
+class PlacedTile(Tile):
+	coordinates: tuple[int, int] 
+
+class GamePlayer(UserFetch):
+	placed: list[PlacedTile] = []
+	points: int = 0
+	
 
 class Game:
 
@@ -10,6 +23,7 @@ class Game:
 		self.game = Scrabble(arr.copy())
 		self.type = options.game_type
 		self.players: list[UserFetch] = []
+		self.gamePlayers: list[GamePlayer] = []
 		self.hasStarted = False
 		if self.type == "GROUP":
 			if options.group_size:
@@ -20,6 +34,10 @@ class Game:
 			self.bot = True
 		self.dictionary_allowed = options.dictionary
 		self.time_limit = options.time_limit
+		self.turn = -1
+
+	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
+		return GamePlayer.model_validate(player)
 
 	def export_data(self):
 		# TODO: include scrabble board data
@@ -28,6 +46,7 @@ class Game:
 			"game_type": self.type,
 			"players": [x.model_dump(mode="json") for x in self.players],
 			"has_started": self.hasStarted,
+			"turn": self.turn,
 			"options": self.options
 		}
 		if self.type == "GROUP":
@@ -37,8 +56,10 @@ class Game:
 
 	
 	def add_player(self, player: UserFetch):
+		
 		if self.hasStarted:
 			raise Exception("Game has already started")
+		player = self._toGamePlayer(player)
 		if player in self.players:
 			raise Exception("Player already in game")
 		else:
@@ -70,6 +91,7 @@ class Game:
 					raise Exception("Only one player when Bot Game")
 	
 	def remove_player(self, player: UserFetch | int):
+		
 		if type(player) == int:
 			for i, p in enumerate(self.players):
 				if p.userID == player:
@@ -83,6 +105,7 @@ class Game:
 						# only one player per group so can break.
 						break
 		elif type(player) == UserFetch:
+			player = self._toGamePlayer(player)
 			try:
 				self.players.remove(player)
 				if self.type == "GROUP":
@@ -146,4 +169,5 @@ class Game:
 
 	def start_game(self):
 		self.hasStarted = True
+		self.turn = self.players[0].userID
 		# TODO: perform other stuff.

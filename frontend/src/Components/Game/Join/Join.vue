@@ -40,14 +40,14 @@ function joinGame() {
 
 function leaveGame() {
 	if (websocket.game) {
-		websocket.send("PLAYER_LEAVE", { code: websocket.game.getId() })
+		websocket.send("PLAYER_LEAVE", { code: websocket.game.id })
 	} else {
 		// TODO: alert to say you are not in a game.
 	}
 }
 function startGame() {
 	if (websocket.game) {
-		websocket.send("GAME_START", { code: websocket.game.getId() })
+		websocket.send("GAME_START", { code: websocket.game.id })
 	} else {
 		// TODO: alert to say you are not in a game.
 	}
@@ -60,7 +60,8 @@ function startGame() {
 
 	<div class="join" v-if="websocket.game == null">
 		<h2>Input Code</h2>
-		<input type="text" v-model="codeModel" placeholder="enter code" class="join__input" maxlength="4" :class="{'input--spacing': codeModel.length > 0, 'input--error': triedInput === true}">
+		<input type="text" v-model="codeModel" placeholder="enter code" class="join__input" maxlength="4"
+			:class="{ 'input--spacing': codeModel.length > 0, 'input--error': triedInput === true }">
 		<button @click="joinGame" class="join__button">Join</button>
 	</div>
 
@@ -76,14 +77,14 @@ function startGame() {
 					{{ user.userData?.userName }}
 				</div>
 				<div class="groups">
-					<Group v-for="(group, ind) in websocket.game?.groups" :group="group"
-						:max-size="Number(websocket.game.maxGroupSize)" :id="ind" :key="ind" />
+					<Group v-for="(group, ind) in websocket.game?.groups" :group="group" :max-size="Number(4)" :id="ind"
+						:key="ind" />
 				</div>
 			</div>
 
 		</div>
 
-		<div class="start" v-if="websocket.isLeader()">
+		<div class="start" v-if="websocket.game.leader == user.userData?.userID">
 			<button @click="startGame">Start Game</button>
 		</div>
 	</div>
@@ -92,7 +93,6 @@ function startGame() {
 
 
 <style lang="css" scoped>
-
 /* Join via Code */
 .join {
 	display: flex;
@@ -101,20 +101,23 @@ function startGame() {
 	align-items: center;
 	gap: 1rem;
 }
+
 .join__input {
 	text-align: center;
 	width: 20%;
 	line-height: 1.5em;
 	padding: .5rem .375rem;
-	border-radius: 8px;	
+	border-radius: 8px;
 	box-sizing: border-box;
 	border: 2px solid grey;
 }
+
 .input--spacing {
 	letter-spacing: 10px;
 	font-weight: bold;
 	text-transform: uppercase;
 }
+
 .input--error {
 	animation: ease 0.5s identifier 5
 }
@@ -123,13 +126,16 @@ function startGame() {
 	0% {
 		border: 2px solid rgb(169, 17, 17);
 	}
+
 	50% {
 		border: 2px solid rgb(248, 41, 41);
 	}
+
 	100% {
 		border: 2px solid rgb(169, 17, 17);
 	}
 }
+
 .join__button {
 	width: 20%;
 }

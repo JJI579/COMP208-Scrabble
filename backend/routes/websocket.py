@@ -57,6 +57,10 @@ class GameHandler:
 
 		game.start_game()
 		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
+		await asyncio.sleep(1)
+		for x in game.players:
+			await GameHandler.game_update(data['code'], x.userID)
+	
 
 
 	@staticmethod
@@ -120,7 +124,7 @@ class GameHandler:
 		
 
 	@staticmethod
-	async def game_update(gameID: str, websocket: WebSocket):
+	async def game_update(gameID: str, websocket: WebSocket| int):
 		game = manager.fetch_game(gameID)
 		if type(game) == bool:
 			print("game type is bool")
@@ -128,7 +132,7 @@ class GameHandler:
 			return False
 		packetData = packets.start.update_game(game.export_data(), game.id)
 		
-		await manager.send_direct_message(packetData, websocket.user_id) # type: ignore
+		await manager.send_direct_message(packetData, websocket.user_id if type(websocket) == WebSocket else websocket) # type: ignore
 	
 	class GroupJoinData(TypedDict):
 		index: int
@@ -248,6 +252,7 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						continue
 					case "GAME_START":
 						await GameHandler.game_start(data, websocket)
+						
 						continue
 				
 			else:
