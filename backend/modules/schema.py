@@ -40,6 +40,17 @@ class UserFetch(BaseModel):
 		from_attributes = True
 
 
+class Tile(BaseModel):
+	letter: str
+	points: int
+
+class PlacedTile(Tile):
+	coordinates: tuple[int, int] 
+	
+class GamePlayer(UserFetch):
+	placed: list[PlacedTile] = []
+	points: int = 0
+
 class SelfFetch(UserFetch):
 	friends: list[UserFetch]
 

@@ -1,5 +1,6 @@
 import type { GameUser } from "@/game_types"
 import type { UserReturn } from "@/types"
+import { isTypeAliasDeclaration } from "typescript"
 import { ref, type Ref } from "vue"
 
 type GAME_TYPE = "NORMAL" | "GROUP" | "BOT"
@@ -41,8 +42,9 @@ type initData = {
 }
 
 type ongoingData = {
-	letters: [],
-	players: [],
+	letters?: [],
+	players?: [],
+	grid?: Record<string, string>,
 	turn: number
 }
 
@@ -58,6 +60,7 @@ class Game implements GAME {
 	timeLimit: number = 0;
 	dictionaryAllowed: boolean = false;
 	letters: string[] = [];
+	grid = [];
 
 	constructor(gameCode: number, dictionary: any | initData) {
 		if (gameCode == 0) {
@@ -89,7 +92,13 @@ class Game implements GAME {
 	}
 
 	updateOngoing(allData: ongoingData) {
-		this.letters = allData.letters;
+		if (allData.letters) {
+			this.letters = allData.letters;
+		}
+		if (allData.grid) {
+			console.log("grid");
+			console.log(allData.grid);
+		}
 		console.log("myletters");
 		console.log(this.letters);
 

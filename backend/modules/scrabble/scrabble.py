@@ -4,7 +4,8 @@ from modules.database.database import get_session
 from sqlalchemy import text
 import asyncio
 import copy
-from modules.schema import UserFetch
+from typing import Literal
+from modules.schema import GamePlayer
 import random
 
 currentPath = Path.cwd()
@@ -112,27 +113,45 @@ class Scrabble:
 		self.gameTurn = 0
 		self.game = arr
 		# [[x, y], "letter"]
-		self.placed = []
+		self.placed = []  # [(x, y), letter]
 		self.firstPlaced = False
 		# make sure it isnt a reference array
 		self.letterArray: list[str] = copy.deepcopy(distributionArray)
 
+	def export_grid(self):
+		toSend = {}
+		for [x,y], letter in self.placed:
+			toSend[str(x*15+y)] = letter
+		return toSend
+	
 	def fetch_player_letters(self, userID: int):
 		return self.playerLetters[str(userID)]
 	
-	def init_game(self, players: list[UserFetch]):
+	def fetch_turn(self):
+		if self.gameTurn >= len(self.players):
+			return -1
+		return self.players[self.gameTurn]
+	
+	def init_game(self, players: list[GamePlayer]):
 		for player in players:
 			userID = int(player.userID)
 			self.players.append(userID)
-			self.playerLetters[str(userID)] = random.choices(self.letterArray, k=7)
-			for x in self.playerLetters[str(userID)]:
-				try:
-					self.letterArray.remove(x)
-				except:
-					print("This will never throw.")
+			self.give_player_letters(userID, 7) # base amount in a deck
 		self.gameTurn = 0
 		# return userid of current turn
 		return self.players[0] 
+
+	def give_player_letters(self, userID: int, amount: int):
+		letterChoices = random.sample(self.letterArray, k=amount)
+		if str(userID) in self.playerLetters:
+			self.playerLetters[str(userID)].extend(letterChoices)
+		else:
+			self.playerLetters[str(userID)] = letterChoices
+		for x in self.playerLetters[str(userID)]:
+			try:
+				self.letterArray.remove(x)
+			except:
+				print("This will never throw.")
 
 	def export_data(self):
 		return {
@@ -146,6 +165,7 @@ class Scrabble:
 			self.gameTurn += 1
 		else:
 			self.gameTurn = 0
+		return self.fetch_turn()
 
 	def get_cell(self, x: int, y: int):
 		return self.game[y][x]
@@ -189,7 +209,7 @@ class Scrabble:
 
 		return coordinates
 	
-	def expand_horizontally(self, position,):
+	def expand_horizontally(self, position):
 		x = position[0]
 		y = position[1]
 		coordinates = []
@@ -218,7 +238,18 @@ class Scrabble:
 
 		return coordinates
 
-	def place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
+	async def place_word(self, letters, direction: str):
+
+		# letters = list of [[x,y], letter]
+		# aim of this is for the game to calculate what word is trying to be made
+
+		# THIS THEN GETS PASSED TO _PLACE_WORD
+		
+		return await self._place_word(''.join([x[1] for x in letters]), letters[0][0], direction) # type: ignore
+
+	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
+		preExisting = [x[0] for x in self.placed] # consider type of self.placed so this just returns coordinates of previously placed letters
+		print(preExisting)
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
@@ -235,7 +266,7 @@ class Scrabble:
 				print("cell has already been taken!")
 				for [x, y], letter in tempPlaced:
 					self.game[y][x] = defaultFiller
-				return
+				return False
 			else:
 				# make it place already to imply that it can be used!
 				if (x, y) not in preExisting:
@@ -249,7 +280,7 @@ class Scrabble:
 						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
 						for [x, y], letter in tempPlaced:
 							self.game[y][x] = defaultFiller
-						return
+						return False
 
 			if direction=="down":
 				y+=1
@@ -258,9 +289,9 @@ class Scrabble:
 		if not self.firstPlaced:
 			# MAKE SURE IT CROSSES THE MIDDLE AS START
 			if [7,7] not in wordCoordinates:
-				return ""
+				return False
 			else:
-				if self.check_word(word):
+				if await self.check_word(word):
 					# fine
 					pass
 				# check the word and allow placement.
@@ -275,7 +306,7 @@ class Scrabble:
 		hasJoiningWord = False
 		# assume every connection is a word until proven wrong
 		# also we assume that they can provide us either a word, or not, if it is a word, prove wrong via connections, else it is fine.
-		isWord = self.check_word(word)
+		isWord = await self.check_word(word)
 		forceBreak = False
 		points = 0
 		for currentPosition in wordCoordinates:
@@ -296,8 +327,9 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
+					print(wordString)
 					print(f'Checking word found: ' + wordString)
-					if not self.check_word(wordString):
+					if not await self.check_word(wordString):
 						isWord = False
 						forceBreak = True
 						print(f"{wordString} is not a word. ")
@@ -314,6 +346,9 @@ class Scrabble:
 		
 		if len(word) == 7 and len(preExisting) == 0:
 			points+=50 
+		# calculate points for the literal word
+		# TODO: this will not work for future make this work.
+		points+=self.calculate_points(tempPlaced, blanks)
 
 		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
 		
@@ -324,6 +359,8 @@ class Scrabble:
 				for [x, y], letter in tempPlaced:
 					self.game[y][x] = defaultFiller
 				return False
+			else:
+				pass
 		
 		self.placed.extend(tempPlaced)
 		print(tempPlaced)
@@ -351,16 +388,18 @@ class Scrabble:
 				print(i, end=" ")
 			print()
 
-	def check_word(self, word: str):
-		return asyncio.run(self._check_word(word)) # type: ignore
+	async def check_word(self, word: str):
+		return True
+		return await self._check_word(word)
 		# return twl.check(word)
 		# resp = requests.get(f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}')
 		# respData = resp.json()
 		# return not ('title' in respData)
 	
 	async def _check_word(self, word: str):
+		print("theword: " + word)
 		async for session in get_session():
-			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word})
+			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word.lower()})
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
 			return result

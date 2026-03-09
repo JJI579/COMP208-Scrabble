@@ -21,10 +21,14 @@ watch(() => websocketStore.game.letters, () => {
 	letters.value = websocketStore.game.letters;
 })
 
+watch(() => websocketStore.game.grid, () => {
+	letters.value = websocketStore.game.grid;
+})
+
 const letters = ref<string[]>([]);
+const grid = ref<(string | modifiers)[]>([]);
 const placed = ref<Map<number, [number, string]>>(new Map());
 const orderPlacement = ref<number[]>([]);
-const grid = ref<(string | modifiers)[]>([]);
 
 onMounted(() => {
 	var initGrid: (string | modifiers)[] = [];

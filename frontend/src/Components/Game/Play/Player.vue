@@ -24,7 +24,7 @@ const props = defineProps({
 <template>
 
 	<div class="player-card" :class="{ active: activePlayer === 1 }">
-		<img class="pfp" src="https://i.pravatar.cc/40?img=4" />
+		<img class="pfp" src="https://i.pravatar.cc/1000?img=50" />
 		<div class="player-info">
 			<p class="name">{{ props.userGameData.userName }}</p>
 			<p class="score">Score: {{ props.userGameData.points }}</p>

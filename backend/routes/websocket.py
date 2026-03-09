@@ -59,7 +59,7 @@ class GameHandler:
 
 		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
 
-		await asyncio.sleep(2)
+		await asyncio.sleep(.5)
 		for x in game.players:
 			await GameHandler.game_update(data['code'], x.userID)
 			letters = game.game.fetch_player_letters(x.userID)
@@ -83,9 +83,24 @@ class GameHandler:
 		game = manager.fetch_game(userConnection['game'])
 		if type(game) == bool:
 			return
-		game.game_turn(data['d']['letters'])
+		if userConnection['info'].userID == game.get_current_turn():
+			resp = await game.game_turn(data['d']['letters'])
+			if type(resp) == bool:
+				# TODO: send error message
+				return
+			# means it is true now send the new board to everyone
+			newGrid = game.game.export_grid()
+			print(newGrid)
+			nextTurn = game.game.next_turn()
+			gameUpdatePacket = packets.during.game_update({
+				"grid": newGrid,
+				"turn": nextTurn
+			})	
+			await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
 
-		pass
+		else:
+			# TODO: send error to user 
+			return
 
 
 	@staticmethod

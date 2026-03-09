@@ -1,17 +1,10 @@
 from .scrabble import Scrabble, arr
-from modules.schema import UserFetch, GameOptions
+from modules.schema import UserFetch, GameOptions, GamePlayer
 from pydantic import BaseModel
 
-class Tile(BaseModel):
-	letter: str
-	points: int
 
-class PlacedTile(Tile):
-	coordinates: tuple[int, int] 
 
-class GamePlayer(UserFetch):
-	placed: list[PlacedTile] = []
-	points: int = 0
+
 
 class Game:
 
@@ -32,12 +25,13 @@ class Game:
 			self.bot = True
 		self.dictionary_allowed = options.dictionary
 		self.time_limit = options.time_limit
-		self.turn = -1
-
+		
+	def get_current_turn(self):
+		return self.game.fetch_turn()
 	
-	def game_turn(self, letters):
+	async def game_turn(self, letters):
 		firstCoordinate = None
-		direction = None
+		direction = "RIGHT"
 		# TODO: identify what direction we go, calculate where blanks are also, and then submit to the board.
 		for [x,y], letter in letters:
 			if firstCoordinate == None:
@@ -45,11 +39,21 @@ class Game:
 			else:
 				if x-firstCoordinate[0] != 0:
 					direction = "RIGHT"
+					letters.sort(key=lambda x: x[0])
 				else:
 					direction = "DOWN"
+					letters.sort(key=lambda x: x[1])
 			# break
 		print(direction)
-
+		result = await self.game.place_word(letters, direction)
+		if type(result) == bool:
+			# invalid placement
+			return
+		# return points amount and perform game update...?
+		# update self.players
+		
+		return result
+		print(f"result: {result}")
 		# 't': 'GAME_TURN', 'd': {'letters': [[[7, 7], 'T'], [[8, 7], 'A'], [[9, 7], 'G']]}}
 		pass
 
@@ -63,7 +67,7 @@ class Game:
 			"game_type": self.type,
 			"players": [x.model_dump(mode="json") for x in self.players],
 			"has_started": self.hasStarted,
-			"turn": self.turn,
+			"turn": self.game.fetch_turn(),
 			"options": self.options
 		}
 		if self.type == "GROUP":
