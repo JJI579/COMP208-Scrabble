@@ -1,5 +1,5 @@
 from .scrabble import Scrabble, arr
-from modules.schema import UserFetch, GAME_TYPE, GameOptions
+from modules.schema import UserFetch, GameOptions
 from pydantic import BaseModel
 
 class Tile(BaseModel):
@@ -12,7 +12,6 @@ class PlacedTile(Tile):
 class GamePlayer(UserFetch):
 	placed: list[PlacedTile] = []
 	points: int = 0
-	
 
 class Game:
 
@@ -22,8 +21,7 @@ class Game:
 		self.options = options.model_dump(mode="json")
 		self.game = Scrabble(arr.copy())
 		self.type = options.game_type
-		self.players: list[UserFetch] = []
-		self.gamePlayers: list[GamePlayer] = []
+		self.players: list[GamePlayer] = []
 		self.hasStarted = False
 		if self.type == "GROUP":
 			if options.group_size:
@@ -35,6 +33,25 @@ class Game:
 		self.dictionary_allowed = options.dictionary
 		self.time_limit = options.time_limit
 		self.turn = -1
+
+	
+	def game_turn(self, letters):
+		firstCoordinate = None
+		direction = None
+		# TODO: identify what direction we go, calculate where blanks are also, and then submit to the board.
+		for [x,y], letter in letters:
+			if firstCoordinate == None:
+				firstCoordinate = [x,y]
+			else:
+				if x-firstCoordinate[0] != 0:
+					direction = "RIGHT"
+				else:
+					direction = "DOWN"
+			# break
+		print(direction)
+
+		# 't': 'GAME_TURN', 'd': {'letters': [[[7, 7], 'T'], [[8, 7], 'A'], [[9, 7], 'G']]}}
+		pass
 
 	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
 		return GamePlayer.model_validate(player)
@@ -170,4 +187,5 @@ class Game:
 	def start_game(self):
 		self.hasStarted = True
 		self.turn = self.players[0].userID
+		self.game.init_game(self.players)
 		# TODO: perform other stuff.

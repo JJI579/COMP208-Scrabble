@@ -108,8 +108,11 @@ class Scrabble:
 		self.playerLetters = {
 			"player_id": ["letters"]
 		}
+		# index of array
 		self.gameTurn = 0
 		self.game = arr
+		# [[x, y], "letter"]
+		self.placed = []
 		self.firstPlaced = False
 		# make sure it isnt a reference array
 		self.letterArray: list[str] = copy.deepcopy(distributionArray)
@@ -117,9 +120,9 @@ class Scrabble:
 	def fetch_player_letters(self, userID: int):
 		return self.playerLetters[str(userID)]
 	
-	def init_game(self, players: UserFetch):
+	def init_game(self, players: list[UserFetch]):
 		for player in players:
-			userID = int(player.userID) # type: ignore
+			userID = int(player.userID)
 			self.players.append(userID)
 			self.playerLetters[str(userID)] = random.choices(self.letterArray, k=7)
 			for x in self.playerLetters[str(userID)]:
@@ -127,8 +130,10 @@ class Scrabble:
 					self.letterArray.remove(x)
 				except:
 					print("This will never throw.")
-		self.gameTurn = self.players[0]
-		
+		self.gameTurn = 0
+		# return userid of current turn
+		return self.players[0] 
+
 	def export_data(self):
 		return {
 			"game": self.game,
@@ -145,10 +150,6 @@ class Scrabble:
 	def get_cell(self, x: int, y: int):
 		return self.game[y][x]
 	
-	def handle_placement(self, word: str, playerCode: str, preExisting: list[tuple[int, int]] = [], blanks: list[tuple[int, int]] = []):
-		# player code is a string that they will use to verify that it is their turn, unless i use their bearer token / session_id to verify its from them?
-		pass
-	
 	def convert_id_to_coordinate(self, squareID: int):
 		x = squareID % 15
 		y = squareID // 15
@@ -159,7 +160,7 @@ class Scrabble:
 		y = coordinate[1]
 		return (y * 15) + x
 
-	def expand_vertically(self, position,):
+	def expand_vertically(self, position):
 		x = position[0]
 		y = position[1]
 		coordinates = []
@@ -324,7 +325,9 @@ class Scrabble:
 					self.game[y][x] = defaultFiller
 				return False
 		
+		self.placed.extend(tempPlaced)
 		print(tempPlaced)
+		return points
 		
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
 		# THIS FUNCTION DOES NOT CONSIDER DOUBLE WORDS / LETTERS ETC.
