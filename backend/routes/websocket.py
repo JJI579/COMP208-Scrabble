@@ -55,12 +55,37 @@ class GameHandler:
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['code'])))
 			return
 
-		game.start_game()
+		gameTurn = game.start_game()
+
 		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
-		await asyncio.sleep(1)
+
+		await asyncio.sleep(2)
 		for x in game.players:
 			await GameHandler.game_update(data['code'], x.userID)
+			letters = game.game.fetch_player_letters(x.userID)
+			ongoing_game_update = packets.during.game_update({
+				"turn": gameTurn,
+				"letters": letters
+			})
+			await manager.send_direct_message(ongoing_game_update, x.userID)
 	
+	@staticmethod
+	async def game_turn(data: dict, websocket: WebSocket):
+		print(data)
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			return
+
+		if userConnection['game'] == None:
+			# TODO: send err
+			return
+		
+		game = manager.fetch_game(userConnection['game'])
+		if type(game) == bool:
+			return
+		game.game_turn(data['d']['letters'])
+
+		pass
 
 
 	@staticmethod
@@ -180,7 +205,7 @@ class GameHandler:
 		
 
 @router.websocket('/ws')
-async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
+async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	
 	hasIdentified = False
 	sessionID = secrets.token_hex(20)
@@ -254,6 +279,8 @@ async def websocket_endpoint_v2(websocket: WebSocket, session: AsyncSession = De
 						await GameHandler.game_start(data, websocket)
 						
 						continue
-				
+					case "GAME_TURN":
+						await GameHandler.game_turn(data, websocket)
+
 			else:
 				return

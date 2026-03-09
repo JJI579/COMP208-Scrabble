@@ -1,20 +1,27 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
 import type { modifiers } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
 import Chat from './Chat/Chat.vue';
 import useWebsocketStore from '@/Components/Stores/websocket';
 import router from '@/router';
-import { isReturnStatement } from 'typescript';
 import useUserStore from '@/Components/Stores/user';
-import { TemplateGenerativeModel } from 'firebase/ai';
 import type { GameUser } from '@/game_types';
+
+// Stores
+const websocketStore = useWebsocketStore();
+const userStore = useUserStore();
 
 const DEFAULT_FILLER = "";
 
 const letterFocused = ref<number>(-1);
-const letters = ref<string[]>(['a', 'b', 'c', 'd', 'e']);
+
+watch(() => websocketStore.game.letters, () => {
+	letters.value = websocketStore.game.letters;
+})
+
+const letters = ref<string[]>([]);
 const placed = ref<Map<number, [number, string]>>(new Map());
 const orderPlacement = ref<number[]>([]);
 const grid = ref<(string | modifiers)[]>([]);
@@ -48,12 +55,23 @@ onMounted(() => {
 	grid.value = initGrid;
 })
 
-// Stores
-const websocketStore = useWebsocketStore();
-const userStore = useUserStore();
+
 
 
 // Game Active
+function submitTurn() {
+	const toSend: [number[], string][] = [];
+
+	placed.value.forEach((value, key) => {
+		var letter = value[1] as string;
+		var cellID = key;
+		const x = cellID % 15;
+		const y = Math.floor(cellID / 15);
+		toSend.push([[x, y], letter])
+	})
+
+	websocketStore.send("GAME_TURN", {letters: toSend});
+}
 
 const activePlayer = computed(() => {
 	if (websocketStore.game === null) {
@@ -90,6 +108,8 @@ function handleKeyboardPress(event: KeyboardEvent) {
 		case "3":
 		case "4":
 		case "5":
+		case "6":
+		case "7":
 			letterFocused.value = parseInt(event.key) - 1
 			break;
 		case "Backspace":
@@ -173,8 +193,8 @@ const players = computed(() => {
 							{{ letter.toUpperCase() }}
 						</div>
 					</div>
-					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
+					<button @click="submitTurn" class="action" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" ><i
 							class="pi pi-check "></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i

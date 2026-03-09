@@ -112,10 +112,14 @@ class StartPackets(Packets):
 	
 
 # These packets are sent during the game (game has started)
-class DuringPackets:
+class DuringPackets(Packets):
 
 	def __init__(self) -> None:
 		pass
+
+	def game_update(self, gameinfo: dict):
+
+		return self.create_packet("GAME_UPDATE_ONGOING", gameinfo)
 
 class AuthenticationPackets(Packets):
 	

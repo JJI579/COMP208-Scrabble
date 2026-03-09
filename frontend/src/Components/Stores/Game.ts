@@ -37,8 +37,14 @@ type initData = {
 	groups?: number[][]
 	leader: number,
 	turn?: number
+	letters?: []
 }
 
+type ongoingData = {
+	letters: [],
+	players: [],
+	turn: number
+}
 
 class Game implements GAME {
 	gameTurn: number = -1;
@@ -51,8 +57,7 @@ class Game implements GAME {
 	hasStarted: boolean = false;
 	timeLimit: number = 0;
 	dictionaryAllowed: boolean = false;
-
-
+	letters: string[] = [];
 
 	constructor(gameCode: number, dictionary: any | initData) {
 		if (gameCode == 0) {
@@ -83,7 +88,12 @@ class Game implements GAME {
 		this.dictionaryAllowed = dictionary.options.dictionary;
 	}
 
+	updateOngoing(allData: ongoingData) {
+		this.letters = allData.letters;
+		console.log("myletters");
+		console.log(this.letters);
 
+	}
 
 	updateContent(allData: any) {
 
@@ -96,6 +106,7 @@ class Game implements GAME {
 		this.id = gameID;
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;
+		this.letters = [];
 		this.players.clear();
 		for (let i = 0; i < dictionary.players.length; i++) {
 			var player = dictionary.players[i];
@@ -105,6 +116,11 @@ class Game implements GAME {
 		}
 		if (dictionary.groups) {
 			this.groups = dictionary.groups;
+		}
+		if (dictionary.letters) {
+			this.letters = dictionary.letters
+		} else {
+			this.letters = []
 		}
 		this.hasStarted = dictionary.has_started;
 		this.dictionaryAllowed = dictionary.options.dictionary;

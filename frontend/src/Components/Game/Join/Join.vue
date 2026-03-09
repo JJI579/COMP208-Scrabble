@@ -20,10 +20,9 @@ onMounted(() => {
 	if (code !== undefined) {
 		// if not null, join game.
 		console.log("joining")
-
+		codeModel.value = code as string;
 		websocket.send("PLAYER_JOIN", { code: code })
 	} else {
-
 		console.log("undeifned")
 	}
 })
@@ -45,6 +44,7 @@ function leaveGame() {
 		// TODO: alert to say you are not in a game.
 	}
 }
+
 function startGame() {
 	if (websocket.game) {
 		websocket.send("GAME_START", { code: websocket.game.id })
@@ -57,8 +57,8 @@ function startGame() {
 
 
 <template>
-
-	<div class="join" v-if="websocket.game == null">
+	{{websocket.game}}
+	<div class="join" v-if="websocket.game.id == 0">
 		<h2>Input Code</h2>
 		<input type="text" v-model="codeModel" placeholder="enter code" class="join__input" maxlength="4"
 			:class="{ 'input--spacing': codeModel.length > 0, 'input--error': triedInput === true }">
@@ -67,6 +67,7 @@ function startGame() {
 
 	<div class="ingame" v-else>
 		<div class="players">
+			{{ codeModel }}
 
 			<div class="player" v-for="player in websocket.game?.players.values()"
 				v-if="websocket.game?.type == 'NORMAL'">
