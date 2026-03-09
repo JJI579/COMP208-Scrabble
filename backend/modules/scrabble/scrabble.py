@@ -3,23 +3,21 @@ import json
 from modules.database.database import get_session
 from sqlalchemy import text
 import asyncio
+import copy
+from modules.schema import UserFetch
+import random
 
 currentPath = Path.cwd()
 pointsPath = currentPath / "scrabble_points.json"
 pointsData = json.load(open(pointsPath))
 
+letterDistribution = currentPath / "letter_distribution.json"
+distributionArray = json.load(open(letterDistribution))
+
 
 defaultFiller = '|'
 arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
 
-# return 
-# {
-# 	"points": 0,
-# 	"word": "",
-# 	"placement": [
-# 		["id", "letter"]
-# 	]
-# }
 class Player:
 
 	def __init__(self) -> None:
@@ -106,12 +104,31 @@ class Player:
 class Scrabble:
 
 	def __init__(self, arr) -> None:
-		self.players = []
+		self.players: list[int] = []
+		self.playerLetters = {
+			"player_id": ["letters"]
+		}
 		self.gameTurn = 0
 		self.game = arr
 		self.firstPlaced = False
-		pass
+		# make sure it isnt a reference array
+		self.letterArray: list[str] = copy.deepcopy(distributionArray)
 
+	def fetch_player_letters(self, userID: int):
+		return self.playerLetters[str(userID)]
+	
+	def init_game(self, players: UserFetch):
+		for player in players:
+			userID = int(player.userID) # type: ignore
+			self.players.append(userID)
+			self.playerLetters[str(userID)] = random.choices(self.letterArray, k=7)
+			for x in self.playerLetters[str(userID)]:
+				try:
+					self.letterArray.remove(x)
+				except:
+					print("This will never throw.")
+		self.gameTurn = self.players[0]
+		
 	def export_data(self):
 		return {
 			"game": self.game,
