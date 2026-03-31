@@ -6,7 +6,6 @@ from pathlib import Path
 
 currentPath = Path.cwd()
 
-from pydantic import BaseModel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

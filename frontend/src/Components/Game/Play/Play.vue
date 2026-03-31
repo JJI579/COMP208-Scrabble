@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
-import type { modifiers } from '@/types';
+import { computed, onActivated, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
+import { DEFAULT_FILLER, type modifiers } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
 import Chat from './Chat/Chat.vue';
@@ -13,7 +13,7 @@ import type { GameUser } from '@/game_types';
 const websocketStore = useWebsocketStore();
 const userStore = useUserStore();
 
-const DEFAULT_FILLER = "";
+
 
 const letterFocused = ref<number>(-1);
 
@@ -22,7 +22,7 @@ watch(() => websocketStore.game.letters, () => {
 })
 
 watch(() => websocketStore.game.grid, () => {
-	letters.value = websocketStore.game.grid;
+	grid.value = websocketStore.game.grid;
 })
 
 const letters = ref<string[]>([]);
@@ -31,32 +31,7 @@ const placed = ref<Map<number, [number, string]>>(new Map());
 const orderPlacement = ref<number[]>([]);
 
 onMounted(() => {
-	var initGrid: (string | modifiers)[] = [];
-
-	const doubleWord = [16, 32, 48, 64, 112, 160, 176, 192, 208, 28, 42, 56, 70, 154, 168, 182, 196];
-	const doubleLetter = [3, 11, 36, 38, 45, 52, 59, 92, 96, 98, 102, 108, 116, 122, 126, 128, 132, 165, 172, 179, 186, 188, 213, 221];
-	const tripleWord = [0, 7, 14, 105, 119, 210, 217, 224];
-	const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
-
-	for (let i = 0; i < 225; i++) {
-		if (i === 112) {
-			initGrid.push("CENTER");
-			continue;
-		}
-		if (doubleWord.includes(i)) {
-			initGrid.push("DOUBLE_WORD");
-			continue;
-		} else if (doubleLetter.includes(i)) {
-			initGrid.push("DOUBLE_LETTER");
-		} else if (tripleWord.includes(i)) {
-			initGrid.push("TRIPLE_WORD");
-		} else if (tripleLetter.includes(i)) {
-			initGrid.push("TRIPLE_LETTER");
-		} else {
-			initGrid.push(DEFAULT_FILLER)
-		}
-	}
-	grid.value = initGrid;
+	grid.value = websocketStore.game.grid;
 })
 
 
@@ -78,6 +53,7 @@ function submitTurn() {
 }
 
 const activePlayer = computed(() => {
+	console.log(activePlayer)
 	if (websocketStore.game === null) {
 		return -1
 	}

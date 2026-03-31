@@ -121,7 +121,7 @@ class Scrabble:
 	def export_grid(self):
 		toSend = {}
 		for [x,y], letter in self.placed:
-			toSend[str(x*15+y)] = letter
+			toSend[str((y*15)+x)] = letter
 		return toSend
 	
 	def fetch_player_letters(self, userID: int):
@@ -161,6 +161,8 @@ class Scrabble:
 		}
 
 	def next_turn(self):
+		# TODO: change this to the next player's user id not game turn - i think?
+
 		if self.gameTurn < len(self.players):
 			self.gameTurn += 1
 		else:
@@ -258,6 +260,9 @@ class Scrabble:
 			if [x,y] not in preExisting:
 				wordCoordinates.append([x, y])
 			cellContents = self.get_cell(x, y)
+			print(cellContents, defaultFiller)
+			print(x,y)
+			print(preExisting)
 			if cellContents != defaultFiller and (x, y) not in preExisting:
 				print(x, y)
 				print(self.get_cell(x, y))

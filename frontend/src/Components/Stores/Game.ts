@@ -1,5 +1,5 @@
 import type { GameUser } from "@/game_types"
-import type { UserReturn } from "@/types"
+import { DEFAULT_FILLER, type modifiers, type UserReturn } from "@/types"
 import { isTypeAliasDeclaration } from "typescript"
 import { ref, type Ref } from "vue"
 
@@ -44,9 +44,16 @@ type initData = {
 type ongoingData = {
 	letters?: [],
 	players?: [],
-	grid?: Record<string, string>,
+	grid?: Map<string, string>,
 	turn: number
 }
+
+
+const doubleWord = [16, 32, 48, 64, 112, 160, 176, 192, 208, 28, 42, 56, 70, 154, 168, 182, 196];
+const doubleLetter = [3, 11, 36, 38, 45, 52, 59, 92, 96, 98, 102, 108, 116, 122, 126, 128, 132, 165, 172, 179, 186, 188, 213, 221];
+const tripleWord = [0, 7, 14, 105, 119, 210, 217, 224];
+const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
+
 
 class Game implements GAME {
 	gameTurn: number = -1;
@@ -60,9 +67,10 @@ class Game implements GAME {
 	timeLimit: number = 0;
 	dictionaryAllowed: boolean = false;
 	letters: string[] = [];
-	grid = [];
+	grid: string[] = [];
 
 	constructor(gameCode: number, dictionary: any | initData) {
+
 		if (gameCode == 0) {
 			return
 		}
@@ -91,14 +99,45 @@ class Game implements GAME {
 		this.dictionaryAllowed = dictionary.options.dictionary;
 	}
 
+	createNewGrid() {
+		// initialise basic grid
+		var initGrid: (string | modifiers)[] = [];
+		for (let i = 0; i < 225; i++) {
+			if (i === 112) {
+				initGrid.push("CENTER");
+				continue;
+			}
+			if (doubleWord.includes(i)) {
+				initGrid.push("DOUBLE_WORD");
+				continue;
+			} else if (doubleLetter.includes(i)) {
+				initGrid.push("DOUBLE_LETTER");
+			} else if (tripleWord.includes(i)) {
+				initGrid.push("TRIPLE_WORD");
+			} else if (tripleLetter.includes(i)) {
+				initGrid.push("TRIPLE_LETTER");
+			} else {
+				initGrid.push(DEFAULT_FILLER)
+			}
+		}
+		this.grid = initGrid;
+	}
+
 	updateOngoing(allData: ongoingData) {
 		if (allData.letters) {
 			this.letters = allData.letters;
 		}
+		console.log(allData);
 		if (allData.grid) {
 			console.log("grid");
 			console.log(allData.grid);
+			Object.entries(allData.grid).forEach((item) => {
+				console.log(item);
+				var ind = Number(item[0]);
+				this.grid[ind] = item[1];
+			})
 		}
+		this.gameTurn = allData.turn;
 		console.log("myletters");
 		console.log(this.letters);
 
@@ -108,7 +147,7 @@ class Game implements GAME {
 
 		var dictionary: initData = allData.game
 		var gameID = allData.gameID
-
+		this.createNewGrid();
 		if (dictionary.turn !== undefined) {
 			this.gameTurn = dictionary.turn
 		}

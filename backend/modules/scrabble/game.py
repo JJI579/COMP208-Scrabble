@@ -1,7 +1,7 @@
 from .scrabble import Scrabble, arr
 from modules.schema import UserFetch, GameOptions, GamePlayer
 from pydantic import BaseModel
-
+import copy
 
 
 
@@ -12,7 +12,7 @@ class Game:
 		self.id = gameID
 		self.leader = leaderID
 		self.options = options.model_dump(mode="json")
-		self.game = Scrabble(arr.copy())
+		self.game = Scrabble(copy.deepcopy(arr))
 		self.type = options.game_type
 		self.players: list[GamePlayer] = []
 		self.hasStarted = False
@@ -190,6 +190,6 @@ class Game:
 
 	def start_game(self):
 		self.hasStarted = True
-		self.turn = self.players[0].userID
-		self.game.init_game(self.players)
+		currentTurn = self.game.init_game(self.players)
+		return currentTurn
 		# TODO: perform other stuff.

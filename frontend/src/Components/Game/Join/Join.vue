@@ -5,6 +5,7 @@ import { isPartiallyEmittedExpression } from 'typescript';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import Group from './Group.vue';
+import Game from '../../Stores/Game';
 
 
 const route = useRoute();
@@ -52,6 +53,10 @@ function startGame() {
 		// TODO: alert to say you are not in a game.
 	}
 }
+
+function quitLast() {
+	websocket.game = new Game(0, {});
+}
 </script>
 
 
@@ -82,11 +87,12 @@ function startGame() {
 						:key="ind" />
 				</div>
 			</div>
-
+			<button @click="quitLast">quit last</button>
 		</div>
 
 		<div class="start" v-if="websocket.game.leader == user.userData?.userID">
 			<button @click="startGame">Start Game</button>
+			
 		</div>
 	</div>
 

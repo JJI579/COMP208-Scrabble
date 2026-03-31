@@ -84,5 +84,7 @@ const pointsMap: Record<string, number> = {
 
 
 
+const DEFAULT_FILLER = "";
+
 export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers };
-export { debug, pointsMap };
+export { debug, pointsMap, DEFAULT_FILLER };
