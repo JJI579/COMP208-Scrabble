@@ -10,6 +10,9 @@ class User(Base):
 	userName = Column(String, unique=True, nullable=False)
 	userPassword = Column(String, nullable=False)
 	userCreatedAt = Column(DateTime, default=datetime.utcnow)
+	wins = Column(Integer, default=0, nullable=False)
+	loses = Column(Integer, default=0, nullable=False)
+	totalScore = Column(Integer, default=0, nullable=False)
 	deactivated = Column(Boolean, default=False, nullable=False)
 
 class Token(Base):

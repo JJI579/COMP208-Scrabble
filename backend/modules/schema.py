@@ -6,6 +6,9 @@ class UserFetch(BaseModel):
 	userID: int
 	userName: str
 	userCreatedAt: datetime.datetime
+	wins: int
+	loses: int
+	totalScore: int
 
 	class Config:
 		from_attributes = True

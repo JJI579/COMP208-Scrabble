@@ -6,6 +6,7 @@
 
 <template>
 
+	<h1>This is the profile</h1>
 	<!-- Self explanatory via the name... -->
 </template>
 
