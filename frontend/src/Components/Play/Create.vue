@@ -3,10 +3,10 @@ import { ref } from 'vue';
 import SegmentedControl from './SegmentedControl/SegmentedControl.vue';
 
 
-const gamemodeOptions = ['Solo', 'Duos']
+const gamemodeOptions = ['Solo', 'Duos'];
 const gamemodeRef = ref('Solo');
 
-const dictionaryOptions = ['Yes', "No"]
+const dictionaryOptions = ['Yes', "No"];
 const dictionaryRef = ref('Yes');
 
 function createGame() {
