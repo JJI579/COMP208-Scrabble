@@ -10,6 +10,7 @@ import os, datetime, secrets, hashlib
 from modules.functions import get_current_user
 from typing import Annotated
 apiLog = APILogger()
+from modules.schema import UserFetch 
 
 from sqlalchemy import insert
 
@@ -29,7 +30,7 @@ router = APIRouter(
 	
 # 	return {'total': len(_words)}
 
-@router.get('/@me')
+@router.get('/@me', response_model=UserFetch)
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	return current_user
 

@@ -96,7 +96,8 @@ async def register(registerData: registerForm, session: AsyncSession = Depends(g
                    userCreatedAt=datetime.datetime.now(datetime.timezone.utc), 
                    wins=0,
                    loses=0,
-                   totalScore=0)
+                   totalScore=0,
+                   bestScore=0)
  
 	session.add(newUser)
 	await session.commit()

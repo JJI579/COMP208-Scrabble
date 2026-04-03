@@ -9,6 +9,7 @@ class UserFetch(BaseModel):
 	wins: int
 	loses: int
 	totalScore: int
+	bestScore: int
 
 	class Config:
 		from_attributes = True
