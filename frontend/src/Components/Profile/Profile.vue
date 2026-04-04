@@ -79,7 +79,7 @@ function calculateAverageScore() {
 
 		<div class="rankScore">
 			<div class="rank">
-				<h3>We'll have the rank here</h3>
+				<h2>We'll have the rank here</h2>
 				<p>Rank</p>
 			</div>
 
@@ -117,125 +117,8 @@ function calculateAverageScore() {
 
 <style lang="css">
 
-
-/* .profile {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-	width: 100%;
-}
-
-.profile > div {
-	flex: 1;
-	display: flex;
-	flex-direction: column;   
-	align-items: center;      
-}
-
-
-.wins {
-	align-items: flex-start;
-	text-align: left;
-}
-
-.userName {
-	align-items: center;
-	text-align: center;
-}
-
-.loses {
-	align-items: flex-end;
-	text-align: right;
-}
-
-
-.profile i {
-	margin-bottom: 8px;  
-}
-
-.profile h2 {
-	margin: 0;
-	font-size: 24px;
-}
-
-.profile p {
-	margin-top: 5px;
-	color: gray;
-} 
-
-.userStats {
-	display: flex;
-	width: 100%;
-	flex-direction: row;
-} */
-
-/* .profile {
-	display: flex;
-	flex-direction: column;
-	margin-top: 2rem;
-	gap: 1.5rem;
-	width: 100%;
-} */
-
-/* Row 1: username centered */
-/* .userName-row {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-.userName {
-	display: flex;
-	flex-direction: column;   
-	align-items: center;      
-	justify-content: center;  
-	text-align: center;
-}
-
-.winsLoses {
-	display: flex;             
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
-	width: 100%;
-	max-width: 400px;          
-	margin: 0 auto;            
-}
-
-.wins,
-.loses {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	flex: 1;                   
-	text-align: center;
-}
-
-
-.wins {
-	margin-right: 1rem;
-}
-
-.loses {
-	margin-left: 1rem;
-}
-
-.profile i {
-	margin-bottom: 8px;
-} */
-
-/* .profile h2 {
-	margin: 0;
-	font-size: 24px;
-} */
-
-/* .profile p {
-	margin-top: 5px;
-	color: gray;
-} */
-
 body {
-	background: #1b263b;
+	background: #0d1b2a;
 }
 
 .profile {
@@ -286,7 +169,7 @@ body {
 .score,
 .statsPart1,
 .statsPart2 {
-	background: linear-gradient(135deg, #2a4d8f, #4169a9); /* brighter blue */
+	background: linear-gradient(135deg, #2a4d8f, #4169a9); 
 	border-radius: 12px;
 	padding: 1.5rem;
 	box-shadow:
@@ -304,6 +187,7 @@ body {
 	flex-direction: column;
 	align-items: center;
 	text-align: center;
+	justify-content: center;
 }
 
 /* Stats boxes */
@@ -311,7 +195,12 @@ body {
 .statsPart2 {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
+	gap: 0.2rem;
+}
+
+.statsPart1 h3,
+.statsPart2 h3 {
+	margin: 10px;
 }
 
 /* Typography */
@@ -323,6 +212,7 @@ body {
 .profile h2 {
 	margin: 0;
 	font-size: 24px;
+	margin-bottom: 10px;
 	color: #ffffff;
 }
 

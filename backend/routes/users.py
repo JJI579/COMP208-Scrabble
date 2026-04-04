@@ -34,11 +34,41 @@ router = APIRouter(
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	return current_user
 
+
+@router.get('/leaderboard', response_model=list[UserFetch])
+async def get_leaderboard(sort_by: str = "totalScore", search: str = '', session: AsyncSession = Depends(get_session)):
+    
+
+    if sort_by == "totalScore":
+        order_by = User.totalScore
+        print("sorting by totalScore")
+    elif sort_by == "wins":
+        order_by = User.wins
+        print("sorting by wins")
+    elif sort_by == "games":
+        order_by = User.wins + User.loses
+        print("sorting by games")
+    else:
+        order_by = User.bestScore
+        
+    query = user_search(select(User), search)
+    query = query.order_by(order_by.desc())
+    
+    results = await session.execute(query)
+    users = results.scalars().all()
+    print(users)
+    return users
+
+
 @router.get('/{user_id}')
 async def get_user(request: Request, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	userID = request.path_params.get('user_id')
 	print(userID)
+ 
+ 
 
+def user_search(query, name: str):
+    if name:
+        return query.where(User.userName.ilike(f"%{name}%"))
+    return query
 
-
-	
