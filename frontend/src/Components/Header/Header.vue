@@ -18,8 +18,8 @@ function profileClicked() {
 	console.log("pfp button clicked");
 	router.push({name: 'profile'});
 	// Test
-
 }
+
 
 
 </script>
@@ -33,7 +33,7 @@ function profileClicked() {
 				</div>
 
 			</div>
-			<RouterLink :to="{ name: 'home' }" class="link">
+			<RouterLink :to="{ name: 'dashboard' }" class="link">
 				<div class="tiles">
 					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
 						{{ l }}

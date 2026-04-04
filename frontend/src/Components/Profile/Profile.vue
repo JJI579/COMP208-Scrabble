@@ -3,6 +3,7 @@
 import api from '@/api';
 import { onMounted, ref } from 'vue';
 import { resolveComponent } from 'vue';
+import router from '../../router';
 
 const user = ref<any>(null);
 
@@ -15,6 +16,13 @@ async function getUser() {
 onMounted(() => {
 	getUser();
 })
+
+function logout() {
+	localStorage.removeItem('token');
+	localStorage.removeItem('refresh_token');
+	localStorage.removeItem('userID');
+	router.push({name: 'dashboard'});
+}
 
 function calculateWinRate() {
 	if (!user.value) {
@@ -107,9 +115,19 @@ function calculateAverageScore() {
 		<h1>Friends</h1>
 		<p>I am going to add a box with all the friends and it will have a link to go to the friends page</p>
 
-		<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
+		<div class="logoutSection">
+      		<button class="logoutButton" @click="logout()">Logout</button>
+    	</div>
 
+		<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
+	
 	</div>
+
+	<!-- <div class="logoutSection">
+      	<button class="logoutButton" @click="logout()">Logout</button>
+    </div>
+
+	<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2> -->
 
 	<!-- Self explanatory via the name... -->
 </template>
@@ -207,6 +225,7 @@ body {
 .profile i {
 	margin-bottom: 8px;
 	color: #80c0ff; /* softer glow */
+	width: 100%;;
 }
 
 .profile h2 {
@@ -219,6 +238,24 @@ body {
 .profile p {
 	margin-top: 5px;
 	color: #dbe6ff; /* brighter for readability */
+}
+
+.logoutSection {
+	grid-column: 1 / -1;
+	margin-top: 2rem;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	padding-bottom: 2rem;
+}
+
+.logoutButton {
+	background-color: rgb(183, 1, 1);
+	border: 2px solid rgb(140, 0, 0);
+	color: white;
+	padding: 0.5rem 3rem;
+	border-radius: 10px;
+	cursor: pointer;
 }
 
 </style>
