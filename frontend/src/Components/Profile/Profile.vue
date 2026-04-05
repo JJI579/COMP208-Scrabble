@@ -87,7 +87,7 @@ function calculateAverageScore() {
 
 		<div class="rankScore">
 			<div class="rank">
-				<h2>We'll have the rank here</h2>
+				<h2>{{ user.rank }}</h2>
 				<p>Rank</p>
 			</div>
 

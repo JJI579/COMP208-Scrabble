@@ -32,12 +32,24 @@ router = APIRouter(
 
 @router.get('/@me', response_model=UserFetch)
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
-	return current_user
+    result = await session.execute(select(User).order_by(User.totalScore.desc()))
+    users = result.scalars().all()
+    
+    rank = next((i + 1 for i, user in enumerate(users) if (user.userID == current_user.userID)), None) # type: ignore
+    print(rank)
+    
+    return {
+        **current_user.__dict__,
+        "rank": rank
+    }
+    
+    
 
 
 @router.get('/leaderboard', response_model=list[UserFetch])
-async def get_leaderboard(sort_by: str = "totalScore", search: str = '', session: AsyncSession = Depends(get_session)):
+async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: int = 100, session: AsyncSession = Depends(get_session)):
     
+    print(limit)
 
     if sort_by == "totalScore":
         order_by = User.totalScore
@@ -52,7 +64,7 @@ async def get_leaderboard(sort_by: str = "totalScore", search: str = '', session
         order_by = User.bestScore
         
     query = user_search(select(User), search)
-    query = query.order_by(order_by.desc())
+    query = query.order_by(order_by.desc()).limit(limit)
     
     results = await session.execute(query)
     users = results.scalars().all()

@@ -5,9 +5,12 @@
 
 <script lang="ts" setup>
 import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import api from '@/api';
+
 
 const streak = ref(7);
+const users = ref<any>([]);
 
 const flameLevel = computed(() => {
   if (streak.value >= 5) return 'legend';
@@ -15,6 +18,16 @@ const flameLevel = computed(() => {
   if (streak.value >= 1) return 'warm';
   return 'idle';
 });
+
+async function getLeaderboard() {
+	const res = await api.get('/users/leaderboard', { params: { limit: 5 } });
+	console.log(res.data);
+	users.value = res.data;
+}
+
+onMounted(() => {
+  getLeaderboard();
+})
 
 </script>
 
@@ -53,12 +66,19 @@ const flameLevel = computed(() => {
 					<span>Score</span>
 				</div>
 
-				<ul class="leaderboard-list">
+				<!-- <ul class="leaderboard-list">
 					<li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500 pts</span></li>
 					<li class="leaderboard-item"><span class="rank-badge silver">2</span><span>PlayerTwoWithLongName</span><span>1200 pts</span></li>
 					<li class="leaderboard-item"><span class="rank-badge bronze">3</span><span>PlayerThree</span><span>900 pts</span></li>
 					<li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li>
-          		</ul>
+        </ul> -->
+        <ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
+          <li class="leaderboard-item"><span> {{  i + 1 }}</span> <span> {{  user.userName }}</span> <span> {{ user.totalScore }}</span></li>
+					<!-- <li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500 pts</span></li>
+					<li class="leaderboard-item"><span class="rank-badge silver">2</span><span>PlayerTwoWithLongName</span><span>1200 pts</span></li>
+					<li class="leaderboard-item"><span class="rank-badge bronze">3</span><span>PlayerThree</span><span>900 pts</span></li>
+					<li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li> -->
+        </ul>
 
 			</button>
 			</RouterLink>

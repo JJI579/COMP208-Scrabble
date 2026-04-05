@@ -10,6 +10,7 @@ class UserFetch(BaseModel):
 	loses: int
 	totalScore: int
 	bestScore: int
+	rank: int | None = None
 
 	class Config:
 		from_attributes = True
