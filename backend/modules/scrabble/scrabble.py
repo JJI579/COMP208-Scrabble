@@ -149,6 +149,7 @@ class Scrabble:
 
 	def give_player_letters(self, userID: int, amount: int):
 		letterChoices = random.sample(self.letterArray, k=amount)
+		letterChoices[0] = " "
 		if str(userID) in self.playerLetters:
 			self.playerLetters[str(userID)].extend(letterChoices)
 		else:
@@ -322,6 +323,7 @@ class Scrabble:
 		hasJoiningWord = False
 		# assume every connection is a word until proven wrong
 		# also we assume that they can provide us either a word, or not, if it is a word, prove wrong via connections, else it is fine.
+		print(f"word: {word}")
 		isWord = await self.check_word(word)
 		forceBreak = False
 		points = 0
@@ -421,7 +423,7 @@ class Scrabble:
 			print()
 
 	async def check_word(self, word: str):
-		return True
+		# return True
 		return await self._check_word(word)
 		# return twl.check(word)
 		# resp = requests.get(f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}')
@@ -429,7 +431,6 @@ class Scrabble:
 		# return not ('title' in respData)
 	
 	async def _check_word(self, word: str):
-		print("theword: " + word)
 		async for session in get_session():
 			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word.lower()})
 			result = resp.scalar_one_or_none()

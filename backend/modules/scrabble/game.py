@@ -67,7 +67,7 @@ class Game:
 		# this should not have a side effect of moving to the next turn.
 		result = await self.game.place_word(letters, direction, blanksIdentified)
 		if type(result) == bool:
-			print("we are here.")
+			
 			return False
 		
 		# Update letters and return result.

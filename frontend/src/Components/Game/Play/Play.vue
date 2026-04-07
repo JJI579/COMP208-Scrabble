@@ -29,9 +29,9 @@ watch(() => websocketStore.game.grid, () => {
 
 const letters = ref<string[]>([]);
 const grid = ref<(string | modifiers)[]>([]);
-const placed = ref<Map<number, [number, string]>>(new Map());
+const placed = ref<Map<number, [number, string, string?]>>(new Map());
 const orderPlacement = ref<number[]>([]);
-
+const blankLetter = ref<string>(DEFAULT_FILLER);
 onMounted(() => {
 	grid.value = websocketStore.game.grid;
 })
@@ -40,21 +40,20 @@ onMounted(() => {
 
 // Game Active
 function submitTurn() {
-	const toSend: [number[], string][] = [];
+	const toSend: [number[], string, string?][] = [];
 
 	placed.value.forEach((value, key) => {
 		var letter = value[1] as string;
 		var cellID = key;
 		const x = cellID % 15;
 		const y = Math.floor(cellID / 15);
-		toSend.push([[x, y], letter])
+		toSend.push([[x, y], letter, value[2]])
 	})
 
-	websocketStore.send("GAME_TURN", {letters: toSend});
+	websocketStore.send("GAME_TURN", { letters: toSend });
 }
 
 const activePlayer = computed(() => {
-	console.log(activePlayer)
 	if (websocketStore.game === null) {
 		return -1
 	}
@@ -64,19 +63,8 @@ const activePlayer = computed(() => {
 const chatOpen = ref(false);
 
 
-onMounted(() => {
-	if (websocketStore.game === null) {
-		router.replace({ name: "dashboard" })
-		return
-	}
-	console.log(websocketStore.game.players)
-	console.log(websocketStore.game.gameTurn)
-})
-
-
 function undo() {
 	const last = orderPlacement.value.pop();
-	console.log(last)
 	if (last !== undefined) {
 		placed.value.delete(last);
 	}
@@ -91,7 +79,7 @@ function handleKeyboardPress(event: KeyboardEvent) {
 		case "5":
 		case "6":
 		case "7":
-			letterFocused.value = parseInt(event.key) - 1
+			handleTileClick(parseInt(event.key) - 1);
 			break;
 		case "Backspace":
 			undo();
@@ -103,9 +91,21 @@ function handleTileClick(index: number) {
 	if (placedIndexes.value.includes(index)) {
 		return
 	}
+	if (letters.value[index] === " ") {
+		console.log("Blank")
+		selectBlank.value = index;
+		return;
+	}
 	letterFocused.value = index;
 }
 onMounted(() => {
+	const websocket = useWebsocketStore();
+	setTimeout(() => {
+		console.log("Checking Game Turn has been set")
+		if (websocket.game.gameTurn == -1) {
+			router.replace({ name: "dashboard" })
+		}
+	}, 2000);
 	window.addEventListener("keyup", handleKeyboardPress)
 })
 
@@ -142,6 +142,21 @@ const players = computed(() => {
 	}
 	return ret
 })
+
+
+const alphabetArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+const selectBlank = ref(-1);
+
+function selectedBlankTile(index: number) {
+	var letter = alphabetArray[index];
+	if (letter !== undefined) {
+		// will never be.
+		letter.toLowerCase();
+		blankLetter.value = letter;
+		letterFocused.value = selectBlank.value;
+		selectBlank.value = -1;
+	}
+}
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -150,18 +165,23 @@ const players = computed(() => {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
+
+	<div class="letter-selection" :class="{'letter-selection--visible': selectBlank !== -1}">
+		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray" @click="selectedBlankTile(Number(ind))">
+			{{ letter }}
+		</div>
+	</div>
 	<div class="wrapper">
+
 		<div class="wrapper__flex">
 			<div class="player__column left">
 				<Player :active-player="activePlayer" :user-game-data="player"
 					v-for="player in (players.length > 0 ? players[0] : [])" />
 			</div>
-
-			{{ activePlayer }}
 			<div class="center__wrapper">
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
-					@cell-clicked="letterFocused = -1" :placed="placed" />
+					@cell-clicked="letterFocused = -1" :placed="placed" :blank-letter="blankLetter" />
 
 				<div class="actions">
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
@@ -175,7 +195,7 @@ const players = computed(() => {
 						</div>
 					</div>
 					<button @click="submitTurn" class="action" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" ><i
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-check "></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
@@ -316,5 +336,43 @@ const players = computed(() => {
 	color: white;
 	font-size: 20px;
 	cursor: pointer;
+}
+
+.letter-selection {
+	display: none;
+	visibility: hidden;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	background-color: var(--scrabble-board);
+	border-radius: 10px;
+	z-index: 9999;
+	max-width: 50vh;
+	width: auto;	
+	gap: 1rem;
+	flex-wrap: wrap;
+	justify-content: left;
+	aspect-ratio: 1/1;
+}
+
+.letter-selection--visible {
+	display: flex;
+	visibility: visible;
+}
+
+/* TODO: fix the alignment of Y and Z when selecting blank */
+.letter-selection__letter {
+	height: 48px;
+	width: 48px;
+	aspect-ratio: 1/1;
+	color: white;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 1px solid white;
+	user-select: none;
+	cursor: pointer;
+	border-radius: 8px;
 }
 </style>

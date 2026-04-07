@@ -62,7 +62,7 @@ function quitLast() {
 
 
 <template>
-	{{websocket.game}}
+
 	<div class="join" v-if="websocket.game.id == 0">
 		<h2>Input Code</h2>
 		<input type="text" v-model="codeModel" placeholder="enter code" class="join__input" maxlength="4"
@@ -71,12 +71,20 @@ function quitLast() {
 	</div>
 
 	<div class="ingame" v-else>
-		<div class="players">
+		<div class="ingame__code">
 			{{ codeModel }}
+		</div>
+		<div class="ingame__players">
 
+			<h2 class="players__title">
+				Players ({{websocket.game.players.size}}/{{ "amount" }})
+			</h2>
 			<div class="player" v-for="player in websocket.game?.players.values()"
 				v-if="websocket.game?.type == 'NORMAL'">
 				{{ player.userName }}
+				<div class="player__icon">
+					<i class="pi pi-crown" v-if="websocket.game.leader == user.userData?.userID"/>
+				</div>
 			</div>
 			<div class="group" v-else-if="websocket.game?.type == 'GROUP'">
 				<div class="player">
@@ -87,13 +95,17 @@ function quitLast() {
 						:key="ind" />
 				</div>
 			</div>
-			<button @click="quitLast">quit last</button>
+			<div class="ingame__actions">
+				<button @click="quitLast">Leave</button> 
+				<div class="start" v-if="websocket.game.leader == user.userData?.userID">
+					<button @click="startGame">Start Game</button>
+				</div>
+
+			</div>
+
 		</div>
 
-		<div class="start" v-if="websocket.game.leader == user.userData?.userID">
-			<button @click="startGame">Start Game</button>
-			
-		</div>
+
 	</div>
 
 </template>
@@ -154,4 +166,43 @@ function quitLast() {
 	gap: 1rem;
 	justify-content: space-between;
 }
+
+.ingame {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+
+.ingame__code {
+	padding: .5rem 1rem;
+	font-size: larger;
+	font-weight: bold;
+	border: 1px solid black;
+	border-radius: 8px;
+}
+
+.ingame__players {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.player {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: .25rem;
+	padding-inline: .5rem;
+	border-radius: 10px;
+	border: 1px solid black;
+}
+.ingame__actions {
+	display: flex;
+	gap: 1rem;
+	justify-content: space-between;
+}
+
 </style>

@@ -13,7 +13,7 @@ const userStore = useUserStore();
 	<div class="header">
 		<div class="first">
 			<RouterLink :to="{ name: 'home' }" class="link">
-				<p class="title">Scrabble {{ userStore.userData?.userName }}</p>
+				<p class="title">Scrabble</p>
 			</RouterLink>
 		</div>
 		<div class="end" v-if="userStore.isLoggedIn">

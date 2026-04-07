@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { modifiers } from '@/types';
+import { DEFAULT_FILLER, type modifiers } from '@/types';
 import { computed, ref } from 'vue';
 import GridCell from './GridCell.vue';
 import ModifierCell from './ModifierCell.vue';
@@ -10,10 +10,11 @@ const emit = defineEmits(['cellClicked']);
 const grid = defineModel("grid", { required: true, type: Array<string | modifiers> });
 const letters = defineModel("letters", { required: true, type: Array<string> });
 const letterFocused = defineModel("letterFocused", { required: true, type: Number });
+const blankLetter = defineModel("blankLetter", { required: true, type: String })
 const activePlayer = defineModel("activePlayer", { required: true, type: Number });
 const orderPlacement = defineModel("orderPlacement", { required: true, type: Array<number> });
 
-const placed = defineModel<Map<number, [number, string]>>("placed", {
+const placed = defineModel<Map<number, [number, string, string?]>>("placed", {
 	required: true,
 	type: Map
 });
@@ -43,8 +44,15 @@ function cellClicked(index: number) {
 		if (grid.value[index] == props.filler || OPTIONS.includes(grid.value[index] || "")) {
 			var letter = letters.value[letterFocused.value];
 			if (letter !== undefined) {
-				placed.value.set(index, [letterFocused.value, letter]);
+				// TODO: make placed value have a
+				const arr: [number, string, string?] = [letterFocused.value, letter, undefined];
+				if (blankLetter.value !== DEFAULT_FILLER) {
+					arr[2] = blankLetter.value
+				}
+				console.log(arr);
+				placed.value.set(index, arr);
 				orderPlacement.value.push(index)
+				blankLetter.value = DEFAULT_FILLER;
 				emit('cellClicked')
 			}
 		} else {
@@ -63,7 +71,7 @@ function cellClicked(index: number) {
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
 				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />
-				<GridCell :cell-value="placed.get(i)?.[1] || value" :score="''" :is-draft="placed.get(i) !== undefined"
+				<GridCell :cell-value="placed.get(i)?.[2] || placed.get(i)?.[1] || value" :score="''" :is-draft="placed.get(i) !== undefined"
 					:x="i % 15" :y="Math.floor(i / 15)" v-else />
 			</div>
 		</div>

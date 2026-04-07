@@ -6,8 +6,8 @@ from typing import Annotated, TypedDict
 from modules.database.models import User
 from modules.schema import GameOptions, PacketType, UserFetch
 from modules.websocket.WebsocketManager import manager
-from modules.scrabble.game import Game
-from sqlmodel import select
+from sqlmodel import insert
+from modules.database.models import Word
 import asyncio, secrets, json
 from modules.websocket.packets import packets
 
@@ -21,9 +21,22 @@ gameRouter = APIRouter(
 	tags=["game"],
 )
 
+
+# @gameRouter.get('/words')
+# async def addwords(session: AsyncSession = Depends(get_session)):
+	
+# 	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
+# 	total = 0
+
+# 	await session.execute(insert(Word), _words)
+# 	await session.commit()
+	
+# 	return {'total': len(_words)}
+
 @gameRouter.post("/create")
 async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):	
 	CODE = manager.create_game(options, current_user.userID) # type: ignore
+	# TODO: add to database
 	return {
 		"code": CODE
 	}
