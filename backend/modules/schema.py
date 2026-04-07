@@ -39,7 +39,6 @@ class UserFetch(BaseModel):
 	class Config:
 		from_attributes = True
 
-
 class Tile(BaseModel):
 	letter: str
 	points: int
