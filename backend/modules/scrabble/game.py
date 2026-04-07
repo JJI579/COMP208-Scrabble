@@ -32,8 +32,12 @@ class Game:
 	async def game_turn(self, letters):
 		firstCoordinate = None
 		direction = "RIGHT"
-		# TODO: identify what direction we go, calculate where blanks are also, and then submit to the board.
+		playerLetters = self.game.fetch_player_letters(self.get_current_turn())
+		
+		# TODO: identify if the letters used are available, and direction of play.
+		blanksIdentified = []
 		for [x,y], letter in letters:
+			# identify direction
 			if firstCoordinate == None:
 				firstCoordinate = [x,y]
 			else:
@@ -43,19 +47,36 @@ class Game:
 				else:
 					direction = "DOWN"
 					letters.sort(key=lambda x: x[1])
-			# break
+			# identify if player has all available letters.
+			if letter in playerLetters:
+				playerLetters.remove(letter)
+			else:
+				# identify if blank is there, and use that.
+				blank = " "
+				if blank in playerLetters:
+					playerLetters.remove(blank)
+					blanksIdentified.append((x,y))
+				else:
+					# invalid placement.
+					return 
+		print("Player has all letters required for this turn.")
+
 		print(direction)
-		result = await self.game.place_word(letters, direction)
+		
+		print(letters)
+		# this should not have a side effect of moving to the next turn.
+		result = await self.game.place_word(letters, direction, blanksIdentified)
 		if type(result) == bool:
 			# invalid placement
 			return
-		# return points amount and perform game update...?
-		# update self.players
 		
+		# Update letters and return result.
+		# get_current_turn should be the same, otherwise place_word changes the current turn.
+		self.game.set_player_letters(self.get_current_turn(), playerLetters)
 		print(f"result: {result}")
+
 		return result
-		# 't': 'GAME_TURN', 'd': {'letters': [[[7, 7], 'T'], [[8, 7], 'A'], [[9, 7], 'G']]}}
-		pass
+		
 
 	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
 		return GamePlayer.model_validate(player)

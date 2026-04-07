@@ -1,5 +1,6 @@
 import type { GameUser } from "@/game_types"
 import { DEFAULT_FILLER, type modifiers, type UserReturn } from "@/types"
+import { all } from "axios"
 import { isTypeAliasDeclaration } from "typescript"
 import { ref, type Ref } from "vue"
 
@@ -46,6 +47,7 @@ type ongoingData = {
 	players?: [],
 	grid?: Map<string, string>,
 	turn: number
+	points?: number
 }
 
 
@@ -133,6 +135,13 @@ class Game implements GAME {
 				this.grid[ind] = item[1];
 			})
 		}
+		// update player points before updating gameturn
+		if (allData.points !== undefined)  {
+			if (this.players.has(this.gameTurn) === true) {
+				this.players.get(this.gameTurn)!.points += allData.points;
+			}
+		}
+		
 		this.gameTurn = allData.turn;
 		console.log("myletters");
 		console.log(this.letters);

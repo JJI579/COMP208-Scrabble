@@ -56,6 +56,7 @@ class WebsocketManager:
 	
 	async def send_message(self, websocket: WebSocket, message: str):
 		try:
+			# print(f"Sent message: {websocket.user_id} | Message: {message}") # type: ignore	
 			await websocket.send_text(message)
 		except Exception as er:
 			print("TRIED TO SEND MESSAGE BUT ERROR")

@@ -118,6 +118,12 @@ class Scrabble:
 		# make sure it isnt a reference array
 		self.letterArray: list[str] = copy.deepcopy(distributionArray)
 
+
+		self.double_letter = [ [3,0],[11,0], [6,2],[8,2], [0,3],[7,3],[14,3], [2,6],[6,6],[8,6],[12,6], [3,7],[11,7], [2,8],[6,8],[8,8],[12,8], [0,11],[7,11],[14,11], [6,12],[8,12], [3,14],[11,14] ]
+		self.triple_letter = [ [5,1],[9,1], [1,5],[5,5],[9,5],[13,5], [1,9],[5,9],[9,9],[13,9], [5,13],[9,13] ]
+		self.double_word = [ [1,1],[2,2],[3,3],[4,4], [7,7], [10,10],[11,11],[12,12],[13,13], [13,1],[12,2],[11,3],[10,4], [4,10],[3,11],[2,12],[1,13] ]
+		self.triple_word = [ [0,0],[7,0],[14,0], [0,7],[14,7], [0,14],[7,14],[14,14] ]
+
 	def export_grid(self):
 		toSend = {}
 		for [x,y], letter in self.placed:
@@ -147,11 +153,21 @@ class Scrabble:
 			self.playerLetters[str(userID)].extend(letterChoices)
 		else:
 			self.playerLetters[str(userID)] = letterChoices
-		for x in self.playerLetters[str(userID)]:
+		for x in letterChoices:
+			print("give player letter")
+			print(x)
 			try:
 				self.letterArray.remove(x)
-			except:
+			except Exception as e:
+				print(e)
 				print("This will never throw.")
+
+	def set_player_letters(self, userID: int, letters: list[str]):
+		# give player rest of letters aswell.
+		# DONT TRY TO REMOVE FROM THE PARAM SINCE THEY HAVE ALREADY BEEN REMOVED PREVIOUSLY.
+		self.playerLetters[str(userID)] = letters
+		if len(letters) < 7: # make it give the rest of the letters.
+			self.give_player_letters(userID, 7 - len(letters))
 
 	def export_data(self):
 		return {
@@ -161,12 +177,13 @@ class Scrabble:
 		}
 
 	def next_turn(self):
-		# TODO: change this to the next player's user id not game turn - i think?
+		# TODO: change this to the next player's user id not game turn - i think?	
 
-		if self.gameTurn < len(self.players):
+		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
 			self.gameTurn = 0
+		# Returns user id 
 		return self.fetch_turn()
 
 	def get_cell(self, x: int, y: int):
@@ -240,18 +257,18 @@ class Scrabble:
 
 		return coordinates
 
-	async def place_word(self, letters, direction: str):
+	async def place_word(self, letters, direction: str, blanks: list[tuple[int, int]]):
 
 		# letters = list of [[x,y], letter]
 		# aim of this is for the game to calculate what word is trying to be made
 
 		# THIS THEN GETS PASSED TO _PLACE_WORD
 		
-		return await self._place_word(''.join([x[1] for x in letters]), letters[0][0], direction) # type: ignore
+		return await self._place_word(''.join([x[1] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
+		print(f"Placing word: {word} | Position: {position} | Direction: {direction} | Blanks: {blanks} | PreExisting: {preExisting}") 	
 		preExisting = [x[0] for x in self.placed] # consider type of self.placed so this just returns coordinates of previously placed letters
-		print(preExisting)
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
@@ -316,7 +333,7 @@ class Scrabble:
 					potentialWord = self.expand_horizontally(currentPosition)
 				else:
 					potentialWord = self.expand_vertically(currentPosition)
-				print(potentialWord)
+					print(potentialWord)
 				testArray = potentialWord.copy()
 				[testArray.remove(x) for x in wordCoordinates if x in testArray]
 				if len(testArray) != 0:
@@ -343,6 +360,7 @@ class Scrabble:
 						hasJoiningWord = True
 						self.firstPlaced = True
 		
+		# TODO: fix 50 points issue and make it not consider preExisting.
 		if len(word) == 7 and len(preExisting) == 0:
 			points+=50 
 		# calculate points for the literal word
@@ -362,17 +380,34 @@ class Scrabble:
 				pass
 		
 		self.placed.extend(tempPlaced)
-		print(tempPlaced)
+		self.print_board()
 		return points
 		
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
-		# THIS FUNCTION DOES NOT CONSIDER DOUBLE WORDS / LETTERS ETC.
-		# blanks are coordinates of the letter.
+		# TODO: fix blanks.
+		doubleWord = 0
+		tripleWord = 0
 		points = 0
-		for tupe, letter in wordOrdered:
-			if tupe not in blanks:
+		for coord, letter in wordOrdered:
+			if coord not in blanks:
 				# do not ignore
-				points += pointsData[letter.upper()]
+				if coord in self.double_letter:
+					points += (pointsData[letter.upper()]*2) 
+				elif coord in self.triple_letter:
+					points += (pointsData[letter.upper()] * 3)
+				else:
+					if coord in self.double_word:
+						doubleWord+=1
+					elif coord in self.triple_word:
+						tripleWord+=1
+					points += pointsData[letter.upper()] 
+
+		for _ in range(doubleWord):
+			print("[POINTS] | Doubled word points")
+			points*=2
+		for _ in range(tripleWord):
+			print("[POINTS] | Tripled word points")
+			points*=3
 		return points
 
 		# points = 0

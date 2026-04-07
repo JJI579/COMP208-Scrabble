@@ -19,6 +19,8 @@ const letterFocused = ref<number>(-1);
 
 watch(() => websocketStore.game.letters, () => {
 	letters.value = websocketStore.game.letters;
+	// if letters change that mean they have been handed a new deck.
+	placed.value = new Map();
 })
 
 watch(() => websocketStore.game.grid, () => {
@@ -33,7 +35,6 @@ const orderPlacement = ref<number[]>([]);
 onMounted(() => {
 	grid.value = websocketStore.game.grid;
 })
-
 
 
 

@@ -84,8 +84,8 @@ class GameHandler:
 		if type(game) == bool:
 			return
 		if userConnection['info'].userID == game.get_current_turn():
-			resp = await game.game_turn(data['d']['letters'])
-			if type(resp) == bool:
+			pointsAmount = await game.game_turn(data['d']['letters'])
+			if type(pointsAmount) == bool:
 				# TODO: send error message
 				return
 			# means it is true now send the new board to everyone
@@ -96,7 +96,14 @@ class GameHandler:
 				"grid": newGrid,
 				"turn": nextTurn
 			})	
-			await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
+			await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+			updateCurrentUser = packets.during.game_update({
+				"grid": newGrid,
+				"turn": nextTurn,
+				"points": pointsAmount,
+				"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
+			})	
+			await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 
 		else:
 			# TODO: send error to user 
