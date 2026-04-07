@@ -4,9 +4,12 @@ import { RouterView, useRoute } from 'vue-router';
 import Header from './Components/Header/Header.vue';
 import useUserStore from './Components/Stores/user';
 import useWebsocketStore from './Components/Stores/websocket';
-const route = useRoute();
+import Alert from './Components/Alert/Alert.vue';
+import useAlertStore from './Components/Stores/alert';
 
+const route = useRoute();
 const websocket = useWebsocketStore()
+
 onMounted(() => {
 	var hasToken = localStorage.getItem('token');
 	const userStore = useUserStore();
@@ -23,11 +26,23 @@ onMounted(() => {
 		}
 	})
 })
+
+const alertStore = useAlertStore();
+function al() {
+	alertStore.alert({
+		text: "test",
+		type: "success"
+	})
+}
+
 </script>
 
 <template>
+	<Alert />
 	<Header />
 	<div class="content" :class="{ 'content--playing': route.name == 'play' }">
+		<br><br>
+		<button @click="al">click</button>
 		<RouterView />
 	</div>
 </template>

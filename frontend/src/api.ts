@@ -1,7 +1,9 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import router from './router';
+import Logger from './logging/Logger';
 
 const BASE_URL = 'http://127.0.0.1:8000';
+
 
 const api: AxiosInstance = axios.create({
 	baseURL: BASE_URL,
@@ -11,12 +13,13 @@ const api: AxiosInstance = axios.create({
 // Optional: Add request interceptor to attach token
 api.interceptors.request.use((config) => {
 	const token = localStorage.getItem('token');
-	console.log(token)
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`;
 	}
 	return config;
 });
+
+const authLogger = new Logger("auth");
 
 // Optional: Add response interceptor to handle 401 globally
 api.interceptors.response.use(
@@ -44,14 +47,16 @@ api.interceptors.response.use(
 				);
 
 				localStorage.setItem('token', data.access_token);
-				console.log(`reset token ${data}`);
+				authLogger.info("Refreshed token, reperforming initial request")
 				originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
 				return api(originalRequest);
 			} catch (err) {
+				authLogger.warn("Refresh Token expired, Logging User out.")
 				localStorage.removeItem('token');
 				localStorage.removeItem('refresh_token');
+				authLogger.info("Removed token, refresh_token from localstorage")
 				router.push({ name: 'login' });
-				console.error('Refresh token failed', err);
+				authLogger.info("Moved to login page.")
 				return Promise.reject(err);
 			}
 		}
