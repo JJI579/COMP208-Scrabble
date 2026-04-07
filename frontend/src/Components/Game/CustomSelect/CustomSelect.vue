@@ -70,10 +70,12 @@ function optionClicked(index: number) {
 
 <style lang="css" scoped>
 .select__container {
+	
 	display: flex;
 	flex-direction: column;
 	gap: .5rem;
-	max-width: 30%;
+	min-width: 30%;
+	
 
 	/* background-color: blue; */
 	/* background-color: blue; */
@@ -97,6 +99,7 @@ function optionClicked(index: number) {
 .selected {
 	/* background-color: beige; */
 	padding: 1rem;
+	width: 100%;
 	display: flex;
 	justify-content: space-between;
 	background-color: var(--clr-surface-a10);

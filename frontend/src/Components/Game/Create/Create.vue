@@ -42,22 +42,32 @@ async function createGame() {
 
 
 <template>
-	<div class="options">
-		<CustomSelect :options="options" :label="'Game Type'" v-model:selected="gameTypeRef" />
-		<CustomSelect :options="timeLimitOptions" :label="'Time Limit'" v-model:selected="timeLimitRef" />
-		<CustomSelect :options="dictionaryOptions" :label="'Dictionary Allowed'" v-model:selected="useDictionaryRef" />
-		<CustomSelect :options="groupSizeOptions" :label="'Number of Groups'" v-model:selected="groupSizeRef" />
+	<div class="create__content">
+		<div class="options">
+			<CustomSelect :options="options" :label="'Game Type'" v-model:selected="gameTypeRef" />
+			<CustomSelect :options="timeLimitOptions" :label="'Time Limit'" v-model:selected="timeLimitRef" />
+			<CustomSelect :options="dictionaryOptions" :label="'Dictionary Allowed'" v-model:selected="useDictionaryRef" />
+			<CustomSelect :options="groupSizeOptions" :label="'Number of Groups'" v-model:selected="groupSizeRef" />
+		</div>
+		<button @click="createGame">Create Game</button>
 	</div>
-	<button @click="createGame">Create Game</button>
 </template>
 
 
 <style lang="css" scoped>
-.options {
+.create__content {
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-	width: 100%;
+	justify-content: center;
+	align-items: center;
+}
+.options {
+	width: 40%;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	
 	margin-bottom: 1rem;
 }
 
