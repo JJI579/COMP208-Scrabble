@@ -5,6 +5,7 @@ import { reactive, ref } from "vue";
 import useUserStore from "./user";
 import router from "@/router";
 import Game from "./Game";
+import useAlertStore from "./alert";
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
@@ -50,6 +51,12 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			const data: WebsocketPacket = JSON.parse(event.data)
 			console.log(data)
 			switch (data.t) {
+				case "ERROR":
+					useAlertStore().alert({
+						text: data.d,
+						type: "error"
+					})
+					break
 				case "IDENTIFY":
 					localStorage.setItem('session_id', data.d.ID)
 					readyToSend.value = true
@@ -80,6 +87,10 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					break
 				case "GAME_INVALID":
 					// TODO: implement into alert
+					useAlertStore().alert({
+						text: "Invalid game",
+						type: "error"
+					})
 					break
 				case "PLAYER_JOIN":
 					if (!game) {
@@ -124,6 +135,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				case "GAME_UPDATE_ONGOING":
 					game.updateOngoing(data.d)
 					break
+				
 
 
 			}

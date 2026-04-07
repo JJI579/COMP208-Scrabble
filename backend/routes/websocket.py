@@ -89,17 +89,19 @@ class GameHandler:
 			if type(pointsAmount) == bool:
 				errorPacket = packets.error("Invalid placement of letters!")
 				await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
-				# TODO: send error message
 				return
-			# means it is true now send the new board to everyone
 			newGrid = game.game.export_grid()
-			print(newGrid)
 			nextTurn = game.game.next_turn()
+
+			# Update the board for other players,
 			gameUpdatePacket = packets.during.game_update({
 				"grid": newGrid,
-				"turn": nextTurn
-			})	
+				"turn": nextTurn,
+				# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
+				"points: ": pointsAmount
+			})
 			await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+			# Update the board for others.
 			updateCurrentUser = packets.during.game_update({
 				"grid": newGrid,
 				"turn": nextTurn,

@@ -14,8 +14,7 @@ const useAlertStore = defineStore("alert", () => {
 	const isActive = ref(false);
     const alerts = ref<AlertData[]>([]);
     const currentAlert = ref<AlertData | null>(null);
-    const ALERT_DURATION = 5000;
-
+    const ALERT_DURATION = 2500;
 
     function alert(alertData: AlertData | null) {
         if (isActive.value === true) {

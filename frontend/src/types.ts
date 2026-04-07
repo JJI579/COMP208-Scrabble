@@ -21,6 +21,7 @@ type SelfReturn = UserReturn & {
 type InitType = "IDENTIFY" | "DISCONNECT"
 
 type PacketType =
+	| "ERROR"
 	| "GAME_INVALID"
 	| "CONFIRM_LEAVE"
 	| "GAME_START"

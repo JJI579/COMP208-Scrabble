@@ -27,14 +27,6 @@ onMounted(() => {
 	})
 })
 
-const alertStore = useAlertStore();
-function al() {
-	alertStore.alert({
-		text: "test",
-		type: "success"
-	})
-}
-
 </script>
 
 <template>
@@ -42,7 +34,7 @@ function al() {
 	<Header />
 	<div class="content" :class="{ 'content--playing': route.name == 'play' }">
 		<br><br>
-		<button @click="al">click</button>
+		
 		<RouterView />
 	</div>
 </template>
