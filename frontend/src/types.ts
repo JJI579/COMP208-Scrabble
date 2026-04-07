@@ -12,6 +12,19 @@ type UserReturn = {
 	userID: number
 	userName: string
 	userCreatedAt: string
+	profilePicture: string | undefined
+}
+
+type Item = {
+	itemID: number,
+	name: string,
+	description: string,
+	xpRequired: number,
+	unlocked: boolean
+}
+
+type UnlockedItemType = Item & {
+	equipped: boolean
 }
 
 type SelfReturn = UserReturn & {
@@ -83,9 +96,7 @@ const pointsMap: Record<string, number> = {
 	"Z": 10
 }
 
+const DEFAULT_FILLER = "|";
 
-
-const DEFAULT_FILLER = "";
-
-export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers };
+export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers, Item, UnlockedItemType };
 export { debug, pointsMap, DEFAULT_FILLER };

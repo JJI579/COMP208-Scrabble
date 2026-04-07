@@ -19,6 +19,8 @@ const route = useRoute();
 
 const userStore = useUserStore();
 
+const rememberMe = ref(false);
+
 
 onMounted(() => {
 	if (route.query.register) {
@@ -46,7 +48,15 @@ async function login() {
 	const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
 	localStorage.setItem("refresh_token", refresh_token)
 	localStorage.setItem("token", token)
-	loginLogger.info("")
+	// Remember me logic
+	if (rememberMe.value) {
+		localStorage.setItem("token", token)
+		localStorage.setItem("refresh_token", refresh_token)
+	} else {
+		sessionStorage.setItem("token", token)
+		sessionStorage.setItem("refresh_token", refresh_token)
+
+	}
 	router.push({ name: "dashboard" })
 	loginLogger.info("Taken to dashboard")
 	// This should work as all tokens have been pushed etc
@@ -121,6 +131,10 @@ const d = computed(() => {
 			<InputField v-model:input="usernameModel" :placeholder="'Username'" :show-error="triedSubmit" />
 			<InputField v-model:input="passwordModel" :placeholder="'Password'" :type="'password'"
 				:show-error="triedSubmit" />
+			<label class="remember">
+				<input type="checkbox" v-model="rememberMe" />
+				Remember me
+			</label>
 			<div class="submit" @click="handleSubmit">
 				<div class="submit__text">
 					{{ currentSelection == 'login' ? 'Login' : 'Register' }}
@@ -136,55 +150,46 @@ const d = computed(() => {
 
 
 <style lang="css" scoped>
-.content {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	/* background-color: blue; */
-	height: 90%;
-}
-
 .form {
-	height: 75%;
-	width: 70%;
-
-	background-color: whitesmoke;
-	border: 1px solid whitesmoke;
-	border-radius: 10px;
-	padding: 1rem;
-
+	width: 100%;
 	display: flex;
 	align-items: center;
 	flex-direction: column;
-	gap: .75rem;
+	gap: 1rem;
 }
 
 .title {
-	margin-bottom: 3rem;
+	display: none;
+}
+
+.option {
+	width: 100%;
 }
 
 .text {
 	margin-right: auto;
-	width: fit-content;
-	padding: .5rem;
-	border-radius: 10px;
-	color: #5865f2;
-	font-weight: 500;
+	padding: .4rem .6rem;
+	border-radius: 8px;
+	color: #9aa4ff;
+	cursor: pointer;
+	transition: 0.2s;
+}
+
+.text:hover {
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .submit {
-	margin-top: 1.5rem;
-	width: 80%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	border-radius: 20px;
-	background-color: #5865f2;
+	margin-top: 1rem;
+	width: 100%;
+	border-radius: 12px;
+	background: linear-gradient(135deg, #5865f2, #7b86ff);
 	color: white;
 	cursor: pointer;
-	font-weight: 500;
+	font-weight: 600;
 	font-size: 1rem;
-	padding: 0.6em 0.8em;
+	padding: 0.75em;
+	transition: 0.2s ease all;
 }
 
 
@@ -246,5 +251,29 @@ const d = computed(() => {
 	.form {
 		width: 75%;
 	}
+}
+
+.submit:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(88, 101, 242, 0.4);
+}
+
+.error {
+	width: 100%;
+	background: rgba(255, 0, 0, 0.15);
+	border: 1px solid rgba(255, 0, 0, 0.3);
+	color: #ffb3b3;
+	padding: .6rem;
+	border-radius: 8px;
+}
+
+.remember {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	color: #9aa4ff;
+	font-size: 0.9rem;
+	margin-top: .5rem;
 }
 </style>

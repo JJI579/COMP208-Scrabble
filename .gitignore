@@ -92,5 +92,4 @@ extra-stuff/
 *.pyc
 letter_distribution.py
 work-split.txt
-extra-stuff/
 __pycache__/

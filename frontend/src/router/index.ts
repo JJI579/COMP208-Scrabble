@@ -8,6 +8,7 @@ import Landing from '@/Components/Landing/Landing.vue'
 import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/Login.vue'
 import Profile from '@/Components/Profile/Profile.vue'
+import Shop from '@/Components/Shop/Shop.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -46,12 +47,16 @@ const router = createRouter({
 		{
 			path: '/login',
 			name: 'login',
-			component: Login
+			component: () => import('@/Components/Login/LoginView.vue')
 		},
 		{
 			path: '/dashboard',
 			name: 'dashboard',
 			component: Dashboard
+		}, {
+			path: '/shop',
+			name: 'shop',
+			component: Shop
 		}
 	],
 })
