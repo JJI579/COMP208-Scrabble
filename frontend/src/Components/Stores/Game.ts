@@ -127,12 +127,8 @@ class Game implements GAME {
 		if (allData.letters) {
 			this.letters = allData.letters;
 		}
-		console.log(allData);
 		if (allData.grid) {
-			console.log("grid");
-			console.log(allData.grid);
 			Object.entries(allData.grid).forEach((item) => {
-				console.log(item);
 				var ind = Number(item[0]);
 				this.grid[ind] = item[1];
 			})
@@ -140,7 +136,6 @@ class Game implements GAME {
 		this.gameTurn = allData.turn;
 		console.log("myletters");
 		console.log(this.letters);
-
 	}
 
 	updateContent(allData: any) {

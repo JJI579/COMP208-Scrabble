@@ -52,8 +52,8 @@ class Game:
 		# return points amount and perform game update...?
 		# update self.players
 		
-		return result
 		print(f"result: {result}")
+		return result
 		# 't': 'GAME_TURN', 'd': {'letters': [[[7, 7], 'T'], [[8, 7], 'A'], [[9, 7], 'G']]}}
 		pass
 

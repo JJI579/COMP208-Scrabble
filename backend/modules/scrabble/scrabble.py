@@ -260,13 +260,7 @@ class Scrabble:
 			if [x,y] not in preExisting:
 				wordCoordinates.append([x, y])
 			cellContents = self.get_cell(x, y)
-			print(cellContents, defaultFiller)
-			print(x,y)
-			print(preExisting)
 			if cellContents != defaultFiller and (x, y) not in preExisting:
-				print(x, y)
-				print(self.get_cell(x, y))
-				print(preExisting)
 				# TODO: check if there is a word that works otherwise raise an issue.
 				print("cell has already been taken!")
 				for [x, y], letter in tempPlaced:
