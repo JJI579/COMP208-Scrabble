@@ -425,10 +425,6 @@ class Scrabble:
 	async def check_word(self, word: str):
 		# return True
 		return await self._check_word(word)
-		# return twl.check(word)
-		# resp = requests.get(f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}')
-		# respData = resp.json()
-		# return not ('title' in respData)
 	
 	async def _check_word(self, word: str):
 		async for session in get_session():
@@ -436,17 +432,3 @@ class Scrabble:
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
 			return result
-
-
-# scrab = Scrabble(arr)
-# scrab.place_word("protege", (7,4), "down")
-# scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
-# scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
-# # scrab.place_word("lazed", (10,3), "right", )
-# # scrab.place_word("bet", (7,7), "down", [])
-# # scrab.place_word("ee", (8,7), "right", [])
-# scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
-# scrab.place_word("b", (12,3), "down")
-# # scrab.place_word("e", (14,2), "right")
-
-# scrab.print_board()
