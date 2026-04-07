@@ -91,8 +91,7 @@ function createPage() {
 <style lang="css" scoped>
 .dashboard {
 	position: relative;
-	width: 100vw;
-	height: 100vh;
+	
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
@@ -103,7 +102,7 @@ function createPage() {
 	box-sizing: border-box;
 	margin-left: calc(-50vw + 50%);
 	min-height: 100vh;
-	overflow-y: auto;
+	
 }
 
 .main {
@@ -396,7 +395,7 @@ text-shadow:
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
   justify-self: center;
   position: relative;
-  overflow: hidden;
+  
 }
 
 .rank-badge.gold {
@@ -500,7 +499,7 @@ text-shadow:
 }
 
 .footer {
-  position: relative;
+  
   width: 100%;
   padding: 0.75rem 0;
   text-align: center;

@@ -40,8 +40,7 @@ onMounted(() => {
 <style scoped>
 /* Main Content Wrapper */
 .content {
-	width: 60%;
-	height: 100%;
+	
 	margin: auto;
 }
 

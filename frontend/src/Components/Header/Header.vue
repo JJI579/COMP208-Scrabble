@@ -164,7 +164,7 @@ function profileClicked() {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	overflow: hidden;
+	
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 	transition: transform 0.2s;
 	background: rgba(255, 255, 255, 0.08);
