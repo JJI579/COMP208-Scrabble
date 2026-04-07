@@ -63,7 +63,7 @@ function profileClicked() {
 			<HeaderLink location="home" name="Word Finder" icon="pi-search" />
 			<HeaderLink location="home" name="Dictionary" icon="pi-book" />
 			<HeaderLink location="home" name="Shop" icon="pi-shopping-cart" />
-			<HeaderLink location="home" name="Friends" icon="pi-users" />
+			<HeaderLink location="home" name="Friends" icon="pi-users" @click = "() => router.push({name: 'friends'})" />
 		</div>
 	</div>
 </template>

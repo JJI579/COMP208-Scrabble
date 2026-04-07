@@ -43,6 +43,23 @@ async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], s
         "rank": rank
     }
     
+
+@router.get('/friends', response_model=UserFetch)
+async def get_friends(session: AsyncSession = Depends(get_session)):
+    pass
+
+
+@router.get('/players', response_model = list[UserFetch])
+async def get_users(search: str = '', session: AsyncSession = Depends(get_session)):
+    if (search == ''):
+        return []
+    query = user_search(select(User), search)
+    results = await session.execute(query.order_by(User.userName.asc()))
+    users = results.scalars().all()
+    print(users)
+    return users
+    
+    
     
 
 
