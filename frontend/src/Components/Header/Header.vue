@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
 import HeaderLink from './HeaderLink.vue';
+import router from '@/router';
 
 const userStore = useUserStore();
 
@@ -13,8 +14,7 @@ function toggleMenu() {
 
 
 function profileClicked() {
-	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
-	console.log("pfp button clicked");
+	router.push({ name: "profile" })
 }
 
 
