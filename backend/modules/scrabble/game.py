@@ -43,10 +43,10 @@ class Game:
 			else:
 				if x-firstCoordinate[0] != 0:
 					direction = "RIGHT"
-					letters.sort(key=lambda x: x[0])
+					letters.sort(key=lambda x: x[0][0])
 				else:
 					direction = "DOWN"
-					letters.sort(key=lambda x: x[1])
+					letters.sort(key=lambda x: x[0][1])
 			# identify if player has all available letters.
 			if letter in playerLetters:
 				playerLetters.remove(letter)
@@ -58,7 +58,7 @@ class Game:
 					blanksIdentified.append((x,y))
 				else:
 					# invalid placement.
-					return 
+					return False
 		print("Player has all letters required for this turn.")
 
 		print(direction)
@@ -67,8 +67,8 @@ class Game:
 		# this should not have a side effect of moving to the next turn.
 		result = await self.game.place_word(letters, direction, blanksIdentified)
 		if type(result) == bool:
-			# invalid placement
-			return
+			print("we are here.")
+			return False
 		
 		# Update letters and return result.
 		# get_current_turn should be the same, otherwise place_word changes the current turn.

@@ -126,6 +126,7 @@ class Game implements GAME {
 	}
 
 	updateOngoing(allData: ongoingData) {
+
 		if (allData.letters) {
 			this.letters = allData.letters;
 		}

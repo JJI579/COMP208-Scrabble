@@ -392,13 +392,17 @@ class Scrabble:
 			if coord not in blanks:
 				# do not ignore
 				if coord in self.double_letter:
+					self.double_letter.remove(coord)
 					points += (pointsData[letter.upper()]*2) 
 				elif coord in self.triple_letter:
+					self.triple_letter.remove(coord)
 					points += (pointsData[letter.upper()] * 3)
 				else:
 					if coord in self.double_word:
+						self.double_word.remove(coord)
 						doubleWord+=1
 					elif coord in self.triple_word:
+						self.triple_word.remove(coord)
 						tripleWord+=1
 					points += pointsData[letter.upper()] 
 
@@ -409,12 +413,6 @@ class Scrabble:
 			print("[POINTS] | Tripled word points")
 			points*=3
 		return points
-
-		# points = 0
-		# for ind in range(len(word)):
-		# 	if ind not in blanks:
-		# 		points += pointsData[word[ind].upper()]
-		# return points
 
 	def print_board(self):
 		for x in self.game:

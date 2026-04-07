@@ -85,7 +85,10 @@ class GameHandler:
 			return
 		if userConnection['info'].userID == game.get_current_turn():
 			pointsAmount = await game.game_turn(data['d']['letters'])
+			print(pointsAmount)
 			if type(pointsAmount) == bool:
+				errorPacket = packets.error("Invalid placement of letters!")
+				await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
 				# TODO: send error message
 				return
 			# means it is true now send the new board to everyone
@@ -267,7 +270,9 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 					await GameHandler.game_update(userData['game'], websocket)
 		else:
 			if hasIdentified:
-				print("RECEIVED: ", packetType)
+				# ignore ping as doesnt help with debug.
+				if packetType != "PING":
+					print("RECEIVED: ", packetType)
 				userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 				if type(userConnection) == bool: # will be false
 					print("USER DOES NOT EIXST, REMOVE WEBSOCKET?")
@@ -275,6 +280,7 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 				# else is Connection class
 				
 				# TODO: should i check for only non-game packets then decide or not?
+				# jason what does this mean.
 
 				# this match case only for games that the user has been validated to be in
 				match (packetType):
