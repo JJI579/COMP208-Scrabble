@@ -70,12 +70,12 @@ function profileClicked() {
 	position: sticky;
 	top: 0;
 	display: flex;
-	justify-content: space-between;
+	justify-content: center;
 	width: 80%;
 	margin: auto;
 	align-items: center;
 	color: var(--text-colour);
-
+	padding-block: 1rem;
 }
 
 .first {}
@@ -102,21 +102,6 @@ function profileClicked() {
 	gap: .5rem;
 }
 
-.user {
-	padding: .25rem;
-	height: 1.5rem;
-	width: 1.5rem;
-	width: 100%;
-	z-index: 999998;
-	min-height: 64px;
-	background: rgba(255, 255, 255, 0.08);
-	backdrop-filter: blur(10px);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
 
 
 
@@ -166,10 +151,7 @@ function profileClicked() {
 	box-shadow: 0 2px 0 #c9b48d, 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
-.end {
-	display: flex;
-	align-items: center;
-}
+
 
 .user-btn {
 	background: transparent;
@@ -185,6 +167,10 @@ function profileClicked() {
 	overflow: hidden;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 	transition: transform 0.2s;
+	background: rgba(255, 255, 255, 0.08);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .user img {

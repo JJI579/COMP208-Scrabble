@@ -6,6 +6,7 @@
 <script lang="ts" setup>
 import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
 import { ref, computed } from 'vue';
+import router from '@/router';
 
 const streak = ref(7);
 
@@ -16,6 +17,12 @@ const flameLevel = computed(() => {
   return 'idle';
 });
 
+
+function createPage() {
+  router.push({
+    name: 'create'
+  })
+}
 </script>
 
 
@@ -39,9 +46,9 @@ const flameLevel = computed(() => {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover">Team Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">

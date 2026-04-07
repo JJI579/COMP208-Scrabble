@@ -33,8 +33,6 @@ onMounted(() => {
 	<Alert />
 	<Header />
 	<div class="content" :class="{ 'content--playing': route.name == 'play' }">
-		<br><br>
-		
 		<RouterView />
 	</div>
 </template>
