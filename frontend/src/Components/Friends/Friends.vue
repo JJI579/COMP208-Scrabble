@@ -30,7 +30,11 @@ async function fetchPeople () {
 
 // Fetching the list of friends for the current user
 async function fetchFriends() {
-    const res = await api.get('/friends/myFriends');
+    const res = await api.get('/friends/myFriends',  {
+        params: {
+            limit: 1000
+        }
+    });
     console.log(res.data);
     friends.value = res.data;
 }
@@ -115,6 +119,14 @@ function showRequests() {
     mode.value = "requests";
 }
 
+function challengeToGame() {
+    console.log("Challenge to game button clicked");
+}
+
+function inviteToGame() {
+    console.log("Invite to team game button clicked");
+}
+
 // Filtering the users to display (excliding friends and the current user)
 const filteredUsers = computed(() => {
 	if (!currentUser.value) return users.value;
@@ -184,10 +196,10 @@ const displayUsers = computed(() => {
                 </div>
 
                 <div v-if="mode === 'idle'" class="myFriends">
-                    <button class="challengeButton">
+                    <button class="challengeButton" @click="challengeToGame()">
                         Challenge to Game
                     </button>
-                    <button class="teamGameButton">
+                    <button class="teamGameButton" @click="inviteToGame()">
                         Invite to Team Game
                     </button>
                 </div>

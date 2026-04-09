@@ -6,6 +6,7 @@ import { resolveComponent } from 'vue';
 import router from '../../router';
 
 const user = ref<any>(null);
+const friends = ref<any>([]);
 
 async function getUser() {
 	const res = await api.get('/users/@me');
@@ -13,8 +14,19 @@ async function getUser() {
 	user.value = res.data;
 }
 
+async function getFriends() {
+	const res = await api.get('/friends/myFriends',  {
+		params: {
+			limit: 5
+		}
+	})
+	console.log(res.data);
+	friends.value = res.data;
+}
+
 onMounted(() => {
 	getUser();
+	getFriends();
 })
 
 function logout() {
@@ -113,7 +125,23 @@ function calculateAverageScore() {
 		</div>
 
 		<h1>Friends</h1>
-		<p>I am going to add a box with all the friends and it will have a link to go to the friends page</p>
+		<RouterLink to="/friends" class="friendsLink">
+			<div class="friendsCard">
+				<div class="friendsHeader">
+					<h2>Friends</h2>
+				</div>
+
+				<ul class="friendsList">
+					<li v-for="(user, i) in friends" :key="user.userID" class="friend">
+						<div class="friendLeft">
+							<span class="friendNumber"> {{ Number(i) + 1 }}</span>
+							<i class="pi pi-user"></i>
+							<span class="friendName"> {{ user.userName }}</span>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</RouterLink>
 
 		<div class="logoutSection">
       		<button class="logoutButton" @click="logout()">Logout</button>
@@ -122,14 +150,6 @@ function calculateAverageScore() {
 		<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
 	
 	</div>
-
-	<!-- <div class="logoutSection">
-      	<button class="logoutButton" @click="logout()">Logout</button>
-    </div>
-
-	<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2> -->
-
-	<!-- Self explanatory via the name... -->
 </template>
 
 
@@ -150,7 +170,6 @@ body {
 	margin-right: auto;
 }
 
-/* Username row (full width) */
 .userName-row {
 	grid-column: 1 / -1;
 	display: flex;
@@ -165,7 +184,6 @@ body {
 	text-align: center;
 }
 
-/* Headings full width */
 .profile > h1,
 .profile > h2 {
 	grid-column: 1 / -1;
@@ -173,14 +191,12 @@ body {
 	color: #e0e0ff;
 }
 
-/* Break parent containers */
 .winsLoses,
 .rankScore,
 .stats {
 	display: contents;
 }
 
-/* BOXES — brighter for contrast */
 .wins,
 .loses,
 .rank,
@@ -196,7 +212,6 @@ body {
 	color: #ffffff;
 }
 
-/* Centered boxes */
 .wins,
 .loses,
 .rank,
@@ -208,7 +223,6 @@ body {
 	justify-content: center;
 }
 
-/* Stats boxes */
 .statsPart1,
 .statsPart2 {
 	display: flex;
@@ -221,10 +235,9 @@ body {
 	margin: 10px;
 }
 
-/* Typography */
 .profile i {
 	margin-bottom: 8px;
-	color: #80c0ff; /* softer glow */
+	color: #80c0ff; 
 	width: 100%;;
 }
 
@@ -237,7 +250,7 @@ body {
 
 .profile p {
 	margin-top: 5px;
-	color: #dbe6ff; /* brighter for readability */
+	color: #dbe6ff; 
 }
 
 .logoutSection {
@@ -256,6 +269,82 @@ body {
 	padding: 0.5rem 3rem;
 	border-radius: 10px;
 	cursor: pointer;
+}
+
+.friendsLink {
+	grid-column: 1 / -1;
+	text-decoration: none;
+}
+
+.friendsCard {
+	background: linear-gradient(135deg, #2a4d8f, #4169a9);
+	border-radius: 14px;
+	padding: 1.5rem;
+	cursor: pointer;
+	transition: 0.25s;
+
+	box-shadow:
+		0 8px 20px rgba(0, 0, 0, 0.3),
+		0 0 15px rgba(77, 148, 255, 0.2);
+}
+
+.friendsHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+}
+
+.friendsHeader h2 {
+	margin: 0;
+	color: white;
+}
+
+.friendsList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+}
+
+.friend {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	padding: 0.6rem 0.8rem;
+	border-radius: 10px;
+
+	background: rgba(255, 255, 255, 0.08);
+	transition: 0.2s;
+}
+
+.friend:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+.friendLeft {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.friendNumber {
+	font-size: 0.85rem;
+	color: #a9c7ff;
+	width: 20px;
+}
+
+.friend i {
+	color: #80c0ff;
+}
+
+.friendName {
+	color: white;
+	font-weight: 500;
 }
 
 </style>

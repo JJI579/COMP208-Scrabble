@@ -55,7 +55,7 @@ async def send_friend_request(data: FriendRequest, current_user: Annotated[User,
     
     
 @router.get('/myFriends', response_model = list[UserFetch])
-async def get_friends(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
+async def get_friends(current_user: Annotated[User, Depends(get_current_user)], limit: int = 1000, session: AsyncSession = Depends(get_session)):
     res = await session.execute(select(User).distinct()
         .join(
             Friend,
@@ -67,7 +67,7 @@ async def get_friends(current_user: Annotated[User, Depends(get_current_user)], 
         .where(
             Friend.status == "accepted",
             User.userID != current_user.userID
-        )
+        ).limit(limit)
     )
     
     results = res.scalars().all()
