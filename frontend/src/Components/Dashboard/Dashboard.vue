@@ -20,10 +20,14 @@ const flameLevel = computed(() => {
 
 const score = ref(0);
 
-function createPage() {
+function createPage(type: string, groupSize: number) {
   router.push({
-    name: 'create'
-  })
+    name: 'create',
+    query: {
+      type,
+      groupSize: String(groupSize)
+    }
+  });
 }
 
 onMounted(async () => {
@@ -56,9 +60,9 @@ onMounted(async () => {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">Solo Vs Bot</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">Play Vs Friends</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">Team Mode</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">
