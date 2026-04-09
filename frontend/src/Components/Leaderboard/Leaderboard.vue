@@ -68,7 +68,7 @@ watch(searchUser, () => {
 					<th>Wins</th>
 				</tr>
 				<tr v-for="(user, i) in users" :key="user.userID" :class="{ me: currentUser && user.userID === currentUser.userID }">
-					<th> {{ i + 1 }}</th>
+					<th> {{ Number(i) + 1 }}</th>
 					<th>
 						<span v-if="currentUser && user.userID === currentUser.userID"> (You)</span>
 						 {{ user.userName }}

@@ -20,7 +20,7 @@ const flameLevel = computed(() => {
 });
 
 async function getLeaderboard() {
-	const res = await api.get('/users/leaderboard', { params: { limit: 5 } });
+	const res = await api.get('/users/leaderboard', { params: { sort_by: "totalScore", limit: 5 } });
 	console.log(res.data);
 	users.value = res.data;
 }
@@ -73,7 +73,7 @@ onMounted(() => {
 					<li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li>
         </ul> -->
         <ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
-          <li class="leaderboard-item"><span> {{  i + 1 }}</span> <span> {{  user.userName }}</span> <span> {{ user.totalScore }}</span></li>
+          <li class="leaderboard-item"><span> {{  Number(i) + 1 }}</span> <span> {{  user.userName }}</span> <span> {{ user.totalScore }}</span></li>
 					<!-- <li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500 pts</span></li>
 					<li class="leaderboard-item"><span class="rank-badge silver">2</span><span>PlayerTwoWithLongName</span><span>1200 pts</span></li>
 					<li class="leaderboard-item"><span class="rank-badge bronze">3</span><span>PlayerThree</span><span>900 pts</span></li>

@@ -32,3 +32,9 @@ class registerForm(BaseModel):
 
 class refreshForm(BaseModel):
 	token: str
+ 
+ 
+#  Friends
+class FriendRequest(BaseModel):
+    toUserID: int
+    

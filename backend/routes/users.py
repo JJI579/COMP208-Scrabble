@@ -44,9 +44,9 @@ async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], s
     }
     
 
-@router.get('/friends', response_model=UserFetch)
-async def get_friends(session: AsyncSession = Depends(get_session)):
-    pass
+# @router.get('/friends', response_model=UserFetch)
+# async def get_friends(session: AsyncSession = Depends(get_session)):
+#     pass
 
 
 @router.get('/players', response_model = list[UserFetch])
