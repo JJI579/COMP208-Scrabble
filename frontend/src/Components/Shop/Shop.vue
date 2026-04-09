@@ -3,8 +3,9 @@ import type { Item } from '@/types';
 import { computed, onMounted, ref, watch } from 'vue';
 import LockedItem from './LockedItem.vue';
 import UnlockedItem from './UnlockedItem.vue';
+import api from '@/api';
 
-const score = ref(357);
+const score = ref(0);
 const displayScore = ref(score.value);
 let interval: ReturnType<typeof setInterval> | null=null;
 const unlockFlash = ref(false);
@@ -14,16 +15,44 @@ let progressInterval: ReturnType<typeof setInterval> | null=null;
 const items = ref<Item[]>([
   {
     itemID: 1,
-    name: "Golden Name",
-    description: "Your name becomes golden!",
-    xpRequired: 500,
+    name: "Gradient Name",
+    description: "Your name gains a rainbow accent!",
+    xpRequired: 300,
     unlocked: false,
   },
   {
     itemID: 2,
-    name: "apple pie",
-    description: "applie pie",
-    xpRequired: 1000,
+    name: "Bronze Border",
+    description: "Your profile picture gains a bronze border!",
+    xpRequired: 600,
+    unlocked: false,
+  },
+  {
+    itemID: 3,
+    name: "Silver Border",
+    description: "Your profile picture gains a silver border!",
+    xpRequired: 900,
+    unlocked: false,
+  },
+  {
+    itemID: 4,
+    name: "Gold Border",
+    description: "Your profile picture gains a golden border!",
+    xpRequired: 1200,
+    unlocked: false,
+  },
+  {
+    itemID: 5,
+    name: "Gold Name",
+    description: "The Ultimate Flex - Your name becomes Golden!",
+    xpRequired: 1500,
+    unlocked: false,
+  },
+  {
+    itemID: 6,
+    name: "How?!",
+    description: "If you've made it this far... go outside",
+    xpRequired: 1800,
     unlocked: false,
   }
 ])
@@ -120,6 +149,13 @@ onMounted(() => {
 watch(progress, (newVal) => {
   animateProgress(newVal);
 });
+
+onMounted(async () => {
+  const { data } = await api.get("/users/@me")
+
+  console.log("API RESPONSE:", data)
+  score.value = data.totalScore
+})
 
 </script>
 
@@ -254,28 +290,71 @@ watch(progress, (newVal) => {
 }
 .bar__progress {
   width: 100%;
-  height: 40px;
+  height: 45px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    inset 0 2px 6px rgba(0,0,0,0.6),
+    0 0 8px rgba(0,0,0,0.4);
   overflow: hidden;
+  position: relative;
 }
 
 .fill {
   height: 100%;
-  background: linear-gradient(90deg, #4d94ff, #80c0ff, #4d94ff);
+  border-radius: inherit;
+  position: relative;
+
+  background: linear-gradient(
+    90deg,
+    #00ff88,
+    #00cc66,
+    #00ff88
+  );
+
   background-size: 200% 100%;
-  transition: width 0.5s ease;
-  animation: glowMove 2.5s linear infinite;
-  box-shadow: 0 0 12px rgba(77,148,255,0.6);
+  animation: xpFlow 2.5s linear infinite, xpPulse 1.2s ease;
+
+  transition: width 0.4s ease-out;
+
+  box-shadow:
+    0 0 10px rgba(0,255,136,0.6),
+    0 0 20px rgba(0,255,136,0.3);
+  overflow: hidden;
 }
-@keyframes glowMove {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
+@keyframes xpFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
+@keyframes xpPulse {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(1.15); }
+  100% { transform: scaleY(1); }
+}
+
+.fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.5),
+    transparent
+  );
+
+  animation: shine 2s infinite;
+}
+@keyframes shine {
+  0% { left: -20%; }
+  100% { left: 120%; }
+}
+
+
 
 .bar__titles {
   display: flex;

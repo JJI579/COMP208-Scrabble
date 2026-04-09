@@ -71,8 +71,8 @@ function createPage() {
 			</RouterLink>
 
 			<div class="score-box card-glass hover-shadow">
-				<h2 class="glow-text">Current Score</h2>
-				<p class="score-number">0 pts</p>
+				<h2 class="glow-text">Lifetime Score</h2>
+				<p class="score-number">0</p>
 			</div>
 
 			<RouterLink to="/shop" class="score-shop card-glass hover-shadow">

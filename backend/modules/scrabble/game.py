@@ -1,5 +1,5 @@
 from .scrabble import Scrabble, arr
-from modules.schema import UserFetch, GameOptions, GamePlayer
+from backend.modules.schema import UserFetch, GameOptions, GamePlayer
 from pydantic import BaseModel
 import copy
 
