@@ -7,6 +7,8 @@
 import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
+import router from '@/router';
+
 
 
 const streak = ref(7);
@@ -29,6 +31,12 @@ onMounted(() => {
   getLeaderboard();
 })
 
+
+function createPage() {
+  router.push({
+    name: 'create'
+  })
+}
 </script>
 
 
@@ -52,9 +60,9 @@ onMounted(() => {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover">Team Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">
@@ -94,8 +102,7 @@ onMounted(() => {
 <style lang="css" scoped>
 .dashboard {
 	position: relative;
-	width: 100vw;
-	height: 100vh;
+	
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
@@ -106,7 +113,7 @@ onMounted(() => {
 	box-sizing: border-box;
 	margin-left: calc(-50vw + 50%);
 	min-height: 100vh;
-	overflow-y: auto;
+	
 }
 
 .main {
@@ -399,7 +406,7 @@ text-shadow:
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
   justify-self: center;
   position: relative;
-  overflow: hidden;
+  
 }
 
 .rank-badge.gold {
@@ -503,7 +510,7 @@ text-shadow:
 }
 
 .footer {
-  position: relative;
+  
   width: 100%;
   padding: 0.75rem 0;
   text-align: center;

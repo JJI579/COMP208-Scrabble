@@ -6,7 +6,6 @@ from pathlib import Path
 
 currentPath = Path.cwd()
 
-from pydantic import BaseModel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,8 +34,11 @@ async def root():
 	return {"message": "Hello World"}
 
 
-from routes import auth, users, friends
+from routes import auth, users, friends, websocket
 
+app.include_router(websocket.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(friends.router)
+app.include_router(websocket.router)
+app.include_router(websocket.gameRouter)

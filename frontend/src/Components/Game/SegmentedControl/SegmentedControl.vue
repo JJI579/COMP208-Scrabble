@@ -9,13 +9,9 @@ const props = defineProps({
 		default: []
 	}
 })
-
-
 const selectedOption = defineModel("current-option");
 
-
 function clickOption(val: string) {
-	console.log(val)
 	selectedOption.value = val
 }
 </script>

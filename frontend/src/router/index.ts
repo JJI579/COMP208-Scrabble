@@ -2,12 +2,12 @@
 // import Landing from '@/Components/Landing/Landing.vue'
 import Dashboard from '@/Components/Dashboard/Dashboard.vue'
 import Friends from '@/Components/Friends/Friends.vue'
+import Create from '@/Components/Game/Create/Create.vue'
+import Join from '@/Components/Game/Join/Join.vue'
+import Play from '@/Components/Game/Play/Play.vue'
 import Landing from '@/Components/Landing/Landing.vue'
 import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/Login.vue'
-import Create from '@/Components/Play/Create.vue'
-import Join from '@/Components/Play/Join.vue'
-import Play from '@/Components/Play/Play.vue'
 import Profile from '@/Components/Profile/Profile.vue'
 import Shop from '@/Components/Shop/Shop.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -18,7 +18,7 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'home',
-			component: Landing
+			component: Dashboard
 		},
 		{
 			path: '/play',

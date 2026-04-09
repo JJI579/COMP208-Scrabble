@@ -1,14 +1,20 @@
 from pathlib import Path
 import json
 import requests
-import twl
+# twl doesn't work/exist for me so gonna make my own prefix trie to not use this
+#import twl
 from sqlalchemy import text
 from modules.database.database import get_session, init_db_sync, init_db
 import asyncio
+import random
 
 
+
+# NOTE: uncomment this when/ if databse gets hooked up
+'''
 init_db_sync()
 asyncio.run(init_db())
+'''
 currentPath = Path.cwd()
 pointsPath = currentPath / "scrabble_points.json"
 pointsData = json.load(open(pointsPath))
@@ -44,7 +50,7 @@ class Player:
 	def can_make(self, word: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
 		wordMap = {}
 		availableCount = {}
-		# TODO: consider preExisting
+		# TODO: consider preExisting - too late im considering it before you - hari
 		for x in word:
 			if x not in wordMap:
 				wordMap[x] = 1
@@ -58,7 +64,165 @@ class Player:
 			if availableCount[key] < val:
 				return False
 			
-		
+
+# TODO: need to consider blanks for the bot, as well as preExisting letters, 
+# however the bot should be able to generate words based on the preExisting letters, 
+# and then check if it can make them with the letters it has, and if not, ignore them.
+
+# TODO: need to figure out beteter cross word validation as only partially validated currently
+
+# TODO: need to figure out how to use board multipliers and general score calculation needs doing
+
+# TODO: need some sort of scrabble tile rack refil / player turn implementation
+
+# TODO: better legality checks on words potentially would be useful?
+
+# NOTE: some of these should be implemented in player class so pick ur poison jason
+
+'''
+
+bot class that uses a prefix trie to generate possible words based on board state
+uses anchor points for where to place a word to reduce list searching
+basic score system
+decent move simulation based on difficulty
+
+'''
+
+
+class Bot(Player):
+
+	def __init__(self, name="Bot", difficulty="medium"):
+		super().__init__()
+		self.name = name
+		self.difficulty = difficulty
+		self.settings = {
+			"easy": {"top_n": 15, "max_len": 4},
+            "medium": {"top_n": 5, "max_len": 6},
+            "hard": {"top_n": 1, "max_len": 15},
+		}
+		self.trie = {}
+		self.build_trie()
+
+	def build_trie(self):
+		with open("sowpods.txt", "r", encoding="utf-8") as f:
+			for line in f:
+				word = line.strip().upper()
+				node = self.trie
+				for char in word:
+					node = node.setdefault(char, {})
+				node["$"] = True
+
+	def choose_move(self, scrabble: "Scrabble"):
+		moves = []
+		anchors = self.get_candidate_cells(scrabble)
+
+		for x, y in anchors:
+			for direction in ["right", "down"]:
+				generated = self.generate_possible_words(scrabble, (x, y), direction)
+
+				for word, preExisting in generated:
+					points = scrabble.try_place_word(
+						word, 
+						(x,y), 
+						direction, 
+						preExisting=preExisting)
+					if isinstance(points, int):
+						moves.append((points+len(word)*2, word, (x,y), direction, preExisting))
+		if not moves:
+			return None
+		moves.sort(reverse=True, key=lambda x: x[0])
+		top_n = self.settings[self.difficulty]["top_n"]
+		return random.choice(moves[:top_n])[1:]
+
+
+	def get_candidate_cells(self, scrabble: "Scrabble"):
+		candidates = set()
+		for y in range(15):
+			for x in range(15):
+				if scrabble.get_cell(x,y) != '|':
+					continue
+				
+				for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < 15 and 0 <= ny < 15:
+						if scrabble.get_cell(nx, ny) != '|':
+							candidates.add((x,y))
+							break
+		if not candidates:
+			candidates.add((7,7))
+		return list(candidates)
+
+	def generate_possible_words(self, scrabble: "Scrabble", position, direction):
+		x, y = position
+		results = []
+		seen = set()
+		max_len = self.settings[self.difficulty]["max_len"]
+
+		def backtrack(node, path, rack, px, py, preExisting, used_anchor):
+			if len(path) > max_len:
+				return
+			if "$" in node and used_anchor:
+				word = "".join(path)
+				key = (word, tuple(preExisting))
+				if key not in seen:
+					seen.add(key)
+					results.append((word, preExisting.copy()))
+			if not (0<=px<15 and 0<=py<15):
+				return
+			cell = scrabble.get_cell(px,py)
+
+			if cell != '|':
+				letter = cell.upper()
+				if letter in node:
+					path.append(letter)
+					preExisting.append((px, py))
+					if direction == "right":
+						backtrack(node[letter], path, rack, px+1, py, preExisting, True)
+					else:
+						backtrack(node[letter], path, rack, px, py+1, preExisting, True)
+					path.pop()
+					preExisting.pop()
+			else:
+				cross_allowed = self.cross_check(scrabble, px, py, direction)
+				for i, letter in enumerate(rack):
+					letter=letter.upper()
+					if letter not in node:
+						continue
+					if letter not in cross_allowed:
+						continue
+					new_rack=rack[:i]+rack[i+1:]
+					path.append(letter)
+					if direction == "right":
+						backtrack(node[letter], path, new_rack, px+1, py, preExisting, used_anchor)
+					else:
+						backtrack(node[letter], path, new_rack, px, py+1, preExisting, used_anchor)
+					path.pop()
+		backtrack(self.trie, [], self.letters.copy(), x, y, [], False)
+		return results
+	
+	def cross_check(self, scrabble, x, y, direction):
+		letters= set()
+		for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+			original = scrabble.game[y][x]
+			scrabble.game[y][x] = c
+			if direction == "right":
+				coords = scrabble.expand_vertically((x,y))
+			else:
+				coords = scrabble.expand_horizontally((x,y))
+			if len(coords) <= 1:
+				letters.add(c)
+			else:
+				coords_sorted = sorted(coords, key=lambda t: (t[1], t[0]))
+				word= ''.join(scrabble.get_cell(cx, cy) for cx, cy in coords_sorted)
+				if scrabble.check_word(word):
+					letters.add(c)
+			scrabble.game[y][x] = original
+		return letters
+
+
+
+
+
 class Scrabble:
 
 	def __init__(self, players, arr) -> None:
@@ -68,6 +232,13 @@ class Scrabble:
 		self.gameTurn = 0
 		self.game = arr
 		self.firstPlaced = False
+		'''
+		once again change this if Database is being used for the dictionary???
+		'''
+		self.word_set = set()
+		with open("sowpods.txt", "r", encoding="utf-8") as f:
+			for line in f:
+				self.word_set.add(line.strip().upper())
 		pass
 
 	def add_player(self, userID: int):
@@ -181,7 +352,7 @@ class Scrabble:
 					self.game[y][x] = word[i]
 					tempPlaced.append([x, y])
 				else:
-					if self.get_cell(x,y) == word[i]:
+					if self.get_cell(x,y).upper() == word[i]:
 						print("missed letter: ", word[i])
 					else:
 						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
@@ -196,7 +367,7 @@ class Scrabble:
 		if not self.firstPlaced:
 			# MAKE SURE IT CROSSES THE MIDDLE AS START
 			if [7,7] not in wordCoordinates:
-				return ""
+				return None
 			else:
 				if self.check_word(word):
 					# fine
@@ -261,10 +432,19 @@ class Scrabble:
 				# remove coordinates placed
 				for x, y in tempPlaced:
 					self.game[y][x] = defaultFiller
+				return None
 		# for l in wordOrdered:
 		# 	print(l)
-
+		return points
 		# have to prove that it is connecting some kind of word to make it work.
+
+	def try_place_word(self, word, position, direction, blanks = [], preExisting = []):
+		original_board=[row.copy() for row in self.game]
+		original_first=self.firstPlaced
+		result = self.place_word(word,position,direction,blanks,preExisting)
+		self.game=original_board
+		self.firstPlaced=original_first
+		return result
 
 		
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
@@ -288,7 +468,7 @@ class Scrabble:
 			for i in x:
 				print(i, end=" ")
 			print()
-
+	'''
 	def check_word(self, word: str):
 		return asyncio.run(self._check_word(word))
 		# return twl.check(word)
@@ -302,20 +482,48 @@ class Scrabble:
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
 			return result
+	'''
+	# nothing in database so have to use sowpods txt file?????
+	# NOTE: not sure if sowpods is good though it has alot of non words ?????
 
+	def check_word(self, word: str):
+		return word.upper() in self.word_set
+	
+	def _check_word_sync(self, word: str):
+		word = word.upper()
+		with open("sowpods.txt", "r", encoding="utf-8") as f:
+			for line in f:
+				if line.strip().upper() == word:
+					return True
+		return False
 
-
-
-scrab = Scrabble([0, 1], arr)
-
-scrab.place_word("protege", (7,4), "down")
-scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
-scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
-# scrab.place_word("lazed", (10,3), "right", )
-# scrab.place_word("bet", (7,7), "down", [])
-# scrab.place_word("ee", (8,7), "right", [])
-scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
-scrab.place_word("b", (12,3), "down")
-# scrab.place_word("e", (14,2), "right")
-
-scrab.print_board()
+# test block
+if __name__ == "__main__":
+	scrab = Scrabble([0, 1], arr)
+	'''
+	scrab.place_word("protege", (7,4), "down")
+	scrab.place_word("epitaxes", (6,4), "right", preExisting=[(7,4)])
+	scrab.place_word("taxes", (9,4), "down", preExisting=[(9,4)])
+	# scrab.place_word("lazed", (10,3), "right", )
+	# scrab.place_word("bet", (7,7), "down", [])
+	# scrab.place_word("ee", (8,7), "right", [])
+	scrab.place_word("best", (13,2), "down", preExisting=[(13, 4)])
+	scrab.place_word("b", (12,3), "down")
+	# scrab.place_word("e", (14,2), "right")
+	print("\ncheck words\n")
+	scrab.check_word("PROTEGE")
+	scrab.check_word("ASDFGHJK")
+	'''
+	scrab.place_word("ant", (7,4), "down")
+	print("\nboard start\n")
+	scrab.print_board()
+	bot=Bot(difficulty="hard")
+	bot.append_letters(list("GUBENATORIAL"))
+	print("\nbot letter: ", bot.letters)
+	move = bot.choose_move(scrab)
+	print("\nbots move: ", move)
+	if move:
+		word, position, direction, preExisting = move
+		scrab.place_word(word, position, direction, preExisting=preExisting)
+	print("\nboard end\n")
+	scrab.print_board()

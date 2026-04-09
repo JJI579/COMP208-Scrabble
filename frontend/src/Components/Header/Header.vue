@@ -4,6 +4,7 @@ import useUserStore from '../Stores/user';
 import HeaderLink from './HeaderLink.vue';
 import router from '../../router';
 
+
 const userStore = useUserStore();
 
 const menuOpen = ref(false);
@@ -73,17 +74,38 @@ function profileClicked() {
 .header {
 	position: sticky;
 	top: 0;
-	width: 100%;
-	z-index: 999998;
-	min-height: 64px;
-	background: rgba(255, 255, 255, 0.08);
-	backdrop-filter: blur(10px);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 	display: flex;
 	justify-content: center;
+	width: 80%;
+	margin: auto;
 	align-items: center;
+	color: var(--text-colour);
+	padding-block: 1rem;
 }
+
+
+.title {
+	font-size: 1.5em;
+	font-weight: 600;
+	color: var(--text-colour);
+}
+
+.link {
+	text-decoration: none;
+	color: var(--text-colour);
+	transition: 0.2s ease all;
+}
+
+.link:hover {
+	color: black;
+}
+
+
+.end {
+	display: flex;
+	gap: .5rem;
+}
+
 
 
 
@@ -133,10 +155,7 @@ function profileClicked() {
 	box-shadow: 0 2px 0 #c9b48d, 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
-.end {
-	display: flex;
-	align-items: center;
-}
+
 
 .user-btn {
 	background: transparent;
@@ -149,9 +168,13 @@ function profileClicked() {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	overflow: hidden;
+	
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 	transition: transform 0.2s;
+	background: rgba(255, 255, 255, 0.08);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .user img {

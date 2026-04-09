@@ -1,4 +1,7 @@
 :root {
+	--bg-colour: #FAF9F6;
+	--text-colour: #333333;
+	--scrabble-board: #19bcb7;
 
 	/* Scrabble Colours */
 	--tile-background-colour: #f4e2b8;
@@ -51,4 +54,12 @@
 	--clr-info-a0: #1e56a3;
 	--clr-info-a10: #347ada;
 	--clr-info-a20: #74a4e6;
+
+
+}
+
+html,
+body,
+#app {
+	background-color: var(--bg-colour);
 }

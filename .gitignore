@@ -87,8 +87,9 @@ pids
 
 venv
 
-later-update/
+extra-stuff/
 
 *.pyc
-extra-stuff
+letter_distribution.py
 work-split.txt
+__pycache__/
