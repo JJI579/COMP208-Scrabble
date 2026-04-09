@@ -102,6 +102,11 @@ async function handleSubmit() {
 const d = computed(() => {
 	return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 })
+
+function toggleMode() {
+	currentSelection.value =
+		currentSelection.value === 'login' ? 'register' : 'login';
+}
 </script>
 
 
@@ -115,14 +120,8 @@ const d = computed(() => {
 			<div class="title__container">
 				<div class="title__options">
 					<h2 class="title">Let's get you Playing!</h2>
-					<div class="option">
-						<span @click="currentSelection = 'login'" class="clickable">Sign in</span> or <span
-							@click="currentSelection = 'register'" class="clickable">create an account.</span>
-					</div>
 				</div>
-				<div class="logo__container">
-					<img src="" alt="" class="logo">
-				</div>
+				<div class="logo__container"></div>
 
 			</div>
 			<div class="error" v-if="errorMessage.length > 0">
@@ -141,8 +140,17 @@ const d = computed(() => {
 				</div>
 			</div>
 			<div class="no__lose">
-				<p>Don't lose your progress!</p>
-				<p @click="currentSelection = 'register'" class="clickable">Create an Account!</p>
+				<p v-if="currentSelection === 'login'">
+					Don't lose your progress!
+				</p>
+
+				<p v-else>
+					Already have an account?
+				</p>
+
+				<p class="clickable" @click="toggleMode">
+					{{ currentSelection === 'login' ? 'Create an Account' : 'Sign in' }}
+				</p>
 			</div>
 		</div>
 	</div>
@@ -155,7 +163,11 @@ const d = computed(() => {
 	display: flex;
 	align-items: center;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 0.8rem;
+	padding-top: 0.5rem;
+}
+input {
+	margin: 0;
 }
 
 .title {
@@ -164,6 +176,13 @@ const d = computed(() => {
 
 .option {
 	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.4rem;
+	text-align: center;
+	font-size: 0.9rem;
+	color: rgba(255,255,255,0.7);
 }
 
 .text {
@@ -190,34 +209,45 @@ const d = computed(() => {
 	font-size: 1rem;
 	padding: 0.75em;
 	transition: 0.2s ease all;
+	text-align: center;
 }
 
 
 .title__container {
 	display: flex;
-	justify-content: space-between;
-	align-items: top;
+	align-items: flex-start;
 	/* background-color: pink; */
 	width: 80%;
-	margin-bottom: 2rem;
+	margin-bottom: -5rem;
+	margin-left: 40px;
 }
-
 .title__options {
 	display: flex;
 	flex-direction: column;
-	/* background-color: blue; */
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	text-align: center;
 }
+
+.option {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+	color: rgba(255,255,255,0.7);
+
+	white-space: nowrap;
+	flex-wrap: nowrap;
+	width: 100%;
+}
+
 
 .title {
 	padding: 0;
 	margin: 0;
 	margin-block: 1rem;
-}
-
-.option {
-	display: flex;
-	width: 100%;
-	gap: .25rem;
 }
 
 .logo__container {
@@ -233,14 +263,39 @@ const d = computed(() => {
 }
 
 .no__lose {
-	text-align: left;
+	text-align: center;
 	width: 80%;
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid rgba(255,255,255,0.1);
+}
 
+.no__lose p {
+	margin: 0.3rem 0;
+	color: rgba(255,255,255,0.7);
+	font-size: 0.85rem;
+}
+.no__lose .clickable {
+	display: inline-block;
+	margin-top: 0.3rem;
+	color: #9aa4ff;
+	font-weight: 500;
 }
 
 .clickable {
 	cursor: pointer;
-	text-decoration: underline;
+	color: #9aa4ff;
+	text-decoration: none;
+	padding: 0.2rem 0.5rem;
+	border-radius: 8px;
+	transition: 0.2s;
+	border: 1px solid transparent;
+}
+
+.clickable:hover {
+	background: rgba(123, 134, 255, 0.15);
+	border: 1px solid rgba(123, 134, 255, 0.3);
+	color: white;
 }
 
 @media (max-width: 999px) {
@@ -255,7 +310,7 @@ const d = computed(() => {
 
 .submit:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 8px 20px rgba(88, 101, 242, 0.4);
+	box-shadow: 0 10px 25px rgba(88, 101, 242, 0.35);
 }
 
 .error {

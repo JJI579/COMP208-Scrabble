@@ -105,14 +105,16 @@ function openExternal(url: string) {
   z-index: 1000;
 
   width: 100%;
-  background: rgba(233, 233, 233, 0.9);
+  background: rgba(20, 20, 20, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(10px);
 
   display: flex;
   justify-content: center;
 
   padding-block: 1rem;
-
+  color: white;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }

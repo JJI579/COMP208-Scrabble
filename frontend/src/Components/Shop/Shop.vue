@@ -150,6 +150,10 @@ watch(progress, (newVal) => {
   animateProgress(newVal);
 });
 
+/**
+ * comment this out when u want to test the equip and unequip
+ */
+
 onMounted(async () => {
   const { data } = await api.get("/users/@me")
 

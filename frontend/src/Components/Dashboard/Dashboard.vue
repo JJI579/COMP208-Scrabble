@@ -5,8 +5,9 @@
 
 <script lang="ts" setup>
 import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import router from '@/router';
+import api from '@/api';
 
 const streak = ref(7);
 
@@ -17,12 +18,21 @@ const flameLevel = computed(() => {
   return 'idle';
 });
 
+const score = ref(0);
 
 function createPage() {
   router.push({
     name: 'create'
   })
 }
+
+onMounted(async () => {
+  const { data } = await api.get("/users/@me")
+
+  console.log("API RESPONSE:", data)
+  score.value = data.totalScore
+})
+
 </script>
 
 
@@ -72,7 +82,7 @@ function createPage() {
 
 			<div class="score-box card-glass hover-shadow">
 				<h2 class="glow-text">Lifetime Score</h2>
-				<p class="score-number">0</p>
+				<p class="score-number">{{ score }}</p>
 			</div>
 
 			<RouterLink to="/shop" class="score-shop card-glass hover-shadow">
