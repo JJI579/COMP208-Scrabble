@@ -18,9 +18,12 @@ function toggleMenu() {
 
 function profileClicked() {
 	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
-	console.log("pfp button clicked");
-	router.push({ name: 'profile' });
-	// Test
+	console.log("pfp button clicked")
+	if (userStore.isLoggedIn) {
+		router.push({ name: 'profile' });
+	} else {
+		router.push({ name: 'login' });
+	}
 }
 
 function goTo(routeName: string) {
@@ -64,14 +67,14 @@ function openExternal(url: string) {
 			</div>
 		</div>
 	</div>
-	<div v-if="menuOpen" class="menu-backdrop" @click="toggleMenu">
+	<div class="menu-backdrop">
 		<div class="menu__container" :class="{ 'menu--active': menuOpen }" @click.stop>
 			<div class="menu">
 				<button class="menu-item" @click="toggleMenu">
 					<i class="pi pi-times out__icon"></i>
 					<span>Close</span>
 				</button>
-
+				
 				<button class="menu-item" :class="{ active: route.name === 'home' }" @click="goTo('home')">
 					<i class="pi pi-home"></i>
 					<span>Home</span>
@@ -104,6 +107,7 @@ function openExternal(url: string) {
 
 <style lang="css" scoped>
 .header {
+	user-select: none;
 	position: sticky;
 	top: 0;
 	z-index: 1000;
@@ -231,31 +235,38 @@ function openExternal(url: string) {
 .menu__container {
 	position: fixed;
 	top: 0;
-	left: -280px;
+	left: 0;
+	transform: translateX(-100%);
 	width: 280px;
 	height: 100%;
 
-	background: rgba(233, 233, 233, 0.9);
+	/* background: rgba(233, 233, 233, 0.9); */
+
 	backdrop-filter: blur(12px);
 
-	transition: 0.35s ease;
+	transition: all 0.25s ease;
 	z-index: 2000;
 
 	box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
+
 }
 
 .menu-backdrop {
+
+
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100%;
-	height: 100%;
 
-	background: rgba(0, 0, 0, 0.4);
-	backdrop-filter: blur(3px);
+
+	/* background: rgba(0, 0, 0, 0.4); */
+	/* backdrop-filter: blur(3px); */
 
 	z-index: 1500;
-	animation: fadeIn 0.25s ease;
+
+	/* animation: fadeIn 0.25s ease; */
+
+
 }
 
 @keyframes fadeIn {
@@ -269,7 +280,8 @@ function openExternal(url: string) {
 }
 
 .menu--active {
-	left: 0;
+	transform: translateX(0);
+
 }
 
 .menu {
@@ -277,6 +289,7 @@ function openExternal(url: string) {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
+
 }
 
 .out {
@@ -309,14 +322,13 @@ function openExternal(url: string) {
 
 	background: transparent;
 	border: none;
-	color: rgb(0, 0, 0);
+	color: white;
 	font-size: 1rem;
 	text-align: left;
 	font-weight: bold;
 
 	cursor: pointer;
 	border-radius: 10px;
-
 	transition: all 0.2s ease;
 }
 
