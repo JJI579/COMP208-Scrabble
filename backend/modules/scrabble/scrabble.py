@@ -128,8 +128,8 @@ class Scrabble:
 
 	def export_grid(self):
 		toSend = {}
-		for [x,y], letter in self.placed:
-			toSend[str((y*15)+x)] = letter
+		for [x,y], letter, blankSubstitute in self.placed:
+			toSend[str((y*15)+x)] = letter if blankSubstitute == None else blankSubstitute
 		return toSend
 	
 	def fetch_player_letters(self, userID: int):
@@ -394,7 +394,37 @@ class Scrabble:
 			int | Literal[False]: The result of the _place_word helper function.
 
 		"""
+		print("OUR HELPER FUNCTION --- START --- ")		
 
+		def check_coordinate(coordinate):
+			coordinate = [x for x in coordinate]
+			for x in self.placed:	
+				if x[0] == coordinate:
+					return True
+			return False
+
+		coords = [x[0] for x in letters]
+		for i in range(1, len(coords)):
+			x1, y1 = coords[i - 1]
+			x2, y2 = coords[i]
+
+			if direction == "RIGHT":
+				expected = (x1 + 1, y1)
+				# Same row, x should increase by exactly 1
+				if y1 == y2 and x2 != x1 + 1  and not check_coordinate(expected):
+					print(f'right: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
+					return False
+			elif direction == "DOWN":
+				expected = (x1, y1 + 1)
+				
+				# Same column, y should increase by exactly 1
+				if x1 == x2 and y2 != y1 + 1 and not check_coordinate(expected):
+					print(f'down: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
+					return False
+
+				
+		print("OUR HELPER FUNCTION --- END --- ")
+		return await self.place_letters(letters)
 		return await self._place_word(''.join([x[1] if x[2] == None else x[2] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
@@ -493,6 +523,8 @@ class Scrabble:
 					potentialWord = self.expand_vertically(currentPosition)
 					print(potentialWord)
 				testArray = potentialWord.copy()
+				print(testArray)
+				print(wordCoordinates)
 				[testArray.remove(x) for x in wordCoordinates if x in testArray]
 				if len(testArray) != 0:
 					if testDirection == "down":
@@ -542,7 +574,108 @@ class Scrabble:
 		
 		self.placed.extend(tempPlaced)
 		return points
+
+	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
+		# PLACE LETTERS ONTO THE GRID, ENSURE EVERYWHERE IS A VALID WORD, ELSE RETURN FALSE
+
+		# TODO: implement
+		isWord = False
+		if not self.firstPlaced:
+			# make sure [8,8] in the letters
+			if [7,7] not in [x[0] for x in letters]:
+				return False
+			
+			wordString = ""
+			for [x, y], letter, blankSubstitute in letters:
+				wordString+=letter if blankSubstitute == None else blankSubstitute
+			isWord = await self.check_word(wordString)
+
+		boardLetters = [x[0] for x in self.placed]
 		
+		placing = []
+		blanks = []
+		points = 0
+
+		for i, ([x,y], letter, blankSubstitute) in enumerate(letters):
+			toPlace = (letter if blankSubstitute == None else blankSubstitute).upper()
+			if letter == " ":
+				# gather the blank positions
+				blanks.append([x,y])
+
+			if [x,y] in boardLetters:
+				# reset the board
+				for letter in placing:
+					x, y = letter[0]
+					self.game[y][x] = defaultFiller
+				return False
+			else:
+				placing.append(letters[i])
+				self.game[y][x] = toPlace
+
+		# Now it is all placed onto the grid, so check each letter and verify it has a valid word.
+		letterPositions = [x[0] for x in letters]
+		forceBreak = False
+		hasJoiningWord = False
+		
+		for currentPosition in letterPositions:
+			if forceBreak:
+				break
+			for testDirection in ['right', "down"]:
+				if testDirection == "right":
+					potentialWord = self.expand_horizontally(currentPosition)
+				else:
+					potentialWord = self.expand_vertically(currentPosition)
+					
+				testArray = potentialWord.copy()
+				print("xxxxxx")
+				print(testArray)
+				print(letterPositions)
+				print("xxxxxx")
+				[testArray.remove(x) for x in letterPositions if x in testArray]
+				if len(testArray) != 0:
+					print(testArray)
+					if testDirection == "down":
+						potentialWord.sort(key=lambda x: x[1] )
+					else:
+						potentialWord.sort(key=lambda x: x[0] )
+					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
+					wordString = ''.join([x[1] for x in wordOrdered])
+					
+					print(f'Checking word found: ' + wordString)
+					if not await self.check_word(wordString):
+						isWord = False
+						forceBreak = True
+						print(f"{wordString} is not a word. ")
+						break
+					else:
+						print(f"{wordString} is a word.")
+						print(wordOrdered)
+						points+=self.calculate_points(wordOrdered, blanks)
+						hasJoiningWord = True
+						isWord = True
+				else:
+					if not self.firstPlaced:
+						hasJoiningWord = True
+						self.firstPlaced = True
+
+		
+		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
+
+		# confirmed it is true?
+
+		print("figure out now...")
+		if not hasJoiningWord or isWord == None:
+			print("removing placed letters")
+			# remove coordinates placed
+			for [x, y], *_ in placing:
+				self.game[y][x] = defaultFiller
+			return False
+		# OTHERWISE IT IS A TRUE WORD.
+		self.placed.extend(placing)
+		return 0
+	
+		
+
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
 		# TODO: fix blanks.
 		doubleWord = 0
