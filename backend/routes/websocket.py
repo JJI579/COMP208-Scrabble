@@ -154,9 +154,23 @@ class GameHandler:
 			# TODO: send error to user 
 			return
 
-
+	@staticmethod
+	async def chat_message(data: dict, websocket: WebSocket):
+		game = manager.fetch_game(data['d']['code'])
+		if type(game) == bool:
+			print("Game does not exist")
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
+			# TODO: send error message
+			return False
+		userID = websocket.user_id # type: ignore
+		userData = manager.connections[userID]['info']
+		fetchModel = UserFetch.model_validate(userData)
+		message = data['d']['message']
+		sendPacket = packets.during.chat_message(message, fetchModel)
+		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
+		
 		game = manager.fetch_game(data['d']['code'])
 		if type(game) == bool:
 			print("Game does not exist")
@@ -347,10 +361,13 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 						continue
 					case "GAME_START":
 						await GameHandler.game_start(data, websocket)
-						
 						continue
 					case "GAME_TURN":
 						await GameHandler.game_turn(data, websocket)
+						continue
+					case "CHAT_MESSAGE":
+						await GameHandler.chat_message(data, websocket)
+						continue
 
 			else:
 				return

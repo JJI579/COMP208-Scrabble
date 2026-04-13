@@ -1,5 +1,4 @@
-import api from "@/api";
-import type { InitType, PacketType, SelfReturn, UserReturn, WebsocketPacket } from "@/types";
+import type { InitType, MessageType, PacketType, WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import useUserStore from "./user";
@@ -11,6 +10,8 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
 	const websocket = ref<WebSocket | null>(null);
 	const game = reactive<Game>(new Game(0, {}));
+
+	const messages = ref<MessageType[]>([]);
 	const userStore = useUserStore();
 	const readyToSend = ref(false)
 
@@ -110,6 +111,8 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					break
 				case "PLAYER_DISCONNECT":
 					break
+				case "CHAT_MESSAGE":
+					messages.value.push(data.d as MessageType);
 				case "GROUP_JOIN":
 					if (!game) {
 						// we should have a game by now.
@@ -168,7 +171,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 			)
 		}
 	}
-	return { websocket, game, connect, generatePacket, send }
+	return { websocket, game, connect, generatePacket, send, messages }
 });
 
 export default useWebsocketStore;
