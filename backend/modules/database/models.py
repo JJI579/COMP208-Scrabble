@@ -10,6 +10,7 @@ class User(Base):
 	userName = Column(String, unique=True, nullable=False)
 	userPassword = Column(String, nullable=False)
 	userCreatedAt = Column(DateTime, default=datetime.utcnow)
+	xpGained = Column(Integer, default=0, nullable=False)
 	deactivated = Column(Boolean, default=False, nullable=False)
 
 class UserConfig(Base):
@@ -69,5 +70,5 @@ class Item(Base):
 
 	itemID = Column(Integer, primary_key=True, index=True)
 	name = Column(String, nullable=False)
-	name = Column(String, nullable=False)
+	description = Column(String, nullable=False)
 	xpRequired = Column(Integer, nullable=False, default=0)
