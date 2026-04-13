@@ -6,6 +6,7 @@ import useUserStore from "./user";
 import router from "@/router";
 import Game from "./Game";
 import useAlertStore from "./alert";
+import { isBreakStatement } from "typescript";
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
@@ -75,7 +76,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 							if (data.d.gameID != game.id) {
 								// new game, sync to new content
 								console.log("[GAME UPDATE] | New game, reset the dictionary")
-								
+
 								game.updateContent(data.d)
 							} else {
 								// update game content
@@ -135,7 +136,13 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				case "GAME_UPDATE_ONGOING":
 					game.updateOngoing(data.d)
 					break
-				
+				case "GAME_END":
+					router.replace({
+						'name': 'finish', state: {
+							finalData: data.d
+						}
+					})
+					break
 
 
 			}

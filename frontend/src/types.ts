@@ -54,6 +54,7 @@ type PacketType =
 	| "NOT_FOUND"
 	| "GAME_TURN"
 	| "CHAT_MESSAGE"
+	| "GAME_END"
 
 type WebsocketPacket = {
 	t: PacketType | InitType
