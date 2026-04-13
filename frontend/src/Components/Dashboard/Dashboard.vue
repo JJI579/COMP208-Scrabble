@@ -1,9 +1,18 @@
 <script lang="ts" setup>
+<<<<<<< HEAD
 
 import { ref, computed } from 'vue';
+=======
+import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
+import { ref, computed, onMounted } from 'vue';
+import api from '@/api';
+>>>>>>> profile
 import router from '@/router';
 
+
+
 const streak = ref(7);
+const users = ref<any>([]);
 
 const flameLevel = computed(() => {
   if (streak.value >= 5) return 'legend';
@@ -11,6 +20,16 @@ const flameLevel = computed(() => {
   if (streak.value >= 1) return 'warm';
   return 'idle';
 });
+
+async function getLeaderboard() {
+	const res = await api.get('/users/leaderboard', { params: { sort_by: "totalScore", limit: 5 } });
+	console.log(res.data);
+	users.value = res.data;
+}
+
+onMounted(() => {
+  getLeaderboard();
+})
 
 
 function createPage() {
@@ -55,6 +74,7 @@ function createPage() {
             <span>Score</span>
           </div>
 
+<<<<<<< HEAD
           <ul class="leaderboard-list">
             <li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500
                 pts</span></li>
@@ -64,6 +84,11 @@ function createPage() {
                 pts</span></li>
             <li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li>
           </ul>
+=======
+        <ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
+          <li class="leaderboard-item"><span> {{  Number(i) + 1 }}</span> <span> {{  user.userName }}</span> <span> {{ user.totalScore }}</span></li>
+        </ul>
+>>>>>>> profile
 
         </button>
       </RouterLink>
