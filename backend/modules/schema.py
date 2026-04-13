@@ -51,6 +51,18 @@ class GamePlayer(UserFetch):
 	placed: list[PlacedTile] = []
 	points: int = 0
 
+	def __str__(self) -> str:
+		return str(self.dump_json())
+
+	def dump_json(self):
+		return {
+			"userID": self.userID,
+			"userName": self.userName,
+			"userCreatedAt": self.userCreatedAt,
+			"placed": self.placed,
+			"points": self.points
+		}
+
 class SelfFetch(UserFetch):
 	friends: list[UserFetch]
 

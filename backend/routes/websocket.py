@@ -183,6 +183,7 @@ class GameHandler:
 
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
+		
 		game = manager.fetch_game(data['d']['code'])
 		if type(game) == bool:
 			print("Game does not exist")

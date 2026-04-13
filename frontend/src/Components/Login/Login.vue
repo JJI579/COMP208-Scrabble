@@ -26,6 +26,11 @@ onMounted(() => {
 	if (route.query.register) {
 		currentSelection.value = "register"
 	}
+	if (userStore.isLoggedIn) {
+		// if logged in force to dashboard
+		router.push({ name: "dashboard" })
+	}
+
 })
 
 watch(() => userStore.isLoggedIn, () => {
@@ -36,7 +41,7 @@ watch(() => userStore.isLoggedIn, () => {
 })
 
 async function login() {
-	const loginLogger = new Logger("login")	
+	const loginLogger = new Logger("login")
 	if (usernameModel.value.length == 0 || passwordModel.value.length == 0) return triedSubmit.value = true;
 	const data = {
 		username: usernameModel.value,

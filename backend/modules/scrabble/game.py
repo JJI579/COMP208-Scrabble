@@ -74,6 +74,9 @@ class Game:
 		# Update letters and return result.
 		# get_current_turn should be the same, otherwise place_word changes the current turn.
 		self.game.set_player_letters(self.get_current_turn(), playerLetters)
+		
+		self.players[self.game.gameTurn].points += result
+		print(self.players)
 		print(f"result: {result}")
 		return result
 
@@ -170,7 +173,7 @@ class Game:
 						self.groups[i].remove(player)
 						# only one player per group so can break.
 						break
-		elif type(player) == UserFetch:
+		elif isinstance(player, UserFetch):
 			player = self._toGamePlayer(player)
 			try:
 				self.players.remove(player)
@@ -263,7 +266,23 @@ class Game:
 	def finish_game(self) -> dict:
 		# get all data from the board, input into database, continue
 		
-		pass
-		return {
+		# TO RETURN
+		"""
+		GRID
+		PLAYER SCORE
+		PLAYER WORDS
+
+		OTHER PLAYERS SCORES + YOUR OWN FOR LEADERBOARD
+
+		"""
+
+		grid = self.game.export_grid()
+		
+		players = [x.dump_json() for x in self.players]
+		winner = max(self.players, key=lambda x: x.points)
 			
+		return {
+			"grid": grid,
+			"players": players,
+			"winner": winner,
 		}

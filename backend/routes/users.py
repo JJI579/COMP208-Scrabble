@@ -19,15 +19,15 @@ router = APIRouter(
 )
 
 # when we need to append words.
-# @router.get('/words')
-# async def putWords(session: AsyncSession = Depends(get_session)):
-# 	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
-# 	total = 0
+@router.get('/words')
+async def putWords(session: AsyncSession = Depends(get_session)):
+	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
+	total = 0
 
-# 	await session.execute(insert(Word), _words)
-# 	await session.commit()
+	await session.execute(insert(Word), _words)
+	await session.commit()
 	
-# 	return {'total': len(_words)}
+	return {'total': len(_words)}
 
 @router.get('/@me')
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):

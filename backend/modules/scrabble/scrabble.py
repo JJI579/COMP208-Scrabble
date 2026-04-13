@@ -395,7 +395,7 @@ class Scrabble:
 
 		"""
 
-		return await self._place_word(''.join([x[1] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
+		return await self._place_word(''.join([x[1] if x[2] == None else x[2] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
 		"""
@@ -442,6 +442,7 @@ class Scrabble:
 			else:
 				# make it place already to imply that it can be used!
 				if (x, y) not in preExisting:
+					# TODO: make it consider blanks
 					print("temp placed letter: ", word[i])
 					self.game[y][x] = word[i]
 					tempPlaced.append([[x, y], word[i]])
@@ -450,7 +451,7 @@ class Scrabble:
 						print("missed letter: ", word[i])
 					else:
 						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
-						for [x, y], letter in tempPlaced:
+						for [x, y], *_ in tempPlaced:
 							self.game[y][x] = defaultFiller
 						return False
 
@@ -509,6 +510,7 @@ class Scrabble:
 						break
 					else:
 						print(f"{wordString} is a word.")
+						print(wordOrdered)
 						points+=self.calculate_points(wordOrdered, blanks)
 						hasJoiningWord = True
 						isWord = True
@@ -522,6 +524,8 @@ class Scrabble:
 			points+=50 
 		# calculate points for the literal word
 		# TODO: this will not work for future make this work.
+		print("this is here")
+		print(tempPlaced)
 		points+=self.calculate_points(tempPlaced, blanks)
 
 		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
@@ -544,7 +548,11 @@ class Scrabble:
 		doubleWord = 0
 		tripleWord = 0
 		points = 0
+		print(blanks)
+		print(wordOrdered)
 		for coord, letter in wordOrdered:
+			print(coord)
+			print(letter)
 			if coord not in blanks:
 				# do not ignore
 				if coord in self.double_letter:
@@ -560,7 +568,9 @@ class Scrabble:
 					elif coord in self.triple_word:
 						self.triple_word.remove(coord)
 						tripleWord+=1
-					points += pointsData[letter.upper()] 
+					if coord not in blanks:
+						# blanks have no points
+						points += pointsData[letter.upper()] 
 
 		for _ in range(doubleWord):
 			print("[POINTS] | Doubled word points")
