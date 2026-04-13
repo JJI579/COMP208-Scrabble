@@ -1,8 +1,14 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from backend.modules.database.database import init_db, close_db, init_db_sync, get_session
+from modules.database.database import init_db, close_db, init_db_sync
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+
+
+# For fetching initial words, if not then providing the words to be used.
+from modules.database.database import get_session
+from modules.database.models import Word
+from sqlmodel import select, insert
 
 currentPath = Path.cwd()
 
@@ -11,6 +17,16 @@ currentPath = Path.cwd()
 async def lifespan(app: FastAPI):
 	init_db_sync()
 	await init_db()
+
+	async for session in get_session():
+		resp = await session.execute(select(Word).limit(1))
+		if resp.scalar_one_or_none() == None:
+			# Provide the words from sowpods.txt
+			print("Providing the words from sowpods.txt")
+			_words = [{'word': x.strip()} for x in open(currentPath / "sowpods.txt", 'r').read().split('\n')]
+			await session.execute(insert(Word), _words)
+			await session.commit()
+		
 	yield
 	await close_db()
 

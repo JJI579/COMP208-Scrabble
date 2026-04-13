@@ -1,15 +1,15 @@
 from fastapi import APIRouter, WebSocket, Depends, WebSocketDisconnect
-from backend.modules.database.database import get_session, AsyncSession
-from backend.modules.functions import get_current_user
-from backend.modules.logger import WebsocketLogger
+from modules.database.database import get_session, AsyncSession
+from modules.functions import get_current_user
+from modules.logger import WebsocketLogger
 from typing import Annotated, TypedDict
-from backend.modules.database.models import User
-from backend.modules.schema import GameOptions, PacketType, UserFetch
-from backend.modules.websocket.WebsocketManager import manager
+from modules.database.models import User
+from modules.schema import GameOptions, PacketType, UserFetch
+from modules.websocket.WebsocketManager import manager
 from sqlmodel import insert
-from backend.modules.database.models import Word
+from modules.database.models import Word
 import asyncio, secrets, json
-from backend.modules.websocket.packets import packets
+from modules.websocket.packets import packets
 
 router = APIRouter(
 	prefix="",

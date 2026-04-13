@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from datetime import datetime
-from backend.modules.database.database import Base
+from modules.database.database import Base
 
 class User(Base):
 	__tablename__ = "tblUsers"

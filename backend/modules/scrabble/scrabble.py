@@ -1,11 +1,11 @@
 from pathlib import Path
 import json
-from backend.modules.database.database import get_session
+from modules.database.database import get_session
 from sqlalchemy import text
 import asyncio
 import copy
 from typing import Literal
-from backend.modules.schema import GamePlayer
+from modules.schema import GamePlayer
 import random
 
 currentPath = Path.cwd()

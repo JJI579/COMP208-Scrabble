@@ -1,13 +1,13 @@
 from fastapi import WebSocket
 import json
 from typing import Optional
-from backend.modules.database.database import get_session
+from modules.database.database import get_session
 from sqlmodel import select
 from sqlalchemy import and_, or_
-from backend.modules.database.models import User, Token
-from backend.modules.scrabble.game import Game
-from backend.modules.schema import GameOptions, UserFetch
-from backend.modules.websocket.packets import packets
+from modules.database.models import User, Token
+from modules.scrabble.game import Game
+from modules.schema import GameOptions, UserFetch
+from modules.websocket.packets import packets
 import asyncio
 import secrets
 

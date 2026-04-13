@@ -1,6 +1,6 @@
 
 from typing import Literal, TypedDict
-from backend.modules.schema import PacketType, UserFetch
+from modules.schema import PacketType, UserFetch
 
 class BasePacket(TypedDict):
 	t: PacketType

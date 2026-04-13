@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from backend.modules.Authentication import Authentication
-from backend.modules.logger import APILogger
-from backend.modules.schema import refreshForm, loginForm, registerForm
+from modules.Authentication import Authentication
+from modules.logger import APILogger
+from modules.schema import refreshForm, loginForm, registerForm
 from sqlmodel import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.modules.database.database import get_session
-from backend.modules.database.models import User, Token, Word
+from modules.database.database import get_session
+from modules.database.models import User, Token, Word
 import os, datetime, secrets, hashlib
-from backend.modules.functions import get_current_user
+from modules.functions import get_current_user
 from typing import Annotated
 apiLog = APILogger()
 from modules.schema import UserFetch 
@@ -18,17 +18,6 @@ router = APIRouter(
 	prefix="/users",
 	tags=["users"],
 )
-
-# when we need to append words.
-# @router.get('/words')
-# async def putWords(session: AsyncSession = Depends(get_session)):
-# 	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
-# 	total = 0
-
-# 	await session.execute(insert(Word), _words)
-# 	await session.commit()
-	
-# 	return {'total': len(_words)}
 
 @router.get('/@me')
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)) -> UserFetch:
