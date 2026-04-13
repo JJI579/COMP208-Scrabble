@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
 import HeaderLink from './HeaderLink.vue';
-import router from '@/router';
+import router from '../../router';
+
 
 const userStore = useUserStore();
 
@@ -14,8 +15,12 @@ function toggleMenu() {
 
 
 function profileClicked() {
-	router.push({ name: "profile" })
+	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
+	console.log("pfp button clicked");
+	router.push({name: 'profile'});
+	// Test
 }
+
 
 
 </script>
@@ -29,7 +34,7 @@ function profileClicked() {
 				</div>
 
 			</div>
-			<RouterLink :to="{ name: 'home' }" class="link">
+			<RouterLink :to="{ name: 'dashboard' }" class="link">
 				<div class="tiles">
 					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
 						{{ l }}
@@ -59,7 +64,7 @@ function profileClicked() {
 			<HeaderLink location="home" name="Word Finder" icon="pi-search" />
 			<HeaderLink location="home" name="Dictionary" icon="pi-book" />
 			<HeaderLink location="home" name="Shop" icon="pi-shopping-cart" />
-			<HeaderLink location="home" name="Friends" icon="pi-users" />
+			<HeaderLink location="home" name="Friends" icon="pi-users" @click = "() => router.push({name: 'friends'})" />
 		</div>
 	</div>
 </template>
@@ -78,7 +83,6 @@ function profileClicked() {
 	padding-block: 1rem;
 }
 
-.first {}
 
 .title {
 	font-size: 1.5em;

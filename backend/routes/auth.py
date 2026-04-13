@@ -120,7 +120,15 @@ async def register(registerData: registerForm, session: AsyncSession = Depends(g
 	mysalt = os.getenv('SALT')
 	saltedPassword = f'{mysalt}:{registerData.password}'
 	hashedPassword = hashlib.sha256(saltedPassword.encode('utf-8')).hexdigest()
-	newUser = User(userName=registerData.username, userPassword=hashedPassword, userCreatedAt=datetime.datetime.now(datetime.timezone.utc))
+ 
+	newUser = User(userName=registerData.username, 
+                   userPassword=hashedPassword, 
+                   userCreatedAt=datetime.datetime.now(datetime.timezone.utc), 
+                   wins=0,
+                   loses=0,
+                   totalScore=0,
+                   bestScore=0)
+ 
 	session.add(newUser)
 	await session.commit()
 	apiLog.warning(f"/login | Created user and committed. | {registerData.username}")

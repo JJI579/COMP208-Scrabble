@@ -34,10 +34,11 @@ async def root():
 	return {"message": "Hello World"}
 
 
-from routes import auth, users, websocket
+from routes import auth, users, friends, websocket
 
 app.include_router(websocket.router)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(friends.router)
 app.include_router(websocket.router)
 app.include_router(websocket.gameRouter)

@@ -36,6 +36,11 @@ class UserFetch(BaseModel):
 	userID: int
 	userName: str
 	userCreatedAt: datetime.datetime
+	wins: int
+	loses: int
+	totalScore: int
+	bestScore: int
+	rank: int | None = None
 
 	class Config:
 		from_attributes = True
@@ -77,7 +82,12 @@ class registerForm(BaseModel):
 
 class refreshForm(BaseModel):
 	token: str
-
+ 
+ 
+#  Friends
+class FriendRequest(BaseModel):
+    toUserID: int
+    
 
 class GameOptions(BaseModel):
     game_type: GAME_TYPE

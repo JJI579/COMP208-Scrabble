@@ -10,6 +10,7 @@ import os, datetime, secrets, hashlib
 from modules.functions import get_current_user
 from typing import Annotated
 apiLog = APILogger()
+from modules.schema import UserFetch 
 
 from sqlalchemy import insert
 
@@ -29,15 +30,74 @@ async def putWords(session: AsyncSession = Depends(get_session)):
 	
 	return {'total': len(_words)}
 
-@router.get('/@me')
+@router.get('/@me', response_model=UserFetch)
 async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
-	return current_user
+    result = await session.execute(select(User).order_by(User.totalScore.desc()))
+    users = result.scalars().all()
+    
+    rank = next((i + 1 for i, user in enumerate(users) if (user.userID == current_user.userID)), None) # type: ignore
+    print(rank)
+    
+    return {
+        **current_user.__dict__,
+        "rank": rank
+    }
+    
+
+# @router.get('/friends', response_model=UserFetch)
+# async def get_friends(session: AsyncSession = Depends(get_session)):
+#     pass
+
+
+@router.get('/players', response_model = list[UserFetch])
+async def get_users(search: str = '', session: AsyncSession = Depends(get_session)):
+    if (search == ''):
+        return []
+    query = user_search(select(User), search)
+    results = await session.execute(query.order_by(User.userName.asc()))
+    users = results.scalars().all()
+    print(users)
+    return users
+    
+    
+    
+
+
+@router.get('/leaderboard', response_model=list[UserFetch])
+async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: int = 100, session: AsyncSession = Depends(get_session)):
+    
+    print(limit)
+
+    if sort_by == "totalScore":
+        order_by = User.totalScore
+        print("sorting by totalScore")
+    elif sort_by == "wins":
+        order_by = User.wins
+        print("sorting by wins")
+    elif sort_by == "games":
+        order_by = User.wins + User.loses
+        print("sorting by games")
+    else:
+        order_by = User.bestScore
+        
+    query = user_search(select(User), search)
+    query = query.order_by(order_by.desc()).limit(limit)
+    
+    results = await session.execute(query)
+    users = results.scalars().all()
+    print(users)
+    return users
+
 
 @router.get('/{user_id}')
 async def get_user(request: Request, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	userID = request.path_params.get('user_id')
 	print(userID)
+ 
+ 
 
+def user_search(query, name: str):
+    if name:
+        return query.where(User.userName.ilike(f"%{name}%"))
+    return query
 
-
-	

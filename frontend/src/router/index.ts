@@ -1,6 +1,7 @@
 // import App from '@/App.vue'
 // import Landing from '@/Components/Landing/Landing.vue'
 import Dashboard from '@/Components/Dashboard/Dashboard.vue'
+import Friends from '@/Components/Friends/Friends.vue'
 import Create from '@/Components/Game/Create/Create.vue'
 import Finish from '@/Components/Game/Finish/Finish.vue'
 import Join from '@/Components/Game/Join/Join.vue'
@@ -62,6 +63,10 @@ const router = createRouter({
 			path: '/shop',
 			name: 'shop',
 			component: Shop
+		}, {
+			path: '/friends',
+			name: 'friends',
+			component: Friends
 		}
 	],
 })
