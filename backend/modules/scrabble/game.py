@@ -259,3 +259,8 @@ class Game:
 		self.hasStarted = True
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn
+	
+	def finish_game(self):
+		# get all data from the board, input into database, continue
+		
+		pass

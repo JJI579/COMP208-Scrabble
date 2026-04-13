@@ -112,12 +112,14 @@ class Scrabble:
 		# index of array
 		self.gameTurn = 0
 		self.game = arr
-		# [[x, y], "letter"]
-		self.placed = []  # [(x, y), letter]
+		# [[x, y], "letter", "blank replacement"]
+		self.placed = []  # [(x, y), letter, "blank replacement"]
 		self.firstPlaced = False
 		# make sure it isnt a reference array
 		self.letterArray: list[str] = copy.deepcopy(distributionArray)
 
+		# even though start and finish is in separate places, i am not arsed to fix this.
+		self.finished = False
 
 		self.double_letter = [ [3,0],[11,0], [6,2],[8,2], [0,3],[7,3],[14,3], [2,6],[6,6],[8,6],[12,6], [3,7],[11,7], [2,8],[6,8],[8,8],[12,8], [0,11],[7,11],[14,11], [6,12],[8,12], [3,14],[11,14] ]
 		self.triple_letter = [ [5,1],[9,1], [1,5],[5,5],[9,5],[13,5], [1,9],[5,9],[9,9],[13,9], [5,13],[9,13] ]
@@ -171,6 +173,7 @@ class Scrabble:
 		# return userid of current turn
 		return self.players[0] 
 
+	
 	def give_player_letters(self, userID: int, amount: int):
 		"""
 		Gives a player the specified amount of letters.
@@ -185,7 +188,19 @@ class Scrabble:
 		Returns:
 			None
 		"""
-		letterChoices = random.sample(self.letterArray, k=amount)
+		if len(self.letterArray) == 0:
+			if len(self.playerLetters[str(userID)]) == 0:
+				self.finished = True
+				return
+			else:
+				return
+		
+		try:
+			letterChoices = random.sample(self.letterArray, k=amount)
+		except:
+			# Take all that is left of the self.letterarray
+			letterChoices = random.sample(self.letterArray, k=len(self.letterArray))
+			return
 		if str(userID) in self.playerLetters:
 			self.playerLetters[str(userID)].extend(letterChoices)
 		else:

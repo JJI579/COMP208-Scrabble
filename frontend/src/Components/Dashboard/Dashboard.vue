@@ -1,10 +1,5 @@
-<!--Not sure where to implement this:
-<RouterLink to="/create">Create</RouterLink>
-<RouterLink to="/join">Join</RouterLink>
--->
-
 <script lang="ts" setup>
-import { R } from 'vue-router/dist/router-CWoNjPRp.mjs';
+
 import { ref, computed } from 'vue';
 import router from '@/router';
 
@@ -28,85 +23,88 @@ function createPage() {
 
 <template>
 
-	<div class="dashboard">
+  <div class="dashboard">
 
-		<div class="bg-aurora"></div>
-		<div class="bg-orb orb1"></div>
-		<div class="bg-orb orb2"></div>
-		<div class="bg-orb orb3"></div>
+    <div class="bg-aurora"></div>
+    <div class="bg-orb orb1"></div>
+    <div class="bg-orb orb2"></div>
+    <div class="bg-orb orb3"></div>
 
 
-		<main class="main">
+    <main class="main">
 
-			<div class="streak-box card-glass">
-				<span class="flame" :class="flameLevel">🔥</span>
-					<p class="streak-text">Weekly Streak</p>
-					<span class="streak-number" :class="{active: streak > 0}">{{ streak }}</span>
-			</div>
+      <div class="streak-box card-glass">
+        <span class="flame" :class="flameLevel">🔥</span>
+        <p class="streak-text">Weekly Streak</p>
+        <span class="streak-number" :class="{ active: streak > 0 }">{{ streak }}</span>
+      </div>
 
-			<h1 class="play-text glow-text">Play a Game</h1>
-			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
-			</div>
+      <h1 class="play-text glow-text">Play a Game</h1>
+      <div class="play-options">
+        <button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
+        <button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
+        <button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
+      </div>
 
-			<RouterLink to="/leaderboard" class="leaderboard-link">
-			<button class="leaderboard card-glass hover-shadow card-hover">
-				<h2 class="glow-text">🏆 Lifetime Leaderboard</h2>
-				<div class="leaderboard-header">
-					<span>Rank</span>
-					<span>Player</span>
-					<span>Score</span>
-				</div>
+      <RouterLink to="/leaderboard" class="leaderboard-link">
+        <button class="leaderboard card-glass hover-shadow card-hover">
+          <h2 class="glow-text">🏆 Lifetime Leaderboard</h2>
+          <div class="leaderboard-header">
+            <span>Rank</span>
+            <span>Player</span>
+            <span>Score</span>
+          </div>
 
-				<ul class="leaderboard-list">
-					<li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500 pts</span></li>
-					<li class="leaderboard-item"><span class="rank-badge silver">2</span><span>PlayerTwoWithLongName</span><span>1200 pts</span></li>
-					<li class="leaderboard-item"><span class="rank-badge bronze">3</span><span>PlayerThree</span><span>900 pts</span></li>
-					<li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li>
-          		</ul>
+          <ul class="leaderboard-list">
+            <li class="leaderboard-item"><span class="rank-badge gold">1</span><span>PlayerOne</span><span>1500
+                pts</span></li>
+            <li class="leaderboard-item"><span
+                class="rank-badge silver">2</span><span>PlayerTwoWithLongName</span><span>1200 pts</span></li>
+            <li class="leaderboard-item"><span class="rank-badge bronze">3</span><span>PlayerThree</span><span>900
+                pts</span></li>
+            <li class="leaderboard-item-self"><span>9</span><span>You</span><span>0 pts</span></li>
+          </ul>
 
-			</button>
-			</RouterLink>
+        </button>
+      </RouterLink>
 
-			<div class="score-box card-glass hover-shadow">
-				<h2 class="glow-text">Current Score</h2>
-				<p class="score-number">0 pts</p>
-			</div>
+      <div class="score-box card-glass hover-shadow">
+        <h2 class="glow-text">Current Score</h2>
+        <p class="score-number">0 pts</p>
+      </div>
 
-			<RouterLink to="/shop" class="score-shop card-glass hover-shadow">
-				<h2 class="glow-text">🛒Shop</h2>
-				<p>Unlock exclusive rewards!</p>
-			</RouterLink>
-		</main>
-	</div>
+      <RouterLink to="/shop" class="score-shop card-glass hover-shadow">
+        <h2 class="glow-text">🛒Shop</h2>
+        <p>Unlock exclusive rewards!</p>
+      </RouterLink>
+    </main>
+  </div>
 
-	<footer class="footer">
-		&copy; 2026 Scrabble Teams. All rights reserved.
-	</footer>
+  <footer class="footer">
+    &copy; 2026 Scrabble Teams. All rights reserved.
+  </footer>
 </template>
 
 
 <style lang="css" scoped>
 .dashboard {
-	position: relative;
-	
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	background: linear-gradient(180deg, #0d1b2a, #1b263b);
-	padding: 2rem;
-	padding-bottom: 6rem;
-	margin: 0;
-	box-sizing: border-box;
-	margin-left: calc(-50vw + 50%);
-	min-height: 100vh;
-	
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: linear-gradient(180deg, #0d1b2a, #1b263b);
+  padding: 2rem;
+  padding-bottom: 6rem;
+  margin: 0;
+  box-sizing: border-box;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+
 }
 
 .main {
-	flex: 1;
+  flex: 1;
 }
 
 
@@ -115,10 +113,10 @@ function createPage() {
 }
 
 .card-hover:hover {
-	transform: translateY(-6px) scale(1.03);
-	box-shadow:
-		0 15px 30px rgba(0,0,0,.25),
-		0 0 25px rgba(77, 148, 255, 0.35);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow:
+    0 15px 30px rgba(0, 0, 0, .25),
+    0 0 25px rgba(77, 148, 255, 0.35);
 }
 
 .card-glass {
@@ -141,58 +139,58 @@ function createPage() {
 }
 
 .menu-btn {
-	position: fixed;
-	top: 1rem;
-	left: 1rem;
-	font-size: 1.5rem;
-	background: none;
-	border: none;
-	cursor: pointer;
-	z-index: 1001;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
 }
 
 .sidebar {
-	position: fixed;
-	top: 0;
-	left: -220px;
-	height: 100%;
-	width: 220px;
-	background: #f0f0f0;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 1.5rem;
-	padding-top: 4rem;
-	transition: left 0.3s ease;
-	z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: -220px;
+  height: 100%;
+  width: 220px;
+  background: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding-top: 4rem;
+  transition: left 0.3s ease;
+  z-index: 1000;
 }
 
 .sidebar.open {
-	left: 0;
+  left: 0;
 }
 
 .icon {
-	font-size: 1.2rem;
-	cursor: pointer;
+  font-size: 1.2rem;
+  cursor: pointer;
 }
 
 .theme-icon {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-	font-size: 1.2rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 1.2rem;
 }
 
 .theme-btn {
-	font-size: 1.2rem;
-	cursor: pointer;
+  font-size: 1.2rem;
+  cursor: pointer;
 }
 
 .main {
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-	min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-height: calc(100vh - 4rem);
 }
 
 .streak-box {
@@ -215,6 +213,7 @@ function createPage() {
   transform: scale(0.9);
   text-shadow: none;
 }
+
 .flame.warm {
   text-shadow:
     0 0 8px #ffae42,
@@ -240,13 +239,23 @@ function createPage() {
 }
 
 @keyframes flameLegend {
-  from { transform: scale(1.35) rotate(-3deg); }
-  to { transform: scale(1.45) rotate(3deg); }
+  from {
+    transform: scale(1.35) rotate(-3deg);
+  }
+
+  to {
+    transform: scale(1.45) rotate(3deg);
+  }
 }
 
 @keyframes flame-bounce {
-  from { transform: translateY(0); }
-  to { transform: translateY(-5px); }
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-5px);
+  }
 }
 
 
@@ -256,11 +265,12 @@ function createPage() {
   text-align: center;
   color: #000000;
 }
+
 .streak-number {
   color: #ff6b6b;
   text-shadow:
     0 0 8px #ff6b6b,
-    0 0 16px rgba(255,107,107,0.5);
+    0 0 16px rgba(255, 107, 107, 0.5);
   font-size: 2rem;
   font-weight: 700;
   text-align: center;
@@ -268,23 +278,26 @@ function createPage() {
 }
 
 @keyframes streakPulse {
-0%, 100% {
-transform: scale(1);
-text-shadow:
-	0 0 6px rgba(255, 80, 80, 0.8),
-	0 0 12px rgba(255, 80, 80, 0.5);
-}
-50% {
-transform: scale(1.08);
-text-shadow:
-	0 0 10px rgba(255, 80, 80, 1),
-	0 0 20px rgba(255, 80, 80, 0.7);
-}
+
+  0%,
+  100% {
+    transform: scale(1);
+    text-shadow:
+      0 0 6px rgba(255, 80, 80, 0.8),
+      0 0 12px rgba(255, 80, 80, 0.5);
+  }
+
+  50% {
+    transform: scale(1.08);
+    text-shadow:
+      0 0 10px rgba(255, 80, 80, 1),
+      0 0 20px rgba(255, 80, 80, 0.7);
+  }
 }
 
 .play-text {
-	text-align: center;
-	font-size: 2.2rem;
+  text-align: center;
+  font-size: 2.2rem;
 }
 
 .play-options {
@@ -313,7 +326,7 @@ text-shadow:
 
 .play-btn:hover {
   background: linear-gradient(135deg, #4169a9, #5a7dbb);
-  box-shadow: 0 0 20px rgba(65,105,169,0.5);
+  box-shadow: 0 0 20px rgba(65, 105, 169, 0.5);
   transform: scale(1.05);
 }
 
@@ -323,11 +336,11 @@ text-shadow:
 }
 
 .play-btn:focus {
-	outline: 2px solid #8080ff;
+  outline: 2px solid #8080ff;
 }
 
 .leaderboard h2 {
-	margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .leaderboard {
@@ -343,21 +356,22 @@ text-shadow:
 .leaderboard:hover {
   background: linear-gradient(135deg, #2a4d8f, #3b61b0);
 }
+
 .leaderboard:active {
   background: linear-gradient(135deg, #1b3050, #254172);
   transform: scale(0.98);
 }
 
 .leaderboard:focus {
-	outline: 2px solid #ccc056;
+  outline: 2px solid #ccc056;
 }
 
 .leaderboard-header,
 .leaderboard-item,
 .leaderboard-item-self {
-	display: grid;
-	grid-template-columns: 80px 1fr 100px;
-	align-items: center;
+  display: grid;
+  grid-template-columns: 80px 1fr 100px;
+  align-items: center;
 }
 
 .leaderboard-header {
@@ -367,12 +381,13 @@ text-shadow:
 }
 
 .leaderboard-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.leaderboard-item, .leaderboard-item-self {
+.leaderboard-item,
+.leaderboard-item-self {
   padding: 0.5rem 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -392,25 +407,25 @@ text-shadow:
   font-weight: bold;
   color: white;
   font-size: 0.9rem;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   justify-self: center;
   position: relative;
-  
+
 }
 
 .rank-badge.gold {
   background: linear-gradient(135deg, #ffd700, #ffc700);
-  box-shadow: 0 0 12px #ffd700, 0 0 25px rgba(255,215,0,0.6);
+  box-shadow: 0 0 12px #ffd700, 0 0 25px rgba(255, 215, 0, 0.6);
 }
 
 .rank-badge.silver {
   background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-  box-shadow: 0 0 12px #c0c0c0, 0 0 25px rgba(192,192,192,0.6);
+  box-shadow: 0 0 12px #c0c0c0, 0 0 25px rgba(192, 192, 192, 0.6);
 }
 
 .rank-badge.bronze {
   background: linear-gradient(135deg, #cd7f32, #b06b2b);
-  box-shadow: 0 0 12px #cd7f32, 0 0 25px rgba(205,127,50,0.6);
+  box-shadow: 0 0 12px #cd7f32, 0 0 25px rgba(205, 127, 50, 0.6);
 }
 
 .rank-badge::after {
@@ -419,12 +434,10 @@ text-shadow:
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255,255,255,0.6),
-    transparent
-  );
+  background: linear-gradient(120deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -434,16 +447,16 @@ text-shadow:
 }
 
 .score-box {
-	background-color: #f0f0f0;
-	padding: 1rem 1.5rem;
-	border-radius: 12px;
-	text-align: center;
+  background-color: #f0f0f0;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  text-align: center;
 }
 
 .score-box h2 {
-	font-size: 1.7rem;
-	font-weight: 700;
-	margin-bottom: 0.5rem;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 
 .score-number {
@@ -465,41 +478,42 @@ text-shadow:
 }
 
 .score-shop h2 {
-	font-size: 1.7rem;
-	font-weight: 600;
-	margin-bottom: 0.5rem;
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .score-shop:hover {
   background: linear-gradient(135deg, #6a6aff, #8c8cff);
   transform: scale(1.02);
-  box-shadow: 0 0 20px rgba(106,106,255,0.3);
+  box-shadow: 0 0 20px rgba(106, 106, 255, 0.3);
 }
 
 .score-shop:active {
   background: linear-gradient(135deg, #2f2fff, #4b4bff);
   transform: scale(0.98);
 }
+
 .score-shop:focus {
-	outline: 2px solid #8080ff;
+  outline: 2px solid #8080ff;
 }
 
 @media (max-width: 900px) {
-	.dashboard {
-		grid-template-columns: 1fr;
-	}
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
 
-	.sidebar {
-		display: none;
-	}
+  .sidebar {
+    display: none;
+  }
 
-	.play-btn {
-		grid-template-columns: 1fr;
-	}
+  .play-btn {
+    grid-template-columns: 1fr;
+  }
 }
 
 .footer {
-  
+
   width: 100%;
   padding: 0.75rem 0;
   text-align: center;

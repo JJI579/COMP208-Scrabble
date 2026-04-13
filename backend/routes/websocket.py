@@ -125,7 +125,7 @@ class GameHandler:
 			return
 		if userConnection['info'].userID == game.get_current_turn():
 			pointsAmount = await game.game_turn(data['d']['letters'])
-			print(pointsAmount)
+			# check if game has finished.
 			if type(pointsAmount) == bool:
 				errorPacket = packets.error("Invalid placement of letters!")
 				await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
@@ -138,10 +138,10 @@ class GameHandler:
 				"grid": newGrid,
 				"turn": nextTurn,
 				# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
-				"points: ": pointsAmount
+				"points": pointsAmount
 			})
 			await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
-			# Update the board for others.
+			# Update the board for the user who just played.
 			updateCurrentUser = packets.during.game_update({
 				"grid": newGrid,
 				"turn": nextTurn,
@@ -150,10 +150,17 @@ class GameHandler:
 			})	
 			await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 
+			if game.game.finished:
+				return await GameHandler.finish_game(websocket)
+
 		else:
 			# TODO: send error to user 
 			return
 
+	@staticmethod
+	async def finish_game(websocket: WebSocket):
+		# TODO: create
+		pass
 
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
