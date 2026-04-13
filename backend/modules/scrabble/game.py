@@ -38,7 +38,7 @@ class Game:
 
 		firstCoordinate = None
 		direction = "RIGHT"
-		playerLetters = self.game.fetch_player_letters(self.get_current_turn())
+		playerLetters = copy.deepcopy(self.game.fetch_player_letters(self.get_current_turn()))
 		
 		# TODO: identify if the letters used are available, and direction of play.
 		blanksIdentified = []
@@ -63,12 +63,13 @@ class Game:
 					playerLetters.remove(blank)
 					blanksIdentified.append((x,y))
 				else:
-					# invalid placement.
+					# Invalid placement, deep copied the player's letters to not affect their actual deck unless it works.
 					return False
 		print("Player has all letters required for this turn.")
 		# this should not have a side effect of moving to the next turn.
 		result = await self.game.place_word(letters, direction, blanksIdentified)
 		if type(result) == bool:
+			print("here")
 			return False
 		
 		# Update letters and return result.

@@ -28,7 +28,6 @@ const props = defineProps({
 		<div class="player-info">
 			<p class="name">{{ props.userGameData.userName }}</p>
 			<p class="score">Score: {{ props.userGameData.points }}</p>
-			<p class="timer">TODO</p>
 		</div>
 	</div>
 </template>

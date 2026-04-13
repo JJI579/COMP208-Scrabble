@@ -425,7 +425,6 @@ class Scrabble:
 				
 		print("OUR HELPER FUNCTION --- END --- ")
 		return await self.place_letters(letters)
-		return await self._place_word(''.join([x[1] if x[2] == None else x[2] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
 		"""
@@ -627,13 +626,9 @@ class Scrabble:
 					potentialWord = self.expand_vertically(currentPosition)
 					
 				testArray = potentialWord.copy()
-				print("xxxxxx")
-				print(testArray)
-				print(letterPositions)
-				print("xxxxxx")
 				[testArray.remove(x) for x in letterPositions if x in testArray]
+				# TODO: see if you can cache new checked letters?
 				if len(testArray) != 0:
-					print(testArray)
 					if testDirection == "down":
 						potentialWord.sort(key=lambda x: x[1] )
 					else:
@@ -649,7 +644,6 @@ class Scrabble:
 						break
 					else:
 						print(f"{wordString} is a word.")
-						print(wordOrdered)
 						points+=self.calculate_points(wordOrdered, blanks)
 						hasJoiningWord = True
 						isWord = True
@@ -657,13 +651,7 @@ class Scrabble:
 					if not self.firstPlaced:
 						hasJoiningWord = True
 						self.firstPlaced = True
-
-		
 		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
-
-		# confirmed it is true?
-
-		print("figure out now...")
 		if not hasJoiningWord or isWord == None:
 			print("removing placed letters")
 			# remove coordinates placed
@@ -672,7 +660,8 @@ class Scrabble:
 			return False
 		# OTHERWISE IT IS A TRUE WORD.
 		self.placed.extend(placing)
-		return 0
+		points+=self.calculate_points(placing, blanks)
+		return points
 	
 		
 
@@ -681,11 +670,7 @@ class Scrabble:
 		doubleWord = 0
 		tripleWord = 0
 		points = 0
-		print(blanks)
-		print(wordOrdered)
-		for coord, letter in wordOrdered:
-			print(coord)
-			print(letter)
+		for coord, letter, *rest in wordOrdered:
 			if coord not in blanks:
 				# do not ignore
 				if coord in self.double_letter:
