@@ -52,51 +52,161 @@ class Player:
 			if availableCount[key] < val:
 				return False
 			
-# class Bot(Player):
+class Bot(Player):
 
-# 	def __init__(self, name="Bot"):
-# 		super().__init__()
-# 		self.name = name
+	def __init__(self, word_set, name="Bot", difficulty="hard"):
+		super().__init__()
+		self.name = name
+		self.difficulty = difficulty
+		self.settings = {
+			"easy": {"top_n": 15, "max_len": 4},
+            "medium": {"top_n": 5, "max_len": 6},
+            "hard": {"top_n": 1, "max_len": 15},
+		}
+		self.word_set = word_set
+		self.trie = {}
+		self.build_trie()
+		
 
-# 	def choose_move(self, scrabble: "Scrabble"):
-# 		best_move = None
-# 		best_score = -1
-# 		# try to get the cells next to already placed - more efficient that checking every cell xx
-# 		candidates = self.get_candidate_cells(scrabble)
-# 		for x, y in candidates:
-# 			for direction in ["right", "down"]:
-# 				for word in self.get_possible_words(scrabble):
-# 					preExisting = self.find_matching_letters(scrabble, word, x, y, direction)
-# 					# print(f"Testing word: {word} at position: ({x}, {y}) in direction: {direction} with preExisting: {preExisting}")
-					
-# 					#save board incase we need to revert
-# 					temp = [row.copy() for row in scrabble.game]
+	def build_trie(self):
+		self.trie = {}
+		for word in self.word_set:
+			word = word.strip().upper()
+			node = self.trie
+			for char in word:
+				node = node.setdefault(char, {})
+			node["$"] = True
 
-# 					# coords for calculating points
-# 					points = scrabble.draft_place_word(word, (x,y), direction, blanks=[], preExisting=preExisting, draft=True)
-# 					if points > best_score:
-# 						best_score = points
-# 						best_move = (word, (x,y), direction, preExisting)
-# 					# restore
-# 					scrabble.game = temp
-# 		return best_move
-# 	# check bots placed tiles...
-# 	''' TODO: get candidate cells, get possible words, find matchingn letters
-# 				difficulty levels?
-# 					-> considers intersecting words and considers tile multipliers..
-# 	'''
+	def is_word(self, word):
+		node = self.trie
+		for c in word:
+			if c not in node:
+				return False
+			node = node[c]
+		return "$" in node
+
+	def choose_move(self, scrabble: "Scrabble"):
+		moves = []
+		anchors = self.get_candidate_cells(scrabble)
+
+		for x, y in anchors:
+			for direction in ["right", "down"]:
+				generated = self.generate_possible_words(scrabble, (x, y), direction)
+
+				for word, pos in generated:
+					points = scrabble.sim_place_word(
+						word, 
+						pos, 
+						direction
+						)
+					if isinstance(points, int):
+						moves.append((points + len(word)*0.5, word, pos, direction))
+		if not moves:
+			return None
+		moves.sort(reverse=True, key=lambda x: x[0])
+		top_n = self.settings[self.difficulty]["top_n"]
+		return random.choice(moves[:top_n])[1:]
+
+
+	def get_candidate_cells(self, scrabble: "Scrabble"):
+		candidates = set()
+		for y in range(15):
+			for x in range(15):
+				if scrabble.get_cell(x,y) != '|':
+					continue
+				
+				for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < 15 and 0 <= ny < 15:
+						if scrabble.get_cell(nx, ny) != '|':
+							candidates.add((x,y))
+							break
+		if not candidates:
+			candidates.add((7,7))
+		return list(candidates)
 	
-# 	def get_candidate_cells(self, scrabble: "Scrabble"):
-# 		pass
+	def cross_check(self, scrabble, x, y, direction):
+		letters= set()
+		for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+			original = scrabble.game[y][x]
+			scrabble.game[y][x] = c
+			if direction == "right":
+				coords = scrabble.expand_vertically((x,y))
+			else:
+				coords = scrabble.expand_horizontally((x,y))
+			if len(coords) <= 1:
+				letters.add(c)
+			else:
+				coords_sorted = sorted(coords, key=lambda t: (t[1], t[0]))
+				word= ''.join(scrabble.get_cell(cx, cy) for cx, cy in coords_sorted)
+				if self.isWord(word):
+					letters.add(c)
+			scrabble.game[y][x] = original
+		return letters
 
-# 	def get_possible_words(self, scrabble: "Scrabble"):
-# 		possible_words = []
-# 		pass
+	def generate_possible_words(self, scrabble, position, direction):
+		x, y = position
+		results = []
+		seen = set()
+		max_len = self.settings[self.difficulty]["max_len"]
 
-# 	def find_matching_letters(self, scrabble: "Scrabble", word, position, direction):
-# 		x, y = position
-# 		preExisting = []
-# 		pass
+		start_x, start_y = x, y
+		while True:
+			prev_x = start_x - 1 if direction == "right" else start_x
+			prev_y = start_y - 1 if direction == "down" else start_y
+			if not (0 <= prev_x < 15 and 0 <= prev_y < 15):
+				break
+			if scrabble.get_cell(prev_x, prev_y) == '|':
+				start_x, start_y = prev_x, prev_y
+			else:
+				break
+
+		def backtrack(node, path, rack, px, py, anchor_used):
+			if len(path) > max_len:
+				return
+			if "$" in node and anchor_used:
+				word = "".join(path)
+				if word not in seen:
+					seen.add(word)
+					results.append((word, start_x, start_y))
+			if not (0<=px<15 and 0<=py<15):
+				return
+			cell = scrabble.get_cell(px,py)
+
+			if not rack and cell =='|':
+				return
+
+			if cell != '|':
+				letter = cell.upper()
+				if letter in node:
+					path.append(letter)
+					if direction == "right":
+						backtrack(node[letter], path, rack, px+1, py, True)
+					else:
+						backtrack(node[letter], path, rack, px, py+1, True)
+					path.pop()
+			else:
+				cross_allowed = self.cross_check(scrabble, px, py, direction)
+
+				for i, letter in enumerate(rack):
+					letter=letter.upper()
+					if letter not in node:
+						continue
+					if letter not in cross_allowed:
+						continue
+					new_rack=rack[:i]+rack[i+1:]
+					path.append(letter)
+					if direction == "right":
+						backtrack(node[letter], path, new_rack, px+1, py, True)
+					else:
+						backtrack(node[letter], path, new_rack, px, py+1, True)
+					path.pop()
+		backtrack(self.trie, [], self.letters.copy(), x, y, False)
+		return results
+	
+
+
+
 
 
 
@@ -562,7 +672,7 @@ class Scrabble:
 		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
 		
 		if self.firstPlaced:
-			if not hasJoiningWord or isWord == None: 
+			if not hasJoiningWord or not isWord: 
 				print("removing placed letters")
 				# remove coordinates placed
 				for [x, y], letter in tempPlaced:
@@ -652,7 +762,7 @@ class Scrabble:
 						hasJoiningWord = True
 						self.firstPlaced = True
 		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
-		if not hasJoiningWord or isWord == None:
+		if not hasJoiningWord or not isWord:
 			print("removing placed letters")
 			# remove coordinates placed
 			for [x, y], *_ in placing:
@@ -704,7 +814,7 @@ class Scrabble:
 				print(i, end=" ")
 			print()
 
-	async def check_word(self, word: str):
+	async def check_word(self, word: str) -> bool:
 		"""
 			Check if a word is present in the database.
 			
@@ -715,7 +825,7 @@ class Scrabble:
 				bool: True if the word is present, False otherwise.
 		"""
 		async for session in get_session():
-			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word.lower()})
+			resp = await session.execute(text("SELECT 1 FROM tblWords WHERE word = :word LIMIT 1"), {"word": word.lower()})
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
-			return result
+			return result is not None
