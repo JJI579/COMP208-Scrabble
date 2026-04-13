@@ -8,15 +8,8 @@ import Message from './Message.vue';
 
 const websocketStore = useWebsocketStore();
 
-function sendMessage(sample: String | undefined) {
-	var message;
-	if (sample == undefined) {
-		message = sample;
-	} else {
-		// send input content
-		message = messageModel.value
-	}
-
+function sendMessage() {
+	var message = messageModel.value
 	websocketStore.send("CHAT_MESSAGE", {
 		message: message
 	});
@@ -56,7 +49,7 @@ const messages = websocketStore.messages;
 		</div>
 		<div class="send">
 			<input type="text" v-model="messageModel" class="send__input">
-			<button class="send__submit"><i class="pi pi-upload"></i></button>
+			<button class="send__submit" @click="sendMessage"><i class="pi pi-upload"></i></button>
 		</div>
 	</div>
 </template>

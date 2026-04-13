@@ -156,21 +156,35 @@ class GameHandler:
 
 	@staticmethod
 	async def chat_message(data: dict, websocket: WebSocket):
-		game = manager.fetch_game(data['d']['code'])
+		userID = websocket.user_id # type: ignore
+		userData = manager.connections[userID]['info']
+		fetchModel = UserFetch.model_validate(userData)
+		connection = manager.fetch_connection(userID)
+		if type(connection) == bool:
+			print("Person does not exist")
+			# TODO: change error code
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
+			return False
+		
+		code = connection['game']
+		if code == None:
+			print("No Game exists")
+			# TODO: change error code
+			await manager.send_message(websocket, json.dumps(packets.start.invalid_game("")))
+			return False
+		
+		game = manager.fetch_game(code)
 		if type(game) == bool:
 			print("Game does not exist")
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
 			# TODO: send error message
 			return False
-		userID = websocket.user_id # type: ignore
-		userData = manager.connections[userID]['info']
-		fetchModel = UserFetch.model_validate(userData)
+		
 		message = data['d']['message']
 		sendPacket = packets.during.chat_message(message, fetchModel)
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
-		
 		game = manager.fetch_game(data['d']['code'])
 		if type(game) == bool:
 			print("Game does not exist")

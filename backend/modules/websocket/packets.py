@@ -137,7 +137,7 @@ class DuringPackets(Packets):
 		messageObject = {
 			"id": random.randint(0,10000),
 			"text": message, 
-			"created_at": datetime.datetime.now(),
+			"created_at": datetime.datetime.now().isoformat(),
 			"author": {
 				"id": author.userID,
 				"name": author.userName

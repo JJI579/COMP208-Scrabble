@@ -12,7 +12,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 	const game = reactive<Game>(new Game(0, {}));
 
 	const messages = ref<MessageType[]>([]);
-	const userStore = useUserStore();
 	const readyToSend = ref(false)
 
 	function connect() {
