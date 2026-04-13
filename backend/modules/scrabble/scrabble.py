@@ -94,11 +94,11 @@ class Bot(Player):
 				generated = self.generate_possible_words(scrabble, (x, y), direction)
 
 				for word, pos in generated:
-					points = scrabble.sim_place_word(
+					points = asyncio.run(scrabble._place_word(
 						word, 
 						pos, 
 						direction
-						)
+						))
 					if isinstance(points, int):
 						moves.append((points + len(word)*0.5, word, pos, direction))
 		if not moves:
@@ -139,7 +139,7 @@ class Bot(Player):
 			else:
 				coords_sorted = sorted(coords, key=lambda t: (t[1], t[0]))
 				word= ''.join(scrabble.get_cell(cx, cy) for cx, cy in coords_sorted)
-				if self.isWord(word):
+				if self.is_word(word):
 					letters.add(c)
 			scrabble.game[y][x] = original
 		return letters
@@ -829,3 +829,19 @@ class Scrabble:
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
 			return result is not None
+
+
+
+
+async def load_word_set():
+	words = []
+	async for session in get_session():
+		result = await session.execute(text("SELECT word FROM tblWords"))
+		words = [row[0].upper() for row in result.fetchall()]
+	return words
+
+async def create_game():
+	word_set = await load_word_set()
+	game = Scrabble(arr)
+	bot = Bot(word_set, name="Bot", difficulty="hard")
+	return game, bot
