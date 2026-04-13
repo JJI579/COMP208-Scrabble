@@ -131,14 +131,38 @@ class Scrabble:
 		return toSend
 	
 	def fetch_player_letters(self, userID: int):
+		"""
+			Fetches the letters of a given player.
+
+			Args:
+				userID (int): The ID of the player whose letters are to be fetched.
+
+			Returns:
+				list[str]: The letters of the player.
+		"""
 		return self.playerLetters[str(userID)]
 	
 	def fetch_turn(self):
+		"""
+			Fetches the ID of the player whose turn it is.
+
+			If the game turn is greater than or equal to the number of players,
+			return -1, indicating that the game is over.
+
+			Otherwise, return the ID of the player whose turn it is.
+		"""
 		if self.gameTurn >= len(self.players):
 			return -1
 		return self.players[self.gameTurn]
 	
 	def init_game(self, players: list[GamePlayer]):
+		"""
+			Initializes the game state with a given list of players.
+
+			Each player is given 7 letters from the letter distribution array.
+			The game turn is set to 0, and the function returns the
+			userID of the current turn.
+		"""
 		for player in players:
 			userID = int(player.userID)
 			self.players.append(userID)
@@ -148,15 +172,25 @@ class Scrabble:
 		return self.players[0] 
 
 	def give_player_letters(self, userID: int, amount: int):
+		"""
+		Gives a player the specified amount of letters.
+		If the player already has letters, the new letters will be added to their existing letters.
+		Otherwise, the new letters will be stored as the player's letters.
+		The letters given will then be removed from the letter array.
+
+		Parameters:
+			userID (int): The user ID of the player to give the letters to.
+			amount (int): The amount of letters to give to the player.
+
+		Returns:
+			None
+		"""
 		letterChoices = random.sample(self.letterArray, k=amount)
-		letterChoices[0] = " "
 		if str(userID) in self.playerLetters:
 			self.playerLetters[str(userID)].extend(letterChoices)
 		else:
 			self.playerLetters[str(userID)] = letterChoices
 		for x in letterChoices:
-			print("give player letter")
-			print(x)
 			try:
 				self.letterArray.remove(x)
 			except Exception as e:
@@ -164,13 +198,34 @@ class Scrabble:
 				print("This will never throw.")
 
 	def set_player_letters(self, userID: int, letters: list[str]):
-		# give player rest of letters aswell.
+		""" 
+		Set the letters a player has to the given list and then top up their letters to 7 if they have less than 7 letters.
+
+		Parameters:
+			userID (int): The user ID of the player to set the letters for.
+			letters (list[str]): The list of letters to set the player's letters to.
+
+			Returns:
+				None
+		"""
 		# DONT TRY TO REMOVE FROM THE PARAM SINCE THEY HAVE ALREADY BEEN REMOVED PREVIOUSLY.
 		self.playerLetters[str(userID)] = letters
 		if len(letters) < 7: # make it give the rest of the letters.
 			self.give_player_letters(userID, 7 - len(letters))
 
 	def export_data(self):
+		""" 
+		Returns a dictionary containing the game state.
+
+		Parameters:
+			None
+
+		Returns:
+			A dictionary containing the game state with the following keys:
+				- "game": The game grid.
+				- "players": A list of the user IDs of the players in the game.
+				- "gameTurn": The current turn of the game.
+		"""
 		return {
 			"game": self.game,
 			"players": self.players,
@@ -178,8 +233,11 @@ class Scrabble:
 		}
 
 	def next_turn(self):
-		# TODO: change this to the next player's user id not game turn - i think?	
+		"""
+		Moves the game state to the next player's turn.
 
+		Returns the user ID of the player whose turn it now is.
+		"""
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
@@ -188,6 +246,16 @@ class Scrabble:
 		return self.fetch_turn()
 
 	def get_cell(self, x: int, y: int):
+		""" 
+			Returns the value of the cell at the given coordinates (x, y) in the game state.
+
+			Parameters:
+				x (int): The x coordinate of the cell to retrieve.
+				y (int): The y coordinate of the cell to retrieve.
+
+			Returns:
+				The value of the cell at the given coordinates.
+		""" 
 		return self.game[y][x]
 	
 	def convert_id_to_coordinate(self, squareID: int):
@@ -201,6 +269,23 @@ class Scrabble:
 		return (y * 15) + x
 
 	def expand_vertically(self, position):
+		"""
+			Expands vertically from the given position in the game state.
+
+			Returns a list of coordinates (x, y) that the bot can potentially place a word on.
+
+			The expansion starts from the given position and moves upwards until it encounters a cell with the defaultFiller character or the top of the board is reached.
+
+			It then moves downwards until it encounters a cell with the defaultFiller character or the bottom of the board is reached.
+
+			The list of coordinates is returned in the order that they were traversed.
+
+			Parameters:
+					position (tuple[int, int]): The position to expand from.
+
+				Returns:
+					list[tuple[int, int]]: A list of coordinates (x, y) that the bot can potentially place a word on.
+		"""
 		x = position[0]
 		y = position[1]
 		coordinates = []
@@ -230,6 +315,23 @@ class Scrabble:
 		return coordinates
 	
 	def expand_horizontally(self, position):
+		""" 
+			Expands horizontally from the given position in the game state.
+
+			Returns a list of coordinates (x, y) that the bot can potentially place a word on.
+
+			The expansion starts from the given position and moves leftwards until it encounters a cell with the defaultFiller character or the left of the board is reached.
+
+			It then moves rightwards until it encounters a cell with the defaultfiller character or the right of the board is reached.
+
+			The list of coordinates is returned in the order that they were traversed.
+
+			Parameters:
+				position (tuple[int, int]): The position to expand from.
+
+			Returns:
+				list[tuple[int, int]]: A list of coordinates (x, y) that the bot can potentially place a word on.
+		"""
 		x = position[0]
 		y = position[1]
 		coordinates = []
@@ -259,15 +361,53 @@ class Scrabble:
 		return coordinates
 
 	async def place_word(self, letters, direction: str, blanks: list[tuple[int, int]]):
+		"""
+		Places a word on the game board based on the given letters and direction.
 
-		# letters = list of [[x,y], letter]
-		# aim of this is for the game to calculate what word is trying to be made
+		The function takes in a list of coordinates and letters, and a direction string (either "right" or "down").
 
-		# THIS THEN GETS PASSED TO _PLACE_WORD
-		
+		It then calculates the coordinates of the word as if it were placed on the board, and calls the _place_word helper function with the calculated coordinates, direction, and blanks.
+
+		Parameters:
+			letters (list[tuple[int, int], str]): A list of coordinates and letters, where each coordinate is a tuple of (x, y) and each letter is a string.
+
+			direction (str): A string indicating the direction of the word placement, either "right" or "down".
+
+			blanks (list[tuple[int, int]]): A list of coordinates of blanks on the board.
+
+		Returns:
+			int | Literal[False]: The result of the _place_word helper function.
+
+		"""
+
 		return await self._place_word(''.join([x[1] for x in letters]), letters[0][0], direction.lower(), blanks=blanks) # type: ignore
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
+		"""
+		Places a word on the game board based on the given letters and direction.
+
+		The function takes in a list of coordinates and letters, and a direction string (either "right" or "down").
+
+		It then calculates the coordinates of the word as if it were placed on the board, and calls the _place_word helper function with the calculated coordinates, direction, and blanks.
+
+		The function also checks whether the word is a valid English word by calling the check_word function.
+
+		The function returns the number of points that the word is worth, calculated by the calculate_points function.
+
+		Parameters:
+			word (str): The word to be placed on the board.
+
+			position (tuple[int, int]): The position to expand from.
+
+			direction (str): A string indicating the direction of the word placement, either "right" or "down".
+
+			blanks (list[tuple[int, int]]): A list of coordinates of blanks on the board.
+
+		Returns:
+			int | Literal[False]: The result of the _place_word helper function.
+
+		"""
+		
 		print(f"Placing word: {word} | Position: {position} | Direction: {direction} | Blanks: {blanks} | PreExisting: {preExisting}") 	
 		preExisting = [x[0] for x in self.placed] # consider type of self.placed so this just returns coordinates of previously placed letters
 		wordCoordinates = []
@@ -382,7 +522,6 @@ class Scrabble:
 				pass
 		
 		self.placed.extend(tempPlaced)
-		self.print_board()
 		return points
 		
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
@@ -423,10 +562,15 @@ class Scrabble:
 			print()
 
 	async def check_word(self, word: str):
-		# return True
-		return await self._check_word(word)
-	
-	async def _check_word(self, word: str):
+		"""
+			Check if a word is present in the database.
+			
+			Args:
+				word (str): The word to check.
+
+			Returns:
+				bool: True if the word is present, False otherwise.
+		"""
 		async for session in get_session():
 			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word.lower()})
 			result = resp.scalar_one_or_none()

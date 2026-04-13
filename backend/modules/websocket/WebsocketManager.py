@@ -14,18 +14,14 @@ import secrets
 letterChoice = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 from typing import TypedDict
+
+
 class Connection(TypedDict):
 	websocket: WebSocket
 	info: UserFetch
 	game: Optional[str]
 	session_id: str
 	disconnected: bool
-# {
-# 	"websocket": websocket,
-# 	"info": userInfo,
-# 	"game": None,
-# 	"session_id": sessionID,
-# }
 
 def generateGameCode():
 	return ''.join(secrets.choice(letterChoice) for _ in range(4))
@@ -34,15 +30,24 @@ class WebsocketManager:
 
 	def __init__(self) -> None:
 		self.connections: dict[int, Connection] = {}
+
 		self.archive = {}
 		# gameID, gameClass
+		# This is a dictionary that stores all active games
 		self.games = {}
 		# userID, array of packets
-		self.to_send = {
-
-		}
+		# This is a dictionary that stacks up packets that require resending when the user reconnects their websocket
+		# This is only used if the websocket is disconnected and they are required to be sent packets.
+		self.to_send = {}
 
 	def create_game(self, options: GameOptions, leaderID: int):
+		"""
+		Creates a new game with the given options and leaderID.
+		
+		Returns the game code of the newly created game.
+		
+		:raises ValueError: If the game code already exists in the game archive.
+		"""
 		code = generateGameCode()
 		while code in self.games:
 			code = generateGameCode()

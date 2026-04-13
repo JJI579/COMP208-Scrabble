@@ -43,8 +43,6 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 
 wsLogger = WebsocketLogger()
 
-
-
 class GameHandler:
 
 	def __init__(self) -> None:
@@ -52,6 +50,21 @@ class GameHandler:
 
 	@staticmethod
 	async def game_start(data: dict, websocket: WebSocket):
+		"""
+			Handles the game start packet.
+
+			Checks if the game exists and if the user is the game leader.
+			If the game exists and the user is the game leader, starts the game and broadcasts to all players that the game has started.
+			If the game does not exist, sends an error message to the user.
+			If the user is not the game leader, sends an error message to the user.
+
+			Parameters:
+				data (dict): The data from the packet.
+				websocket (WebSocket): The websocket connection of the user.
+
+			Returns:
+				None
+		"""
 		data = data['d']
 		if 'code' not in data:
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['code'])))
@@ -84,7 +97,21 @@ class GameHandler:
 	
 	@staticmethod
 	async def game_turn(data: dict, websocket: WebSocket):
-		print(data)
+		"""
+			Handles the game turn packet.
+
+			Checks if the user is in a game and if it is their turn.
+			If the user is in a game and it is their turn, checks if the letters are valid and if they are, updates the game board and broadcasts the updated board to all players.
+			If the user is not in a game, sends an error message to the user.
+			If the user is in a game but it is not their turn, sends an error message to the user.
+
+			Parameters:
+				data (dict): The data from the packet.
+				websocket (WebSocket): The websocket connection of the user.
+
+			Returns:
+				None
+		"""
 		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 		if type(userConnection) == bool:
 			return

@@ -17,6 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 jwtAuthentication = Authentication()
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: AsyncSession = Depends(get_session)):
+	# Get current user based on their bearer token they provide.
 	credentialsException = HTTPException(status_code=401, detail="Invalid or expired Bearer Token")
 	try:
 		decodedToken: JWTToken = jwtAuthentication.decode_access_token(token) # type: ignore

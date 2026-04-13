@@ -19,10 +19,23 @@ jwtAuthentication = Authentication()
 
 @router.post('/refresh')
 async def refresh(refreshData: refreshForm, session: AsyncSession = Depends(get_session)):
+	"""
+		Refreshes a Bearer Token. This endpoint is used to obtain a new Bearer Token.
+
+		Parameters:
+		- `refreshData.token`: The refresh token to be used to obtain a new Bearer Token.
+
+		Returns:
+		- `access_token`: The new Bearer Token.
+		- `token_type`: The type of the token, which is 'bearer'.
+		- `expires_in`: The number of seconds until the token expires.
+
+		Raises:
+		- `HTTPException`: If the refresh token is invalid, a 401 status code is returned with the detail 'Invalid refresh token'.
+	"""
 	apiLog.info(f"/refresh | Received request to refresh token | {refreshData.token[:15]}...")
 	resp = await session.execute(select(Token).where(Token.refreshTokenID == refreshData.token))
 	tokenData: Token = resp.scalars().first()
-
 	apiLog.info(f"/refresh | Fetching data | {refreshData.token[:15]}...")
 	if tokenData:
 		apiLog.info(f"/refresh | Granted request, creating new Bearer Token | User ID: {tokenData.userID}")
@@ -37,6 +50,23 @@ async def refresh(refreshData: refreshForm, session: AsyncSession = Depends(get_
 	
 @router.post('/login')
 async def login(loginData: loginForm, session: AsyncSession = Depends(get_session)):
+	"""
+		Login to the system. This endpoint is used to obtain a Bearer Token.
+
+		Parameters:
+		- `loginData.username`: The username to be used to login to the system.
+		- `loginData.password`: The password to be used to login to the system.
+
+		Returns:
+		- `type`: The type of the token, which is 'bearer'.
+		- `id`: The ID of the user that the token belongs to.
+		- `token`: The Bearer Token.
+		- `refresh_token`: The refresh token that can be used to obtain a new Bearer Token.
+		- `expires_at`: The number of seconds until the token expires.
+
+		Raises:
+		- `HTTPException`: If the password or username is invalid, a 401 status code is returned with the detail 'Incorrect password or username invalid'.
+	"""
 	resp = await session.execute(select(User).where(User.userName == loginData.username)) 
 	user: User = resp.scalars().first() 
 	if not user:

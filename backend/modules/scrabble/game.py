@@ -1,10 +1,6 @@
 from .scrabble import Scrabble, arr
 from modules.schema import UserFetch, GameOptions, GamePlayer
-from pydantic import BaseModel
 import copy
-
-
-
 
 class Game:
 
@@ -30,6 +26,16 @@ class Game:
 		return self.game.fetch_turn()
 	
 	async def game_turn(self, letters):
+		"""
+		Places a word on the game board based on the given letters and direction.
+
+		Parameters:
+			letters (list[tuple[int, int], str]): A list of coordinates and letters.
+
+		Returns:
+			bool | int | Literal[False]: The points gotten by the player for placing the word.
+		"""
+
 		firstCoordinate = None
 		direction = "RIGHT"
 		playerLetters = self.game.fetch_player_letters(self.get_current_turn())
@@ -60,23 +66,16 @@ class Game:
 					# invalid placement.
 					return False
 		print("Player has all letters required for this turn.")
-
-		print(direction)
-		
-		print(letters)
 		# this should not have a side effect of moving to the next turn.
 		result = await self.game.place_word(letters, direction, blanksIdentified)
 		if type(result) == bool:
-			
 			return False
 		
 		# Update letters and return result.
 		# get_current_turn should be the same, otherwise place_word changes the current turn.
 		self.game.set_player_letters(self.get_current_turn(), playerLetters)
 		print(f"result: {result}")
-
 		return result
-		
 
 	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
 		return GamePlayer.model_validate(player)
@@ -95,10 +94,24 @@ class Game:
 			data['groups'] = self.groups
 		
 		return data
-
 	
 	def add_player(self, player: UserFetch):
-		
+		"""
+			Add a player to the game.
+			
+			Checks if the game has already started or if the player is already in the game.
+			If the game is a normal game, it checks if the game is full (4 players).
+			If the game is a group game, it checks if all groups are full (each group has 2 players).
+			If the game is a bot game, it checks if there is already a player in the game.
+			
+			Raises an exception if any of the above conditions are met.
+			
+			Parameters:
+			player (UserFetch): The player to add to the game.
+			
+			Returns:
+			None
+		"""
 		if self.hasStarted:
 			raise Exception("Game has already started")
 		player = self._toGamePlayer(player)
@@ -133,7 +146,18 @@ class Game:
 					raise Exception("Only one player when Bot Game")
 	
 	def remove_player(self, player: UserFetch | int):
-		
+		"""
+			Remove a player from the game.
+			
+			Args:
+				player (UserFetch | int): The player to remove. Can be either a UserFetch object or the player's userID as an integer.
+			
+			Returns:
+				bool: True if the player was removed successfully, False otherwise.
+			
+			Raises:
+				ValueError: If the player is not in the player list.
+		"""
 		if type(player) == int:
 			for i, p in enumerate(self.players):
 				if p.userID == player:
@@ -164,8 +188,6 @@ class Game:
 		return player.userID in self.groups[groupIndex]
 
 	def join_group(self, player: UserFetch, groupIndex: int):
-		if self.hasStarted:
-			raise Exception("Game has already started")
 		"""
 		Join a player to a group
 
@@ -177,6 +199,8 @@ class Game:
 		Returns:
 			bool: Whether the player was successfully joined
 		"""
+		if self.hasStarted:
+			raise Exception("Game has already started")
 		alreadyinGroup = self.in_group(player, groupIndex)
 		if alreadyinGroup:
 			return alreadyinGroup
@@ -198,6 +222,19 @@ class Game:
 		return True
 	
 	def leave_group(self, player: UserFetch):
+		"""
+			Remove a player from a group
+
+			Args:
+				player (UserFetch): The player to remove from the group
+
+			Returns:
+				bool: Whether the player was successfully removed
+
+			Raises:
+				Exception: If the game has already started
+				Exception: If the player is not in a group
+		"""
 		if self.hasStarted:
 			raise Exception("Game has already started")
 		hasGroup = False
@@ -210,7 +247,15 @@ class Game:
 		return True
 
 	def start_game(self):
+		"""
+			Start the game
+
+			Initializes the game state and hands out the current turn
+			to the players.
+
+			Returns:
+				int: The current turn
+		"""
 		self.hasStarted = True
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn
-		# TODO: perform other stuff.

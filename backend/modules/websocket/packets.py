@@ -22,7 +22,6 @@ class Packets:
 # These packets are sent when the game has not started yet
 class StartPackets(Packets):
 
-
 	def __init__(self) -> None:
 		super().__init__()
 	

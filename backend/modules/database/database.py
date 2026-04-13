@@ -16,11 +16,26 @@ SessionLocal: async_sessionmaker[AsyncSession] | None = None
 Base = declarative_base()
 
 def init_db_sync():
-    sync_engine = create_engine(SYNC_DATABASE_URL)
-    Base.metadata.create_all(sync_engine)
-    sync_engine.dispose()
+	"""
+		Initializes the database by creating an engine and creating the database tables.
+
+		:param DATABASE_URL: The URL to the database
+		:type DATABASE_URL: str
+
+		:raises RuntimeError: If the database has not been initialized.
+	"""
+	sync_engine = create_engine(SYNC_DATABASE_URL)
+	Base.metadata.create_all(sync_engine)
+	sync_engine.dispose()
 
 async def init_db():
+	"""
+	Initializes the database by creating an async engine and session maker.
+
+	Does not create the database tables. Use `init_db_sync` for that.
+
+		:raises RuntimeError: If the database has not been initialized.
+	"""
 	global engine, SessionLocal
 
 	engine = create_async_engine(
@@ -39,6 +54,13 @@ async def close_db():
 		await engine.dispose()
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+	"""
+	Returns an async generator for an SQLAlchemy session.
+	
+	Raises a RuntimeError if the database has not been initialized.
+	
+	Yields an AsyncSession object when used in an async with statement.
+	"""
 	if SessionLocal is None:
 		raise RuntimeError("Database not initialized")
 

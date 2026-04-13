@@ -53,8 +53,6 @@ class GamePlayer(UserFetch):
 class SelfFetch(UserFetch):
 	friends: list[UserFetch]
 
-
-
 # Login
 class loginForm(BaseModel):
 	username: str
