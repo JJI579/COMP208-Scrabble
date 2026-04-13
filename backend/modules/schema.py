@@ -94,3 +94,11 @@ class GameOptions(BaseModel):
     group_size: Optional[int] = None
     time_limit: str
     dictionary: bool
+
+class PersonalItemReturn(BaseModel):
+	itemID: int
+	name: str
+	description: str
+	xpRequired: int 
+	unlocked: Optional[bool]
+	

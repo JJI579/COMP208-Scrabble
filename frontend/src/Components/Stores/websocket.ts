@@ -87,7 +87,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					}
 					break
 				case "GAME_INVALID":
-					// TODO: implement into alert
 					useAlertStore().alert({
 						text: "Invalid game",
 						type: "error"
@@ -166,7 +165,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
 			websocket.value.send(packet)
 		} else {
-			// TODO: make this wait until authenticated 
 			console.log("waiting till websocket is open..")
 			websocket.value?.addEventListener(
 				"open",

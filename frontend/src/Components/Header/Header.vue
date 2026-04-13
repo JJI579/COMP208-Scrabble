@@ -2,8 +2,10 @@
 import { computed, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
 import HeaderLink from './HeaderLink.vue';
-import router from '../../router';
+import router from '@/router';
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 
 const userStore = useUserStore();
 
@@ -17,10 +19,19 @@ function toggleMenu() {
 function profileClicked() {
 	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
 	console.log("pfp button clicked");
-	router.push({name: 'profile'});
+	router.push({ name: 'profile' });
 	// Test
 }
 
+function goTo(routeName: string) {
+	menuOpen.value = false;
+	router.push({ name: routeName });
+}
+
+function openExternal(url: string) {
+	menuOpen.value = false;
+	window.open(url, "_blank");
+}
 
 
 </script>
@@ -53,18 +64,39 @@ function profileClicked() {
 			</div>
 		</div>
 	</div>
+	<div v-if="menuOpen" class="menu-backdrop" @click="toggleMenu">
+		<div class="menu__container" :class="{ 'menu--active': menuOpen }" @click.stop>
+			<div class="menu">
+				<button class="menu-item" @click="toggleMenu">
+					<i class="pi pi-times out__icon"></i>
+					<span>Close</span>
+				</button>
 
-	<div class="menu__container" :class="{ 'menu--active': menuOpen }">
-		<div class="menu">
-			<div class="out">
-				<i class="pi pi-times out__icon" @click="toggleMenu"></i>
+				<button class="menu-item" :class="{ active: route.name === 'home' }" @click="goTo('home')">
+					<i class="pi pi-home"></i>
+					<span>Home</span>
+				</button>
+
+				<button class="menu-item" @click="openExternal('https://www.scrabble-solver.com/')">
+					<i class="pi pi-search"></i>
+					<span>Word Finder</span>
+				</button>
+
+				<button class="menu-item" @click="openExternal('https://scrabblewordfinder.org/dictionary-checker')">
+					<i class="pi pi-book"></i>
+					<span>Dictionary</span>
+				</button>
+
+				<button class="menu-item" :class="{ active: route.name === 'shop' }" @click="goTo('shop')">
+					<i class="pi pi-shopping-cart"></i>
+					<span>Shop</span>
+				</button>
+
+				<button class="menu-item" :class="{ active: route.name === 'friends' }" @click="goTo('friends')">
+					<i class="pi pi-users"></i>
+					<span>Friends</span>
+				</button>
 			</div>
-
-			<HeaderLink location="home" name="Home" icon="pi-home" />
-			<HeaderLink location="home" name="Word Finder" icon="pi-search" />
-			<HeaderLink location="home" name="Dictionary" icon="pi-book" />
-			<HeaderLink location="home" name="Shop" icon="pi-shopping-cart" />
-			<HeaderLink location="home" name="Friends" icon="pi-users" @click = "() => router.push({name: 'friends'})" />
 		</div>
 	</div>
 </template>
@@ -74,15 +106,22 @@ function profileClicked() {
 .header {
 	position: sticky;
 	top: 0;
+	z-index: 1000;
+
+	width: 100%;
+	background: rgba(20, 20, 20, 0.35);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(10px);
+
 	display: flex;
 	justify-content: center;
-	width: 80%;
-	margin: auto;
-	align-items: center;
-	color: var(--text-colour);
-	padding-block: 1rem;
-}
 
+	padding-block: 1rem;
+	color: white;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
 
 .title {
 	font-size: 1.5em;
@@ -168,7 +207,7 @@ function profileClicked() {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	
+
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 	transition: transform 0.2s;
 	background: rgba(255, 255, 255, 0.08);
@@ -190,15 +229,43 @@ function profileClicked() {
 }
 
 .menu__container {
-	height: 100%;
-	padding-inline: 2rem;
-	padding-right: 3.5rem;
-	background-color: var(--clr-surface-a10);
-	position: absolute;
+	position: fixed;
 	top: 0;
-	left: -30%;
-	transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1) all;
-	z-index: 9999999;
+	left: -280px;
+	width: 280px;
+	height: 100%;
+
+	background: rgba(233, 233, 233, 0.9);
+	backdrop-filter: blur(12px);
+
+	transition: 0.35s ease;
+	z-index: 2000;
+
+	box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
+}
+
+.menu-backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(3px);
+
+	z-index: 1500;
+	animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0
+	}
+
+	to {
+		opacity: 1
+	}
 }
 
 .menu--active {
@@ -206,19 +273,68 @@ function profileClicked() {
 }
 
 .menu {
-	margin-inline: 0;
-	margin-block: 2rem;
+	margin-top: 1rem;
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 0.5rem;
 }
 
 .out {
 	padding: 1rem;
+	color: black;
 }
 
 .out__icon {
-	font-size: 1.25rem;
+	font-size: 1.4rem;
 	cursor: pointer;
+}
+
+.menu-item:first-child {
+	color: #ff4d4d;
+	margin-bottom: 0.5rem;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.menu-item:first-child i {
+	color: #ff4d4d;
+}
+
+.menu-item {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+
+	width: 90%;
+	padding: 0.9rem 1.2rem;
+
+	background: transparent;
+	border: none;
+	color: rgb(0, 0, 0);
+	font-size: 1rem;
+	text-align: left;
+	font-weight: bold;
+
+	cursor: pointer;
+	border-radius: 10px;
+
+	transition: all 0.2s ease;
+}
+
+.menu-item i {
+	font-size: 1.2rem;
+	color: #4d94ff;
+}
+
+.menu-item:hover {
+	background: rgba(77, 148, 255, 0.15);
+	transform: translateX(6px);
+}
+
+.menu-item:active {
+	transform: scale(0.97);
+}
+
+.menu-item.active {
+	background: rgba(255, 255, 255, 0.616);
 }
 </style>

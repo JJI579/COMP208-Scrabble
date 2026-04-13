@@ -1,11 +1,11 @@
-from modules.database.database import get_session
+from backend.modules.database.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException
 from typing import TypedDict, Annotated
-from modules.Authentication import Authentication
+from backend.modules.Authentication import Authentication
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import select
-from modules.database.models import User, Token
+from backend.modules.database.models import User, Token
 
 JWTToken = TypedDict('JWTToken', {
 	"type": str,

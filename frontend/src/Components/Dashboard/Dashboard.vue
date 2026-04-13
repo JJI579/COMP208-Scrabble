@@ -25,11 +25,25 @@ onMounted(() => {
 })
 
 
-function createPage() {
-	router.push({
-		name: 'create'
-	})
+const score = ref(0);
+
+function createPage(type: string, groupSize: number) {
+  router.push({
+    name: 'create',
+    query: {
+      type,
+      groupSize: String(groupSize)
+    }
+  });
 }
+
+onMounted(async () => {
+  const { data } = await api.get("/users/@me")
+
+  console.log("API RESPONSE:", data)
+  score.value = data.totalScore
+})
+
 </script>
 
 
@@ -53,9 +67,9 @@ function createPage() {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage">Team Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">Solo Vs Bot</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">Play Vs Friends</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">Team Mode</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">
@@ -76,8 +90,8 @@ function createPage() {
 			</RouterLink>
 
 			<div class="score-box card-glass hover-shadow">
-				<h2 class="glow-text">Current Score</h2>
-				<p class="score-number">0 pts</p>
+				<h2 class="glow-text">Lifetime Score</h2>
+				<p class="score-number">{{ score }}</p>
 			</div>
 
 			<RouterLink to="/shop" class="score-shop card-glass hover-shadow">

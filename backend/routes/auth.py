@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from modules.Authentication import Authentication
-from modules.logger import APILogger
-from modules.schema import refreshForm, loginForm, registerForm
+from backend.modules.Authentication import Authentication
+from backend.modules.logger import APILogger
+from backend.modules.schema import refreshForm, loginForm, registerForm
 from sqlmodel import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from modules.database.database import get_session
-from modules.database.models import User, Token
+from backend.modules.database.database import get_session
+from backend.modules.database.models import User, Token
 import os, datetime, secrets, hashlib
 
 apiLog = APILogger()

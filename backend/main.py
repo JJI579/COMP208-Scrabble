@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from modules.database.database import init_db, close_db, init_db_sync, get_session
+from backend.modules.database.database import init_db, close_db, init_db_sync, get_session
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
