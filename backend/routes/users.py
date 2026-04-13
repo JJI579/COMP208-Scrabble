@@ -20,29 +20,27 @@ router = APIRouter(
 )
 
 # when we need to append words.
-@router.get('/words')
-async def putWords(session: AsyncSession = Depends(get_session)):
-	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
-	total = 0
+# @router.get('/words')
+# async def putWords(session: AsyncSession = Depends(get_session)):
+# 	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
+# 	total = 0
 
-	await session.execute(insert(Word), _words)
-	await session.commit()
+# 	await session.execute(insert(Word), _words)
+# 	await session.commit()
 	
-	return {'total': len(_words)}
+# 	return {'total': len(_words)}
 
-@router.get('/@me', response_model=UserFetch)
-async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(User).order_by(User.totalScore.desc()))
-    users = result.scalars().all()
-    
-    rank = next((i + 1 for i, user in enumerate(users) if (user.userID == current_user.userID)), None) # type: ignore
-    print(rank)
-    
-    return {
-        **current_user.__dict__,
-        "rank": rank
-    }
-    
+@router.get('/@me')
+async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)) -> UserFetch:
+	result = await session.execute(select(User).order_by(User.totalScore.desc()))
+	users = result.scalars().all()
+	
+	rank = next((i + 1 for i, user in enumerate(users) if (user.userID == current_user.userID)), None) # type: ignore
+	
+	fetchModel = UserFetch.model_validate(current_user)
+	fetchModel.rank = rank
+	return fetchModel
+	
 
 # @router.get('/friends', response_model=UserFetch)
 # async def get_friends(session: AsyncSession = Depends(get_session)):
@@ -51,42 +49,41 @@ async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], s
 
 @router.get('/players', response_model = list[UserFetch])
 async def get_users(search: str = '', session: AsyncSession = Depends(get_session)):
-    if (search == ''):
-        return []
-    query = user_search(select(User), search)
-    results = await session.execute(query.order_by(User.userName.asc()))
-    users = results.scalars().all()
-    print(users)
-    return users
-    
-    
-    
+	if (search == ''):
+		return []
+	query = user_search(select(User), search)
+	results = await session.execute(query.order_by(User.userName.asc()))
+	users = results.scalars().all()
+	print(users)
+	return users
+	
+	
+	
 
 
 @router.get('/leaderboard', response_model=list[UserFetch])
 async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: int = 100, session: AsyncSession = Depends(get_session)):
-    
-    print(limit)
+	
+	print(limit)
 
-    if sort_by == "totalScore":
-        order_by = User.totalScore
-        print("sorting by totalScore")
-    elif sort_by == "wins":
-        order_by = User.wins
-        print("sorting by wins")
-    elif sort_by == "games":
-        order_by = User.wins + User.loses
-        print("sorting by games")
-    else:
-        order_by = User.bestScore
-        
-    query = user_search(select(User), search)
-    query = query.order_by(order_by.desc()).limit(limit)
-    
-    results = await session.execute(query)
-    users = results.scalars().all()
-    print(users)
-    return users
+	if sort_by == "totalScore":
+		order_by = User.totalScore
+		print("sorting by totalScore")
+	elif sort_by == "wins":
+		order_by = User.wins
+		print("sorting by wins")
+	elif sort_by == "games":
+		order_by = User.wins + User.loses
+		print("sorting by games")
+	else:
+		order_by = User.bestScore
+		
+	query = user_search(select(User), search)
+	query = query.order_by(order_by.desc()).limit(limit)
+	
+	results = await session.execute(query)
+	users = results.scalars().all()
+	return users
 
 
 @router.get('/{user_id}')
@@ -97,7 +94,7 @@ async def get_user(request: Request, current_user: Annotated[User, Depends(get_c
  
 
 def user_search(query, name: str):
-    if name:
-        return query.where(User.userName.ilike(f"%{name}%"))
-    return query
+	if name:
+		return query.where(User.userName.ilike(f"%{name}%"))
+	return query
 
