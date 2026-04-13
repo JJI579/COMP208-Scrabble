@@ -12,6 +12,12 @@ class User(Base):
 	userCreatedAt = Column(DateTime, default=datetime.utcnow)
 	deactivated = Column(Boolean, default=False, nullable=False)
 
+class UserConfig(Base):
+	__tablename__ = "tblUserConfig"
+	userID = Column(Integer, ForeignKey("tblUsers.userID"), primary_key=True, nullable=False)
+	itemID = Column(Integer, ForeignKey("tblItems.itemID"), primary_key=True, nullable=False)
+	active = Column(Boolean, default=False, nullable=False)
+	
 class Token(Base):
 	__tablename__ = "tblTokens"
 
@@ -53,5 +59,15 @@ class GamePlayers(Base):
 class Word(Base):
 
 	__tablename__ = "tblWords"
+
 	wordID = Column(Integer, primary_key=True, index=True)
 	word = Column(String, unique=True, nullable=False)
+
+class Item(Base):
+
+	__tablename__ = "tblItems"
+
+	itemID = Column(Integer, primary_key=True, index=True)
+	name = Column(String, nullable=False)
+	name = Column(String, nullable=False)
+	xpRequired = Column(Integer, nullable=False, default=0)
