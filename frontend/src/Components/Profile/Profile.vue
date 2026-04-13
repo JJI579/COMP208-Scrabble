@@ -1,31 +1,28 @@
 <script lang="ts" setup>
 
 import api from '@/api';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { resolveComponent } from 'vue';
 import router from '../../router';
+import useUserStore from '../Stores/user';
 
-const user = ref<any>(null);
+const userStore = useUserStore();
+const user = ref();
 const friends = ref<any>([]);
 
-async function getUser() {
-	const res = await api.get('/users/@me');
-	console.log(res.data);
-	user.value = res.data;
-}
-
 async function getFriends() {
-	const res = await api.get('/friends/myFriends',  {
+	const res = await api.get('/friends/myFriends', {
 		params: {
 			limit: 5
 		}
 	})
-	console.log(res.data);
 	friends.value = res.data;
 }
 
+watch(() => userStore.userData, () => {
+	user.value = userStore.userData
+})
 onMounted(() => {
-	getUser();
 	getFriends();
 })
 
@@ -33,7 +30,7 @@ function logout() {
 	localStorage.removeItem('token');
 	localStorage.removeItem('refresh_token');
 	localStorage.removeItem('userID');
-	router.push({name: 'dashboard'});
+	router.push({ name: 'login' });
 }
 
 function calculateWinRate() {
@@ -119,7 +116,7 @@ function calculateAverageScore() {
 			</div>
 
 			<div class="statsPart2">
-				<h3>Total Games: {{  user.wins + user.loses }}</h3>
+				<h3>Total Games: {{ user.wins + user.loses }}</h3>
 				<h3>Best Score: {{ user.bestScore }}</h3>
 			</div>
 		</div>
@@ -144,20 +141,32 @@ function calculateAverageScore() {
 		</RouterLink>
 
 		<div class="logoutSection">
-      		<button class="logoutButton" @click="logout()">Logout</button>
-    	</div>
+			<button class="logoutButton" @click="logout()">Logout</button>
+		</div>
 
 		<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
-	
+
+	</div>
+
+	<div v-else class="loading">
+		<h1 class="loading__title">Loading...</h1>
 	</div>
 </template>
 
 
 <style lang="css">
-
 body {
-	background: #0d1b2a;
+	background-color: #0d1b2a;
 }
+
+.loading {
+
+	display: flex;
+	height: 100%;
+	justify-content: center;
+	align-items: center;
+}
+
 
 .profile {
 	display: grid;
@@ -184,8 +193,8 @@ body {
 	text-align: center;
 }
 
-.profile > h1,
-.profile > h2 {
+.profile>h1,
+.profile>h2 {
 	grid-column: 1 / -1;
 	text-align: center;
 	color: #e0e0ff;
@@ -203,7 +212,7 @@ body {
 .score,
 .statsPart1,
 .statsPart2 {
-	background: linear-gradient(135deg, #2a4d8f, #4169a9); 
+	background: linear-gradient(135deg, #2a4d8f, #4169a9);
 	border-radius: 12px;
 	padding: 1.5rem;
 	box-shadow:
@@ -237,8 +246,9 @@ body {
 
 .profile i {
 	margin-bottom: 8px;
-	color: #80c0ff; 
-	width: 100%;;
+	color: #80c0ff;
+	width: 100%;
+	;
 }
 
 .profile h2 {
@@ -250,7 +260,7 @@ body {
 
 .profile p {
 	margin-top: 5px;
-	color: #dbe6ff; 
+	color: #dbe6ff;
 }
 
 .logoutSection {
@@ -346,5 +356,4 @@ body {
 	color: white;
 	font-weight: 500;
 }
-
 </style>
