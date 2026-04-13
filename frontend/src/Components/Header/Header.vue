@@ -33,7 +33,7 @@ function profileClicked() {
 			</div>
 			
 			<RouterLink :to="{ name: 'home' }" class="link">
-				{{ userStore.userData?.userName }}
+				
 				<div class="tiles">
 					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
 						{{ l }}
