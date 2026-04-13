@@ -527,7 +527,7 @@ class Scrabble:
 		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
 		
 		if self.firstPlaced:
-			if not hasJoiningWord or not isWord: 
+			if not hasJoiningWord or isWord == None: 
 				print("removing placed letters")
 				# remove coordinates placed
 				for [x, y], letter in tempPlaced:

@@ -160,7 +160,26 @@ class GameHandler:
 	@staticmethod
 	async def finish_game(websocket: WebSocket):
 		# TODO: create
-		pass
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			return
+
+		if userConnection['game'] == None:
+			# TODO: send err
+			return
+		
+		game = manager.fetch_game(userConnection['game'])
+		if type(game) == bool:
+			return
+		
+		# game is game object
+		gameResult = game.finish_game()
+		[x.userID for x in game.players]
+		gameFinishPacket = packets.end.game_end(gameResult)
+
+		# TODO: input all data into the user's stats etc
+		
+		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):

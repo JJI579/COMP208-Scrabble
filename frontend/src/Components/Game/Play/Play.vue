@@ -92,10 +92,10 @@ function handleTileClick(index: number) {
 		return
 	}
 	if (letters.value[index] === " ") {
-		console.log("Blank")
 		selectBlank.value = index;
 		return;
 	}
+	blankLetter.value = DEFAULT_FILLER;
 	letterFocused.value = index;
 }
 onMounted(() => {

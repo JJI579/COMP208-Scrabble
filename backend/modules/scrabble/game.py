@@ -42,7 +42,7 @@ class Game:
 		
 		# TODO: identify if the letters used are available, and direction of play.
 		blanksIdentified = []
-		for [x,y], letter in letters:
+		for [x,y], letter, blankReplacement in letters:
 			# identify direction
 			if firstCoordinate == None:
 				firstCoordinate = [x,y]
@@ -260,7 +260,10 @@ class Game:
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn
 	
-	def finish_game(self):
+	def finish_game(self) -> dict:
 		# get all data from the board, input into database, continue
 		
 		pass
+		return {
+			
+		}

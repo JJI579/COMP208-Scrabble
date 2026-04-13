@@ -2,10 +2,9 @@
 // import Landing from '@/Components/Landing/Landing.vue'
 import Dashboard from '@/Components/Dashboard/Dashboard.vue'
 import Create from '@/Components/Game/Create/Create.vue'
-import Finish from '@/Components/Game/Finish.vue'
+import Finish from '@/Components/Game/Finish/Finish.vue'
 import Join from '@/Components/Game/Join/Join.vue'
 import Play from '@/Components/Game/Play/Play.vue'
-
 import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/LoginView.vue'
 import Profile from '@/Components/Profile/Profile.vue'

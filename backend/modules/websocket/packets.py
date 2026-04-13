@@ -134,10 +134,20 @@ class AuthenticationPackets(Packets):
 	def not_found(self):
 		return self.create_packet('NOT_FOUND', {})
 
+class EndPackets(Packets):
+
+	def __init__(self) -> None:
+		pass
+
+	def game_end(self, gameinfo: dict):
+
+		return self.create_packet("GAME_END", gameinfo)
+	
 class AllPackets:
 	def __init__(self) -> None:
 		self.start = StartPackets()
 		self.during = DuringPackets()
+		self.end = EndPackets()
 		self.authentication = AuthenticationPackets()
 	
 	def error(self, text: str):
