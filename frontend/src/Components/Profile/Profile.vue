@@ -19,10 +19,15 @@ async function getFriends() {
 	friends.value = res.data;
 }
 
-watch(() => userStore.userData, () => {
-	user.value = userStore.userData
-})
+async function getCurrentUser() {
+	const res = await api.get('users/@me');
+	user.value = res.data;
+	console.log(user.value);
+}
+
+
 onMounted(() => {
+	getCurrentUser();
 	getFriends();
 })
 
@@ -154,9 +159,12 @@ function calculateAverageScore() {
 </template>
 
 
-<style lang="css">
-body {
-	background-color: #0d1b2a;
+<style lang="css" scoped>
+
+.content {
+	/* background-color: #0d1b2a; */
+	height: 100%;
+	width: 100%;
 }
 
 .loading {
@@ -177,6 +185,7 @@ body {
 	max-width: 800px;
 	margin-left: auto;
 	margin-right: auto;
+	height: 100%;
 }
 
 .userName-row {

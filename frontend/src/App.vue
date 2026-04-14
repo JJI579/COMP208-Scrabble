@@ -69,6 +69,7 @@ html {
 	width: 100%;
 	margin: 0;
 	font-family: "Roboto", sans-serif;
+	background-color: #0f172a;
 }
 
 *,

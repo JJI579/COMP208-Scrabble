@@ -86,7 +86,7 @@ watch(searchUser, () => {
 </template>
 
 
-<style lang="css">
+<style lang="css" scoped>
 
 /* PAGE WRAPPER */
 .contentMe {
@@ -111,9 +111,17 @@ h1 {
 	display: flex;
 	justify-content: space-between;
 	width: 100%;
+	max-width: 1100px;
+	margin-left: auto;
+	margin-right: auto;
 	align-items: center;
 	gap: 1rem;
 	flex-wrap: wrap;
+
+}
+
+.searchUser {
+	flex: 1;
 }
 
 /* SEARCH */
@@ -124,6 +132,7 @@ h1 {
 	background: rgba(255,255,255,0.1);
 	color: #fff;
 	min-width: 220px;
+	width: 100%;
 	backdrop-filter: blur(6px);
 }
 
@@ -145,6 +154,9 @@ h1 {
 /* TABLE CONTAINER */
 .leaderboard {
 	width: 100%;
+	max-width: 1100px;
+	margin-left: auto;
+	margin-right: auto;
 	background: rgba(255,255,255,0.12);
 	backdrop-filter: blur(12px);
 	border-radius: 16px;

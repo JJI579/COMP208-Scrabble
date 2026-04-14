@@ -82,7 +82,9 @@ onMounted(async () => {
 					</div>
 
 					<ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
-						<li class="leaderboard-item"><span> {{ Number(i) + 1 }}</span> <span> {{ user.userName }}</span>
+						<li class="leaderboard-item">
+							<span> {{ Number(i) + 1 }}</span> 
+							<span> {{ user.userName }}</span>
 							<span> {{ user.totalScore }}</span></li>
 					</ul>
 
@@ -386,6 +388,7 @@ onMounted(async () => {
 .leaderboard:focus {
 	outline: 2px solid #ccc056;
 }
+
 
 .leaderboard-header,
 .leaderboard-item,

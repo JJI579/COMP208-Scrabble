@@ -212,10 +212,24 @@ const displayUsers = computed(() => {
 
 <style lang="css" scoped>
 
+.content {
+	/* background: linear-gradient(180deg, #0d1b2a, #1b263b); */
+	height: 100%;
+}
+
 .container {
 	max-width: 1100px;
 	margin: 0 auto;
 	padding: 2rem;
+
+}
+
+h1 {
+	font-size: 2.5rem;
+	font-weight: 700;
+	text-align: center;
+	color: #ffffff;
+	text-shadow: 0 0 12px rgba(77,148,255,0.7);
 }
 
 .userChoiceBar {
