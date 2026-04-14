@@ -130,7 +130,8 @@ class GameHandler:
 				pointsAmount = await game.game_turn(data['d']['letters'])
 				# check if game has finished.
 				if type(pointsAmount) == bool:
-					print("No Game")
+					print(pointsAmount)
+					print("unknown error")
 					errorPacket = packets.error("Invalid placement of letters!")
 					await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
 					return
@@ -153,6 +154,13 @@ class GameHandler:
 					"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
 				})	
 				await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
+				# check if the bot is next then make the bot play.
+				print("NEXT TURN")
+				print(nextTurn)
+				if nextTurn == -2: 
+					await asyncio.sleep(1)
+					print("this is the way")
+					await game.bot_turn()
 
 				if game.game.finished:
 					return await GameHandler.finish_game(websocket)

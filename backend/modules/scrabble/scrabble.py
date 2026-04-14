@@ -5,7 +5,7 @@ from sqlalchemy import text
 import asyncio
 import copy
 from typing import Literal
-from modules.schema import GamePlayer
+from modules.schema import GamePlayer, BotPlayer
 import random
 
 currentPath = Path.cwd()
@@ -15,6 +15,9 @@ pointsData = json.load(open(pointsPath))
 letterDistribution = currentPath / "letter_distribution.json"
 distributionArray = json.load(open(letterDistribution))
 
+wordsPath = currentPath / "sowpods.txt"
+with open(wordsPath, "r", encoding="utf-8") as f:
+	wordSet = set(line.strip().upper() for line in f if line.strip())
 
 defaultFiller = '|'
 arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
@@ -60,9 +63,10 @@ class Bot(Player):
 		self.difficulty = difficulty
 		self.settings = {
 			"easy": {"top_n": 15, "max_len": 4},
-            "medium": {"top_n": 5, "max_len": 6},
-            "hard": {"top_n": 1, "max_len": 15},
+			"medium": {"top_n": 5, "max_len": 6},
+			"hard": {"top_n": 1, "max_len": 15},
 		}
+		self.forbidden_words = set()
 		self.word_set = word_set
 		self.trie = {}
 		self.build_trie()
@@ -85,26 +89,30 @@ class Bot(Player):
 			node = node[c]
 		return "$" in node
 
-	def choose_move(self, scrabble: "Scrabble"):
+	async def choose_move(self, scrabble: "Scrabble"):
 		moves = []
 		anchors = self.get_candidate_cells(scrabble)
-
+		print(anchors)
 		for x, y in anchors:
 			for direction in ["right", "down"]:
 				generated = self.generate_possible_words(scrabble, (x, y), direction)
-
-				for word, pos in generated:
-					points = asyncio.run(scrabble._place_word(
+				
+				for word, *pos in generated:
+					print(word)
+					print(pos)
+					pos = tuple(pos)
+					points = await scrabble._place_word(
 						word, 
 						pos, 
 						direction
-						))
+					)
 					if isinstance(points, int):
 						moves.append((points + len(word)*0.5, word, pos, direction))
 		if not moves:
 			return None
 		moves.sort(reverse=True, key=lambda x: x[0])
 		top_n = self.settings[self.difficulty]["top_n"]
+		print("we are here.")
 		return random.choice(moves[:top_n])[1:]
 
 
@@ -216,6 +224,7 @@ class Scrabble:
 
 	def __init__(self, arr) -> None:
 		self.players: list[int] = []
+		
 		self.playerLetters = {
 			"player_id": ["letters"]
 		}
@@ -267,7 +276,7 @@ class Scrabble:
 			return -1
 		return self.players[self.gameTurn]
 	
-	def init_game(self, players: list[GamePlayer]):
+	def init_game(self, players: list[GamePlayer | BotPlayer]):
 		"""
 			Initializes the game state with a given list of players.
 
@@ -275,15 +284,61 @@ class Scrabble:
 			The game turn is set to 0, and the function returns the
 			userID of the current turn.
 		"""
+		
 		for player in players:
 			userID = int(player.userID)
-			self.players.append(userID)
+			if userID == -2:
+				# they are a bot
+				# initialise the bot?
+				self.bot = Bot(word_set=wordSet, name="Bot", difficulty="hard")
+				self.players.append(-2)
+			else:
+				self.players.append(userID)
 			self.give_player_letters(userID, 7) # base amount in a deck
+		# first index of array
 		self.gameTurn = 0
-		# return userid of current turn
+		# return userid of first index of array
 		return self.players[0] 
 
 	
+	async def bot_turn(self):
+		self.bot.letters = self.fetch_player_letters(-2)
+		pass_streak = 1
+		MAX_PASSES = 3
+		move = await self.bot.choose_move(self)
+		print("here move")
+		print(move)
+		if not move:
+			print("PASS")
+			pass_streak += 1
+			
+			if pass_streak >= MAX_PASSES:
+				print("\nStopping: too many passes")
+				return False # game over?
+			return True
+		else:
+			pass_streak = 0
+
+			word, pos, direction = move # type: ignore
+			print(f"PLAY: {word} at {pos} {direction}")
+
+			try:
+				result = await self._place_word(word, pos, direction)
+			except Exception as e:
+				print("ERROR:", e)
+				result = False
+
+			print("RESULT:", result)
+
+			if result:
+				for c in word:
+					if c in self.bot.letters:
+						self.bot.letters.remove(c)
+
+				# -2 is bot id
+				self.give_player_letters(-2, 7 - len(self.bot.letters))
+				self.bot.letters = self.fetch_player_letters(-2)
+
 	def give_player_letters(self, userID: int, amount: int):
 		"""
 		Gives a player the specified amount of letters.
@@ -363,6 +418,7 @@ class Scrabble:
 
 		Returns the user ID of the player whose turn it now is.
 		"""
+		
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
@@ -829,7 +885,7 @@ class Scrabble:
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
 			return result is not None
-
+		return False
 
 
 

@@ -68,6 +68,20 @@ class GamePlayer(UserFetch):
 			"points": self.points
 		}
 
+class BotPlayer(BaseModel):
+	userID: int = -2
+	bot: bool = True
+	placed: list[PlacedTile] = []
+	points: int = 0
+
+	def dump_json(self):
+		return {
+			"bot": self.bot,
+			"placed": self.placed,
+			"points": self.points
+		}
+	
+
 class SelfFetch(UserFetch):
 	friends: list[UserFetch]
 

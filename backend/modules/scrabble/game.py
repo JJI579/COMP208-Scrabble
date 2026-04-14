@@ -1,5 +1,5 @@
 from .scrabble import Scrabble, arr
-from modules.schema import UserFetch, GameOptions, GamePlayer
+from modules.schema import UserFetch, GameOptions, GamePlayer, GAME_TYPE, BotPlayer
 import copy
 
 class Game:
@@ -9,8 +9,8 @@ class Game:
 		self.leader = leaderID
 		self.options = options.model_dump(mode="json")
 		self.game = Scrabble(copy.deepcopy(arr))
-		self.type = options.game_type
-		self.players: list[GamePlayer] = []
+		self.type: GAME_TYPE = options.game_type
+		self.players: list[GamePlayer | BotPlayer] = []
 		self.hasStarted = False
 		if self.type == "GROUP":
 			if options.group_size:
@@ -25,6 +25,17 @@ class Game:
 	def get_current_turn(self):
 		return self.game.fetch_turn()
 	
+	async def bot_turn(self):
+		resp = await self.game.bot_turn()
+		if type(resp) == bool:
+			if resp:
+				self.game.next_turn()
+				# bot has skipped
+				pass
+			else:
+				pass
+				# finish the game as bot has had too many passes
+
 	async def game_turn(self, letters):
 		"""
 		Places a word on the game board based on the given letters and direction.
@@ -80,6 +91,7 @@ class Game:
 		print(self.players)
 		print(f"result: {result}")
 		return result
+
 
 	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
 		return GamePlayer.model_validate(player)
@@ -149,6 +161,12 @@ class Game:
 				else:
 					raise Exception("Only one player when Bot Game")
 	
+	def add_bot(self):
+		if len(self.players) == 0:
+			raise Exception("No players in game to add bot into the game")
+		else:
+			self.players.append(BotPlayer())
+
 	def remove_player(self, player: UserFetch | int):
 		"""
 			Remove a player from the game.
@@ -260,6 +278,8 @@ class Game:
 			Returns:
 				int: The current turn
 		"""
+		if self.type == "BOT":
+			self.add_bot()
 		self.hasStarted = True
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn

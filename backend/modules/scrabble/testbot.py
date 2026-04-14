@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .scrabble import Scrabble, Bot
 
-Bot.isWord = Bot.is_word
+# Bot.isWord = Bot.is_word
 
 # -----------------------------
 # LOAD DATA
@@ -87,8 +87,6 @@ async def run_game():
     bot1 = Bot(word_set)
     bot2 = Bot(word_set)
 
-    bot1.forbidden_words = set()
-    bot2.forbidden_words = set()
 
     bots = {1: bot1, 2: bot2}
 
@@ -108,7 +106,7 @@ async def run_game():
         print(f"TURN {turn} | Player {player_id}")
         print("Letters:", bot.letters)
 
-        move = bot.choose_move(game)
+        move = bot.choose_move(self)
 
         if not move:
             print("PASS")
