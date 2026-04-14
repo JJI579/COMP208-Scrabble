@@ -74,7 +74,7 @@ function openExternal(url: string) {
 					<i class="pi pi-times out__icon"></i>
 					<span>Close</span>
 				</button>
-				
+
 				<button class="menu-item" :class="{ active: route.name === 'home' }" @click="goTo('home')">
 					<i class="pi pi-home"></i>
 					<span>Home</span>
@@ -114,7 +114,6 @@ function openExternal(url: string) {
 
 	width: 100%;
 	background: rgba(20, 20, 20, 0.35);
-	backdrop-filter: blur(16px);
 	-webkit-backdrop-filter: blur(16px);
 	backdrop-filter: blur(10px);
 
@@ -233,40 +232,27 @@ function openExternal(url: string) {
 }
 
 .menu__container {
+	user-select: none;
 	position: fixed;
 	top: 0;
 	left: 0;
 	transform: translateX(-100%);
 	width: 280px;
 	height: 100%;
-
-	/* background: rgba(233, 233, 233, 0.9); */
-
-	backdrop-filter: blur(12px);
-
+	/* -webkit-backdrop-filter: blur(16px); */
+	/* backdrop-filter: blur(10px); */
 	transition: all 0.25s ease;
 	z-index: 2000;
 
 	box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
-
+	background-color: rgba(20, 20, 20, 0.8);
 }
 
 .menu-backdrop {
-
-
 	position: fixed;
 	top: 0;
 	left: 0;
-
-
-	/* background: rgba(0, 0, 0, 0.4); */
-	/* backdrop-filter: blur(3px); */
-
 	z-index: 1500;
-
-	/* animation: fadeIn 0.25s ease; */
-
-
 }
 
 @keyframes fadeIn {

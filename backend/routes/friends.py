@@ -18,10 +18,6 @@ router = APIRouter(
     tags=["friends"]
 )
 
-    
-
-
-# TODO: implement everything
 @router.post('/request')
 async def send_friend_request(data: FriendRequest, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
     print("This has been called")
@@ -71,7 +67,6 @@ async def get_friends(current_user: Annotated[User, Depends(get_current_user)], 
     )
     
     results = res.scalars().all()
-    print(results)
     return results
     
     
@@ -117,8 +112,7 @@ async def decline_friend_request(data: FriendRequest, current_user: Annotated[Us
     await session.commit()
     print("Friend request has been declined")
     
-            
-            
+         
 @router.get('/requests', response_model = list[UserFetch])
 async def get_friend_requests(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
     search = await session.execute(select(Friend.senderID).where(and_(Friend.receiverID == current_user.userID, Friend.status == "pending")))
@@ -127,7 +121,6 @@ async def get_friend_requests(current_user: Annotated[User, Depends(get_current_
     requests = res.scalars().all()
     print(requests)
     return requests
-
 
 @router.get('/sent')
 async def get_sent_requests(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):

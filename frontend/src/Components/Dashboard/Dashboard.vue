@@ -28,20 +28,20 @@ onMounted(() => {
 const score = ref(0);
 
 function createPage(type: string, groupSize: number) {
-  router.push({
-    name: 'create',
-    query: {
-      type,
-      groupSize: String(groupSize)
-    }
-  });
+	router.push({
+		name: 'create',
+		query: {
+			type,
+			groupSize: String(groupSize)
+		}
+	});
 }
 
 onMounted(async () => {
-  const { data } = await api.get("/users/@me")
+	const { data } = await api.get("/users/@me")
 
-  console.log("API RESPONSE:", data)
-  score.value = data.totalScore
+	console.log("API RESPONSE:", data)
+	score.value = data.totalScore
 })
 
 </script>
@@ -67,9 +67,12 @@ onMounted(async () => {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">Solo Vs Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">Play Vs Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">Team Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">Solo Vs
+					Bot</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">Play Vs
+					Friends</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">Team
+					Mode</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">
@@ -83,9 +86,10 @@ onMounted(async () => {
 
 					<ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
 						<li class="leaderboard-item">
-							<span> {{ Number(i) + 1 }}</span> 
+							<span> {{ Number(i) + 1 }}</span>
 							<span> {{ user.userName }}</span>
-							<span> {{ user.totalScore }}</span></li>
+							<span> {{ user.totalScore }}</span>
+						</li>
 					</ul>
 
 				</button>
@@ -158,7 +162,6 @@ onMounted(async () => {
 
 .glow-text {
 	color: #4d94ff;
-	text-shadow: 0 0 8px #4d94ff, 0 0 16px #80c0ff;
 }
 
 .menu-btn {

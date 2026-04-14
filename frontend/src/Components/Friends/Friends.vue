@@ -18,25 +18,25 @@ function userSearch() {
 }
 
 // Fetches the list of users (additionally takes the search query as a parameter to filter results)
-async function fetchPeople () {
-    const res = await api.get('/users/players', {
-        params: {
-            search: searchUser.value
-        }
-    })
-    console.log(res.data);
-    users.value = res.data;
+async function fetchPeople() {
+	const res = await api.get('/users/players', {
+		params: {
+			search: searchUser.value
+		}
+	})
+	console.log(res.data);
+	users.value = res.data;
 }
 
 // Fetching the list of friends for the current user
 async function fetchFriends() {
-    const res = await api.get('/friends/myFriends',  {
-        params: {
-            limit: 1000
-        }
-    });
-    console.log(res.data);
-    friends.value = res.data;
+	const res = await api.get('/friends/myFriends', {
+		params: {
+			limit: 1000
+		}
+	});
+	console.log(res.data);
+	friends.value = res.data;
 }
 
 // Fetching outselves
@@ -48,102 +48,102 @@ async function getCurrentUser() {
 
 // Sending a friend request to another user based on their userID
 async function sendFriendRequest(userID: number) {
-    console.log(currentUser.value.userID, "is sending friend request to userID: ", userID);
-    await api.post('/friends/request', {
-        toUserID: userID
-    });
+	console.log(currentUser.value.userID, "is sending friend request to userID: ", userID);
+	await api.post('/friends/request', {
+		toUserID: userID
+	});
 
-    requestedUsers.value.add(userID);
+	requestedUsers.value.add(userID);
 }
 
 // Fetching the list of incoming friend requests for the user
 async function checkRequests() {
-    const res = await api.get('/friends/requests');
-    myRequests.value = res.data;
-    console.log(res.data);
+	const res = await api.get('/friends/requests');
+	myRequests.value = res.data;
+	console.log(res.data);
 }
 
 // Fetching the list of sent friend requests
 async function getSentRequests() {
-    const res = await api.get('/friends/sent');
-    console.log(res.data);
-    requestedUsers.value = new Set(res.data);
+	const res = await api.get('/friends/sent');
+	console.log(res.data);
+	requestedUsers.value = new Set(res.data);
 
 }
 
 // Accepting a friend request based on the userID of the sender
 async function acceptRequest(userID: number) {
-    await api.post('/friends/accept', {
-        toUserID: userID
-    });
-    
-    myRequests.value = myRequests.value.filter(
-        (u: any) => u.userID !== userID
-    );
-    console.log("accepted friend request from userID:", userID);
+	await api.post('/friends/accept', {
+		toUserID: userID
+	});
+
+	myRequests.value = myRequests.value.filter(
+		(u: any) => u.userID !== userID
+	);
+	console.log("accepted friend request from userID:", userID);
 }
 
 // Declining the friend request
 async function declineRequest(userID: number) {
-    await api.post('/friends/decline', {
-        toUserID: userID
-    });
+	await api.post('/friends/decline', {
+		toUserID: userID
+	});
 
-    myRequests.value = myRequests.value.filter(
-        (u: any) => u.userID !== userID
-    );
-    console.log("Declined friend request from userID:", userID);
+	myRequests.value = myRequests.value.filter(
+		(u: any) => u.userID !== userID
+	);
+	console.log("Declined friend request from userID:", userID);
 }
 
 // Running these functions when the page loads to fetch the necessary data
 onMounted(() => {
-    getCurrentUser();
-    checkRequests();
-    getSentRequests();
-    fetchFriends();
+	getCurrentUser();
+	checkRequests();
+	getSentRequests();
+	fetchFriends();
 })
 
 // Watching the search input for changes to update the displayed user list
 watch(searchUser, (value) => {
-    if (value.trim() === "") {
-        mode.value = "idle";
-        return;
-    }
+	if (value.trim() === "") {
+		mode.value = "idle";
+		return;
+	}
 
-    mode.value = "search";
+	mode.value = "search";
 	userSearch();
 })
 
 // Function to show incoming friend requests when the button is clicked
 function showRequests() {
-    mode.value = "requests";
+	mode.value = "requests";
 }
 
 function challengeToGame() {
-    console.log("Challenge to game button clicked");
+	console.log("Challenge to game button clicked");
 }
 
 function inviteToGame() {
-    console.log("Invite to team game button clicked");
+	console.log("Invite to team game button clicked");
 }
 
 // Filtering the users to display (excliding friends and the current user)
 const filteredUsers = computed(() => {
 	if (!currentUser.value) return users.value;
 
-    return users.value
-        .filter((user: any) => user.userID !== currentUser.value.userID)
-        .filter((user: any) => 
-            !friends.value.some((friend: any) => friend.userID === user.userID)
-        )
-        .filter((user: any) =>
-            !myRequests.value.some((request: any) => request.userID === user.userID)
-        );
+	return users.value
+		.filter((user: any) => user.userID !== currentUser.value.userID)
+		.filter((user: any) =>
+			!friends.value.some((friend: any) => friend.userID === user.userID)
+		)
+		.filter((user: any) =>
+			!myRequests.value.some((request: any) => request.userID === user.userID)
+		);
 });
 
 // Deciding which users to display based on the current mode
 const displayUsers = computed(() => {
-    if (mode.value === "idle") return friends.value;
+	if (mode.value === "idle") return friends.value;
 	if (mode.value === "search") return filteredUsers.value;
 	if (mode.value === "requests") return myRequests.value;
 	return [];
@@ -154,82 +154,76 @@ const displayUsers = computed(() => {
 
 
 <template>
-    <h1> Friends </h1>
+	<h1 class="title"> Friends </h1>
 
-    <div class="container">
-        <div class="userChoiceBar">
-            <input type="text" placeholder="Search people... " v-model="searchUser" class="searchInput"></input>
+	<div class="container">
+		<div class="userChoiceBar">
+			<input type="text" placeholder="Search people... " v-model="searchUser" class="searchInput"></input>
 
-            <div class="requestsButton">
-                <button @click="showRequests()">Requests {{ myRequests.length }}</button>
-            </div>
-        </div>
+			<div class="requestsButton">
+				<button @click="showRequests()">Requests {{ myRequests.length }}</button>
+			</div>
+		</div>
 
-        <!-- If the user has no friends and theyre in the idle mode print this -->
-        <div v-if="mode === 'idle' && friends.length === 0" class="emptyState">
-            <p>Search for users or view requests</p>
-        </div>
+		<!-- If the user has no friends and theyre in the idle mode print this -->
+		<div v-if="mode === 'idle' && friends.length === 0" class="emptyState">
+			<p>Search for users or view requests</p>
+		</div>
 
 
-        <div v-else class="users">
-            <div v-for="user in displayUsers" :key="user.userID" class="userCard">
+		<div v-else class="users">
+			<div v-for="user in displayUsers" :key="user.userID" class="userCard">
 
-                <div class="profilePicture">
-                    <i class="pi pi-user"></i>
-                </div>
+				<div class="profilePicture">
+					<i class="pi pi-user"></i>
+				</div>
 
-                <div class="userName">
-                    {{ user.userName }}
-                </div>
+				<div class="userName">
+					{{ user.userName }}
+				</div>
 
-                <button v-if = "mode === 'search'" class="addFriend" @click="sendFriendRequest(user.userID)" :disabled="requestedUsers.has(user.userID)">
-                    {{ requestedUsers.has(user.userID) ? "Request is sent!": "Add Friend" }}
-                </button>
+				<button v-if="mode === 'search'" class="addFriend" @click="sendFriendRequest(user.userID)"
+					:disabled="requestedUsers.has(user.userID)">
+					{{ requestedUsers.has(user.userID) ? "Request is sent!" : "Add Friend" }}
+				</button>
 
-                <div v-if="mode === 'requests'" class="requestActions">
-                    <button class="acceptButton" @click="acceptRequest(user.userID)">
-                        Accept
-                    </button>
-                    <button class="declineButton" @click="declineRequest(user.userID)">
-                        Decline
-                    </button>
-                </div>
+				<div v-if="mode === 'requests'" class="requestActions">
+					<button class="acceptButton" @click="acceptRequest(user.userID)">
+						Accept
+					</button>
+					<button class="declineButton" @click="declineRequest(user.userID)">
+						Decline
+					</button>
+				</div>
 
-                <div v-if="mode === 'idle'" class="myFriends">
-                    <button class="challengeButton" @click="challengeToGame()">
-                        Challenge to Game
-                    </button>
-                    <button class="teamGameButton" @click="inviteToGame()">
-                        Invite to Team Game
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+				<div v-if="mode === 'idle'" class="myFriends">
+					<button class="challengeButton" @click="challengeToGame()">
+						Challenge to Game
+					</button>
+					<button class="teamGameButton" @click="inviteToGame()">
+						Invite to Team Game
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
 </template>
 
 
 <style lang="css" scoped>
-
-.content {
-	/* background: linear-gradient(180deg, #0d1b2a, #1b263b); */
-	height: 100%;
-}
-
 .container {
 	max-width: 1100px;
 	margin: 0 auto;
 	padding: 2rem;
-
 }
 
-h1 {
+.title {
 	font-size: 2.5rem;
 	font-weight: 700;
 	text-align: center;
-	color: #ffffff;
-	text-shadow: 0 0 12px rgba(77,148,255,0.7);
+	color: var(--title-colour);
+	user-select: none;
 }
 
 .userChoiceBar {
@@ -345,7 +339,7 @@ h1 {
 	border-radius: 8px;
 	border: none;
 
-	background: #225ec5; 
+	background: #225ec5;
 	color: white;
 
 	cursor: pointer;
@@ -357,7 +351,7 @@ h1 {
 	gap: 0.5rem;
 	width: 100%;
 	justify-content: center;
-    flex-direction: column;
+	flex-direction: column;
 }
 
 /* PRIMARY BUTTON */
@@ -441,5 +435,4 @@ h1 {
 	background: #dc2626;
 	transform: scale(1.05);
 }
-
 </style>

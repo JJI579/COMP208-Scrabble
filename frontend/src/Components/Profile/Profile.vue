@@ -5,10 +5,11 @@ import { onMounted, ref, watch } from 'vue';
 import { resolveComponent } from 'vue';
 import router from '../../router';
 import useUserStore from '../Stores/user';
-
+import "../../base.css";
+import type { UserReturn } from '@/types';
 const userStore = useUserStore();
 const user = ref();
-const friends = ref<any>([]);
+const friends = ref<UserReturn[]>([]);
 
 async function getFriends() {
 	const res = await api.get('/friends/myFriends', {
@@ -73,8 +74,8 @@ function calculateAverageScore() {
 
 		<div class="userName-row">
 			<div class="userName">
-				<i class="pi pi-user" style="font-size: 3rem"></i>
-				<h2>
+				<i class="pi pi-user icon" style="font-size: 3rem"></i>
+				<h2 class="profile__title">
 					{{ user.userName }}
 				</h2>
 				<!-- <p>Username</p> -->
@@ -83,37 +84,37 @@ function calculateAverageScore() {
 
 		<div class="winsLoses">
 			<div class="wins">
-				<i class="pi pi-trophy" style="font-size: 2rem"></i>
-				<h2>
+				<i class="pi pi-trophy icon" style="font-size: 2rem"></i>
+				<h2 class="profile__title">
 					{{ user.wins }}
 				</h2>
 				<p>Wins</p>
 			</div>
 
 			<div class="loses">
-				<i class="pi pi-times" style="font-size: 2rem"></i>
-				<h2>
+				<i class="pi pi-times icon" style="font-size: 2rem"></i>
+				<h2 class="profile__title">
 					{{ user.loses }}
 				</h2>
-				<p>Loses</p>
+				<p>Losses</p>
 			</div>
 		</div>
 
 		<div class="rankScore">
 			<div class="rank">
-				<h2>{{ user.rank }}</h2>
+				<h2 class="profile__title">{{ user.rank }}</h2>
 				<p>Rank</p>
 			</div>
 
 			<div class="score">
-				<h2>
+				<h2 class="profile__title">
 					{{ user.totalScore }}
 				</h2>
 				<p>Total Score</p>
 			</div>
 		</div>
 
-		<h1>Statistics</h1>
+		<h1 class="profile__title">Statistics</h1>
 		<div class="stats">
 			<div class="statsPart1">
 				<h3>Win rate: {{ calculateWinRate() }}% </h3>
@@ -126,18 +127,19 @@ function calculateAverageScore() {
 			</div>
 		</div>
 
-		<h1>Friends</h1>
+		<h1 class="profile__title">Friends</h1>
 		<RouterLink to="/friends" class="friendsLink">
 			<div class="friendsCard">
-				<div class="friendsHeader">
+				<div class="friendsHeader" :class="{ 'friendsHeader--bottom': friends.length > 0 }">
 					<h2>Friends</h2>
+					<i class="pi pi-angle-right angle icon"></i>
 				</div>
 
 				<ul class="friendsList">
 					<li v-for="(user, i) in friends" :key="user.userID" class="friend">
 						<div class="friendLeft">
 							<span class="friendNumber"> {{ Number(i) + 1 }}</span>
-							<i class="pi pi-user"></i>
+							<i class="pi pi-user icon"></i>
 							<span class="friendName"> {{ user.userName }}</span>
 						</div>
 					</li>
@@ -160,7 +162,6 @@ function calculateAverageScore() {
 
 
 <style lang="css" scoped>
-
 .content {
 	/* background-color: #0d1b2a; */
 	height: 100%;
@@ -202,11 +203,10 @@ function calculateAverageScore() {
 	text-align: center;
 }
 
-.profile>h1,
-.profile>h2 {
+.profile__title {
 	grid-column: 1 / -1;
 	text-align: center;
-	color: #e0e0ff;
+	color: var(--title-colour);
 }
 
 .winsLoses,
@@ -253,11 +253,9 @@ function calculateAverageScore() {
 	margin: 10px;
 }
 
-.profile i {
+.icon {
 	margin-bottom: 8px;
 	color: #80c0ff;
-	width: 100%;
-	;
 }
 
 .profile h2 {
@@ -310,8 +308,16 @@ function calculateAverageScore() {
 .friendsHeader {
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	/* align-items: center; */
+}
+
+.friendsHeader--bottom {
 	margin-bottom: 1rem;
+}
+
+.angle {
+	font-size: 2rem;
+
 }
 
 .friendsHeader h2 {

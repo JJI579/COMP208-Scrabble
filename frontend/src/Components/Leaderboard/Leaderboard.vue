@@ -38,7 +38,7 @@ watch(searchUser, () => {
 <template>
 	<div class="contentMe">
 		<h1>LeaderBoard</h1>
-		
+
 		<div class="search">
 
 			<div class="searchUser">
@@ -46,13 +46,13 @@ watch(searchUser, () => {
 			</div>
 
 			<div class="filterUsers">
-				    <select v-model="selectedSort" @change="getLeaderboard">
-      					<option value="totalScore">Filter by Score</option>
-      					<option value="games">Filter by the Number of Games</option>
-						<option value="bestScore">Filter by Best Score</option>
-						<option value="wins">Filter by Wins</option>
-						<!-- <option value="Rate">Filter by the Win Rate</option> -->
-    				</select>
+				<select v-model="selectedSort" @change="getLeaderboard" class="select">
+					<option value="totalScore">Filter by Score</option>
+					<option value="games">Filter by the Number of Games</option>
+					<option value="bestScore">Filter by Best Score</option>
+					<option value="wins">Filter by Wins</option>
+					<!-- <option value="Rate">Filter by the Win Rate</option> -->
+				</select>
 			</div>
 		</div>
 
@@ -67,16 +67,17 @@ watch(searchUser, () => {
 					<th>Best Score</th>
 					<th>Wins</th>
 				</tr>
-				<tr v-for="(user, i) in users" :key="user.userID" :class="{ me: currentUser && user.userID === currentUser.userID }">
-					<th> {{ Number(i) + 1 }}</th>
-					<th>
+				<tr v-for="(user, i) in users" :key="user.userID"
+					:class="{ me: currentUser && user.userID === currentUser.userID }">
+					<td> {{ Number(i) + 1 }}</td>
+					<td>
 						<span v-if="currentUser && user.userID === currentUser.userID"> (You)</span>
-						 {{ user.userName }}
-					</th>
-					<th> {{ user.totalScore }}</th>
-					<th> {{  user.wins + user.loses }}</th>
-					<th> {{ user.bestScore }}</th>
-					<th> {{user.wins}}</th>
+						{{ user.userName }}
+					</td>
+					<td> {{ user.totalScore }}</td>
+					<td> {{ user.wins + user.loses }}</td>
+					<td> {{ user.bestScore }}</td>
+					<td> {{ user.wins }}</td>
 				</tr>
 			</table>
 		</div>
@@ -87,7 +88,6 @@ watch(searchUser, () => {
 
 
 <style lang="css" scoped>
-
 /* PAGE WRAPPER */
 .contentMe {
 	display: flex;
@@ -103,7 +103,7 @@ h1 {
 	font-weight: 700;
 	text-align: center;
 	color: #ffffff;
-	text-shadow: 0 0 12px rgba(77,148,255,0.7);
+	text-shadow: 0 0 12px rgba(77, 148, 255, 0.7);
 }
 
 /* ROW 2: SEARCH + FILTER */
@@ -128,8 +128,8 @@ h1 {
 .searchUser input {
 	padding: 0.7rem 1rem;
 	border-radius: 10px;
-	border: 1px solid rgba(255,255,255,0.2);
-	background: rgba(255,255,255,0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.1);
 	color: #fff;
 	min-width: 220px;
 	width: 100%;
@@ -137,15 +137,15 @@ h1 {
 }
 
 .searchUser input::placeholder {
-	color: rgba(255,255,255,0.6);
+	color: rgba(255, 255, 255, 0.6);
 }
 
 /* FILTER */
 .filterUsers select {
 	padding: 0.7rem 1rem;
 	border-radius: 10px;
-	border: 1px solid rgba(255,255,255,0.2);
-	background: rgba(255,255,255,0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.1);
 	color: #fff;
 	cursor: pointer;
 	backdrop-filter: blur(6px);
@@ -157,11 +157,11 @@ h1 {
 	max-width: 1100px;
 	margin-left: auto;
 	margin-right: auto;
-	background: rgba(255,255,255,0.12);
+	background: rgba(255, 255, 255, 0.12);
 	backdrop-filter: blur(12px);
 	border-radius: 16px;
 	padding: 1rem;
-	box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 	overflow-x: auto;
 }
 
@@ -177,7 +177,7 @@ th {
 	color: #a9c9ff;
 	font-weight: 600;
 	padding: 0.8rem;
-	border-bottom: 2px solid rgba(255,255,255,0.2);
+	border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 	text-align: left;
 }
 
@@ -194,12 +194,12 @@ tr {
 
 /* STRIPES */
 tr:nth-child(even) {
-	background: rgba(255,255,255,0.05);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 /* HOVER */
 tr:hover {
-	background: rgba(77,148,255,0.2);
+	background: rgba(77, 148, 255, 0.2);
 }
 
 /* CURRENT USER */

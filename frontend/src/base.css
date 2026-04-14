@@ -56,6 +56,8 @@
 	--clr-info-a20: #74a4e6;
 
 
+	/* Colours For Headers */
+	--title-colour: #e0e0ff;
 }
 
 html,
@@ -63,3 +65,4 @@ body,
 #app {
 	background-color: var(--bg-colour);
 }
+
