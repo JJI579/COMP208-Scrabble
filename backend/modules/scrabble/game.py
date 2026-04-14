@@ -1,5 +1,5 @@
 from .scrabble import Scrabble, arr
-from modules.schema import UserFetch, GameOptions, GamePlayer
+from modules.schema import UserFetch, GameOptions, GamePlayer, GAME_TYPE
 import copy
 
 class Game:
@@ -9,7 +9,7 @@ class Game:
 		self.leader = leaderID
 		self.options = options.model_dump(mode="json")
 		self.game = Scrabble(copy.deepcopy(arr))
-		self.type = options.game_type
+		self.type: GAME_TYPE = options.game_type
 		self.players: list[GamePlayer] = []
 		self.hasStarted = False
 		if self.type == "GROUP":
@@ -79,6 +79,10 @@ class Game:
 		self.players[self.game.gameTurn].points += result
 		print(self.players)
 		print(f"result: {result}")
+		if self.type == "BOT":
+			# play bot turn
+			pass
+		
 		return result
 
 	def _toGamePlayer(self, player: UserFetch) -> GamePlayer:
@@ -278,10 +282,10 @@ class Game:
 		"""
 
 		grid = self.game.export_grid()
-		
 		players = [x.dump_json() for x in self.players]
+		# players sorted in order of 1st,2nd,3rd etc.
+		players.sort(key=lambda x: x['points'], reverse=True)
 		winner = max(self.players, key=lambda x: x.points)
-			
 		return {
 			"grid": grid,
 			"players": players,
