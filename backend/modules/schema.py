@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import datetime
 from typing import Optional, Literal
 
@@ -53,7 +53,7 @@ class PlacedTile(Tile):
 	coordinates: tuple[int, int] 
 	
 class GamePlayer(UserFetch):
-	placed: list[PlacedTile] = []
+	placed: list[PlacedTile] = Field(default_factory=list)
 	points: int = 0
 
 	def __str__(self) -> str:
@@ -71,11 +71,12 @@ class GamePlayer(UserFetch):
 class BotPlayer(BaseModel):
 	userID: int = -2
 	bot: bool = True
-	placed: list[PlacedTile] = []
+	placed: list[PlacedTile] = Field(default_factory=list)
 	points: int = 0
 
 	def dump_json(self):
 		return {
+			"userName": "Bot",
 			"bot": self.bot,
 			"placed": self.placed,
 			"points": self.points
