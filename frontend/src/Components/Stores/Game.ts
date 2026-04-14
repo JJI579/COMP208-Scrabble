@@ -13,7 +13,7 @@ function toGameUser(user: UserReturn): GameUser {
 }
 
 type GAME = {
-	id: number,
+	id: string | number,
 	type: GAME_TYPE,
 	players: Map<Number, GameUser>,
 	leader: number,
@@ -59,7 +59,7 @@ const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
 
 class Game implements GAME {
 	gameTurn: number = -1;
-	id: number = 0;
+	id: string | number = 0;
 	leader: number = 0;
 	type: GAME_TYPE = "NORMAL";
 	players: Map<number, GameUser> = new Map();
@@ -71,9 +71,9 @@ class Game implements GAME {
 	letters: string[] = [];
 	grid: string[] = [];
 
-	constructor(gameCode: number, dictionary: any | initData) {
+	constructor(gameCode: string | number, dictionary: any | initData) {
 
-		if (gameCode == 0) {
+		if (!gameCode) {
 			return
 		}
 		console.log(dictionary)
@@ -181,7 +181,7 @@ class Game implements GAME {
 	isLeader(userID: number): boolean {
 		return userID == this.leader;
 	}
-	getId(): number {
+	getId(): string | number {
 		return this.id;
 	}
 
@@ -221,7 +221,7 @@ class Game implements GAME {
 		return this.dictionaryAllowed;
 	}
 
-	setId(id: number): void {
+	setId(id: string | number): void {
 		this.id = id;
 	}
 

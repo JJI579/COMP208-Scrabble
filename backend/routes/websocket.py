@@ -34,8 +34,17 @@ gameRouter = APIRouter(
 # 	return {'total': len(_words)}
 
 @gameRouter.post("/create")
-async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):	
+async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	CODE = manager.create_game(options, current_user.userID) # type: ignore
+	# Add the creator to the game immediately so they become the leader lobby
+	try:
+		game = manager.fetch_game(CODE)
+		if type(game) != bool:
+			game.add_player(UserFetch.model_validate(current_user))
+			manager.set_game(current_user.userID, CODE)
+			await manager.send_direct_message(packets.start.update_game(game.export_data(), game.id), current_user.userID)
+	except Exception as e:
+		print("Error setting creator into game:", e)
 	# TODO: add to database
 	return {
 		"code": CODE

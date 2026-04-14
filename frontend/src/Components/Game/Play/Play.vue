@@ -220,16 +220,21 @@ function selectedBlankTile(index: number) {
 .wrapper {
 	display: flex;
 	justify-content: center;
-	height: 100%;
+	align-items: center;
+	min-height: calc(100vh - 2rem);
 	width: 100%;
+	padding: 1rem;
 }
 
 .wrapper__flex {
 	margin-top: 1rem;
 	height: fit-content;
 	display: flex;
+	justify-content: center;
 	gap: 2rem;
 	align-items: center;
+	flex-wrap: wrap;
+	width: 100%;
 }
 
 .player__column {
@@ -237,16 +242,18 @@ function selectedBlankTile(index: number) {
 	flex-direction: column;
 	gap: 2rem;
 	width: fit-content;
+	min-width: 180px;
 }
-
 
 .center__wrapper {
 	display: flex;
-	/* background-color: blue; */
-	flex: 1;
+	flex: 1 1 720px;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	gap: 1.5rem;
+	width: 100%;
+	max-width: 900px;
 }
 
 

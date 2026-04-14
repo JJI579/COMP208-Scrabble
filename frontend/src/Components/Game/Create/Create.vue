@@ -46,12 +46,11 @@ function goToJoin() {
 }
 
 async function createGame() {
-	// TODO: implement.
 	const resp = await api.post("/game/create", {
 		game_type: gameTypeRef.value,
 		group_size: Number(groupSizeRef.value),
 		time_limit: timeLimitRef.value,
-		dictionary: useDictionaryRef.value
+		dictionary: useDictionaryRef.value === "true"
 	})
 	router.push({ name: "join", query: { code: resp.data.code } })
 }
