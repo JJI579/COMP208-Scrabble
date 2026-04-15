@@ -35,6 +35,9 @@ class Game:
 			else:
 				pass
 				# finish the game as bot has had too many passes
+			return False
+		return resp
+	
 
 	async def game_turn(self, letters):
 		"""

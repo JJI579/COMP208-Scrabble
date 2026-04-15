@@ -160,8 +160,16 @@ class GameHandler:
 				if nextTurn == -2: 
 					await asyncio.sleep(1)
 					print("this is the way")
-					await game.bot_turn()
-
+					botPoints = await game.bot_turn()
+					print(botPoints)
+					newGrid = game.game.export_grid()
+					nextTurn = game.game.next_turn()
+					# Update the board for other players,
+					gameUpdatePacket = packets.during.game_update({
+						"grid": newGrid,
+						"turn": nextTurn,
+					})
+					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
 				if game.game.finished:
 					return await GameHandler.finish_game(websocket)
 

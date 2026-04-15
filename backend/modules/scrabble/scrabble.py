@@ -347,6 +347,7 @@ class Scrabble:
 
 	def export_grid(self):
 		toSend = {}
+		print(self.placed)
 		for (x,y), letter, blankSubstitute in self.placed:
 			toSend[str((y*15)+x)] = letter if blankSubstitute == None else blankSubstitute
 		return toSend
@@ -401,7 +402,7 @@ class Scrabble:
 		return self.players[0] 
 
 	
-	async def bot_turn(self):
+	async def bot_turn(self) -> int | bool:
 		self.bot.letters = self.fetch_player_letters(-2)
 		self.bot_pass_streak = 1
 		MAX_PASSES = 3
@@ -411,8 +412,6 @@ class Scrabble:
 		if not move:
 			print("PASS (no valid moves)")
 			self.bot_pass_streak += 1
-			self.next_turn()
-
 			if self.bot_pass_streak >= MAX_PASSES:
 				print("\nStopping: too many passes")
 				return False
@@ -428,10 +427,6 @@ class Scrabble:
 			except Exception as e:
 				print("ERROR:", e)
 				result = False
-
-			print("RESULT:", result)
-			print(self.print_board())
-
 			if result:
 				temp_letters = self.bot.letters.copy()
 				for c in word:
@@ -442,7 +437,10 @@ class Scrabble:
 				# -2 is bot id
 				self.give_player_letters(-2, 7 - len(self.bot.letters))
 				self.bot.letters = self.fetch_player_letters(-2)
-
+				return result
+			else:
+				print("BOT: place word failed.")
+				return False
 	def give_player_letters(self, userID: int, amount: int):
 		"""
 		Gives a player the specified amount of letters.
@@ -807,7 +805,7 @@ class Scrabble:
 			return False
 		
 		# print(f"Placing word: {word} | Position: {position} | Direction: {direction} | Blanks: {blanks} | PreExisting: {preExisting}") 	
-		preExisting = set(preExisting) # consider type of self.placed so this just returns coordinates of previously placed letters
+		preExisting = set(preExisting) # type: ignore # consider type of self.placed so this just returns coordinates of previously placed letters
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
@@ -963,7 +961,9 @@ class Scrabble:
 			else:
 				pass
 		
-		self.placed.extend(tempPlaced)
+		for x in tempPlaced:
+			coord, letter = x
+			self.placed.append([coord, letter, None])
 		return points
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
