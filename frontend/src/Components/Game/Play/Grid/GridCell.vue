@@ -31,6 +31,10 @@ const score = computed(() => {
 	return pointsMap[letter] || ' ';
 })
 
+const isPlaced = computed(() => {
+	return props.cellValue !== '|' && props.cellValue !== '';
+})
+
 // center highlight
 const bgColour = computed(() => {
 	return '#37a8bd';
@@ -41,7 +45,7 @@ const bgColour = computed(() => {
 
 
 <template>
-	<div class="cell" :class="{ 'scrabble--placed': cellValue.length > 1, 'cell--draft': isDraft }"
+	<div class="cell" :class="{ 'scrabble--placed': isPlaced, 'cell--draft': isDraft }"
 		:style="{ backgroundColor: bgColour }">
 		<p class="cell__letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
 		<p class="cell__score" v-if="cellValue !== '|'">{{ score }}</p>
@@ -65,13 +69,13 @@ const bgColour = computed(() => {
 }
 
 .scrabble--placed {
-	background: linear-gradient(145deg, #f3d28a, #d1a652);
+	background: linear-gradient(145deg, var(--tile-background-colour), #e9d7a6);
 	border-radius: 6px;
 	box-shadow:
 		inset 0 2px 2px rgba(255, 255, 255, 0.4),
 		inset 0 -2px 3px rgba(0, 0, 0, 0.3),
 		0 3px 5px rgba(0, 0, 0, 0.4);
-	border: 1px solid #a87e3a;
+	border: 1px solid #c5a569;
 }
 
 .cell--draft {

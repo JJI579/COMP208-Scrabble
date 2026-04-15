@@ -431,15 +431,18 @@ class Scrabble:
 				for c in word:
 					if c in temp_letters:
 						temp_letters.remove(c)
-				self.bot.letters = temp_letters
+					elif " " in temp_letters:
+						temp_letters.remove(" ")
+				self.set_player_letters(-2, temp_letters)
 
-				# -2 is bot id
-				self.give_player_letters(-2, 7 - len(self.bot.letters))
+				# -2 is bot id; refill the bot rack after play.
+				self.give_player_letters(-2, max(0, 7 - len(self.fetch_player_letters(-2))))
 				self.bot.letters = self.fetch_player_letters(-2)
 				return result
 			else:
 				print("BOT: place word failed.")
 				return False
+
 	def give_player_letters(self, userID: int, amount: int):
 		"""
 		Gives a player the specified amount of letters.
@@ -454,23 +457,20 @@ class Scrabble:
 		Returns:
 			None
 		"""
+		if amount <= 0:
+			return
 		if len(self.letterArray) == 0:
-			if len(self.playerLetters[str(userID)]) == 0:
+			if str(userID) in self.playerLetters and len(self.playerLetters[str(userID)]) == 0:
 				self.finished = True
 				return
 			else:
 				return
+
+		letterChoices = random.sample(self.letterArray, k=min(amount, len(self.letterArray)))
 		
-		try:
-			letterChoices = random.sample(self.letterArray, k=amount)
-		except:
-			# Take all that is left of the self.letterarray
-			letterChoices = random.sample(self.letterArray, k=len(self.letterArray))
-		
-		if str(userID) in self.playerLetters:
-			self.playerLetters[str(userID)].extend(letterChoices)
-		else:
-			self.playerLetters[str(userID)] = letterChoices
+		if str(userID) not in self.playerLetters:
+			self.playerLetters[str(userID)] = []
+		self.playerLetters[str(userID)].extend(letterChoices)
 		for x in letterChoices:
 			try:
 				self.letterArray.remove(x)
