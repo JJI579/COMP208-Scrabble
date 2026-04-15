@@ -2,10 +2,9 @@ from pathlib import Path
 import json
 from modules.database.database import get_session
 from sqlalchemy import text
-import asyncio
 import copy
 from typing import Literal
-from modules.schema import GamePlayer
+from modules.schema import GamePlayer, BotPlayer
 import random
 
 currentPath = Path.cwd()
@@ -15,6 +14,9 @@ pointsData = json.load(open(pointsPath))
 letterDistribution = currentPath / "letter_distribution.json"
 distributionArray = json.load(open(letterDistribution))
 
+wordsPath = currentPath / "sowpods.txt"
+with open(wordsPath, "r", encoding="utf-8") as f:
+	wordSet = set(line.strip().upper() for line in f if line.strip())
 
 defaultFiller = '|'
 arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
@@ -51,52 +53,265 @@ class Player:
 				return False
 			if availableCount[key] < val:
 				return False
-			
-# class Bot(Player):
-
-# 	def __init__(self, name="Bot"):
-# 		super().__init__()
-# 		self.name = name
-
-# 	def choose_move(self, scrabble: "Scrabble"):
-# 		best_move = None
-# 		best_score = -1
-# 		# try to get the cells next to already placed - more efficient that checking every cell xx
-# 		candidates = self.get_candidate_cells(scrabble)
-# 		for x, y in candidates:
-# 			for direction in ["right", "down"]:
-# 				for word in self.get_possible_words(scrabble):
-# 					preExisting = self.find_matching_letters(scrabble, word, x, y, direction)
-# 					# print(f"Testing word: {word} at position: ({x}, {y}) in direction: {direction} with preExisting: {preExisting}")
-					
-# 					#save board incase we need to revert
-# 					temp = [row.copy() for row in scrabble.game]
-
-# 					# coords for calculating points
-# 					points = scrabble.draft_place_word(word, (x,y), direction, blanks=[], preExisting=preExisting, draft=True)
-# 					if points > best_score:
-# 						best_score = points
-# 						best_move = (word, (x,y), direction, preExisting)
-# 					# restore
-# 					scrabble.game = temp
-# 		return best_move
-# 	# check bots placed tiles...
-# 	''' TODO: get candidate cells, get possible words, find matchingn letters
-# 				difficulty levels?
-# 					-> considers intersecting words and considers tile multipliers..
-# 	'''
+		return True
 	
-# 	def get_candidate_cells(self, scrabble: "Scrabble"):
-# 		pass
+class Bot(Player):
 
-# 	def get_possible_words(self, scrabble: "Scrabble"):
-# 		possible_words = []
-# 		pass
+	def __init__(self, word_set, name="Bot", difficulty="hard"):
+		super().__init__()
+		self.name = name
+		self.difficulty = difficulty
+		self.settings = {
+			"easy": {"top_n": 15, "max_len": 4},
+			"medium": {"top_n": 5, "max_len": 6},
+			"hard": {"top_n": 1, "max_len": 45},
+		}
+		self.word_set = word_set
+		self.trie = {}
+		self.build_trie()
+		
 
-# 	def find_matching_letters(self, scrabble: "Scrabble", word, position, direction):
-# 		x, y = position
-# 		preExisting = []
-# 		pass
+	def build_trie(self):
+		self.trie = {}
+		for word in self.word_set:
+			word = word.strip().upper()
+			node = self.trie
+			for char in word:
+				node = node.setdefault(char, {})
+			node["$"] = True
+
+	def is_word(self, word):
+		node = self.trie
+		for c in word:
+			if c not in node:
+				return False
+			node = node[c]
+		return "$" in node
+
+	async def choose_move(self, scrabble: "Scrabble"):
+		# OPTIMIZATION: Limit total moves evaluated to prevent combinatorial explosion
+		MAX_MOVES_PER_ANCHOR = 5000  # Limit moves per anchor cell
+		MAX_TOTAL_MOVES = 5000      # Total moves to evaluate
+		
+		moves = []
+		anchors = self.get_candidate_cells(scrabble)
+		
+		# OPTIMIZATION: Sort anchors by potential score (near premium squares)
+		anchors = self._prioritize_anchors(scrabble, anchors)
+		
+		# print(f"Evaluating {len(anchors)} anchor cells")
+		
+		total_moves_evaluated = 0
+		
+		for anchor_x, anchor_y in anchors:
+			if total_moves_evaluated >= MAX_TOTAL_MOVES:
+				break
+				
+			anchor_moves = []
+			
+			for direction in ["right", "down"]:
+				generated = self.generate_possible_words(scrabble, (anchor_x, anchor_y), direction)
+				
+				for word, pos in generated:
+					if total_moves_evaluated >= MAX_TOTAL_MOVES:
+						break
+						
+					word = word.upper()
+					if not self.is_word(word):
+						continue
+						
+					points = await scrabble.simulate_place_word(word, pos, direction)
+					
+					if isinstance(points, int):
+						anchor_moves.append((points, word, pos, direction))
+						total_moves_evaluated += 1
+						
+						# Early exit if we have enough good moves from this anchor
+						if len(anchor_moves) >= MAX_MOVES_PER_ANCHOR:
+							break
+							
+				if len(anchor_moves) >= MAX_MOVES_PER_ANCHOR:
+					break
+			
+			moves.extend(anchor_moves)
+		
+		if not moves:
+			return None
+			
+		# Sort by score (already mostly sorted, but ensure it)
+		moves.sort(reverse=True, key=lambda x: x[0])
+		
+		# OPTIMIZATION: Only consider top moves to reduce randomness impact
+		top_n = min(self.settings[self.difficulty]["top_n"], len(moves))
+		print(f"Found {len(moves)} possible moves, considering top {top_n}")
+
+		chosen_word = random.choice(moves[:top_n])
+		points, word, pos, direction = chosen_word
+		return chosen_word
+
+	def get_candidate_cells(self, scrabble: "Scrabble"):
+		candidates = set()
+		for y in range(15):
+			for x in range(15):
+				if scrabble.get_cell(x,y) != '|':
+					continue
+				
+				for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < 15 and 0 <= ny < 15:
+						if scrabble.get_cell(nx, ny) != '|':
+							candidates.add((x,y))
+							break
+		if not candidates:
+			candidates.add((7,7))
+		return list(candidates)
+	
+	def _prioritize_anchors(self, scrabble: "Scrabble", anchors):
+		"""Sort anchors by potential score (near premium squares, center, etc.)"""
+		def anchor_score(anchor):
+			x, y = anchor
+			score = 0
+			
+			# Prefer center area
+			center_dist = abs(x - 7) + abs(y - 7)
+			score -= center_dist * 2  # Closer to center = higher priority
+			
+			# Prefer positions near premium squares
+			for dx in [-1, 0, 1]:
+				for dy in [-1, 0, 1]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < 15 and 0 <= ny < 15:
+						if (nx, ny) in scrabble.double_word or (nx, ny) in scrabble.triple_word:
+							score += 10
+						elif (nx, ny) in scrabble.double_letter or (nx, ny) in scrabble.triple_letter:
+							score += 5
+			
+			return score
+		
+		return sorted(anchors, key=anchor_score, reverse=True)
+	
+	def cross_check(self, scrabble, x, y, direction):
+		"""OPTIMIZATION: Use trie to limit possible letters instead of trying all 26"""
+		letters = set()
+		
+		# When placing horizontally (right), check vertical (down) cross-words
+		# When placing vertically (down), check horizontal (right) cross-words
+		cross_direction = "down" if direction == "right" else "right"
+		
+		# Find letters that would form valid cross words
+		for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+			if c not in self.letters:
+				continue  # Skip letters not in rack
+				
+			# Temporarily place the letter
+			original = scrabble.game[y][x]
+			scrabble.game[y][x] = c
+			
+			try:
+				# Check the perpendicular direction for cross-words
+				if cross_direction == "right":
+					coords = scrabble.expand_horizontally((x, y))
+				else:
+					coords = scrabble.expand_vertically((x, y))
+					
+				# If only this single tile, no cross-word formed - letter is valid
+				if len(coords) == 1:
+					letters.add(c)
+				else:
+					# Check if the formed cross-word is valid
+					coords_sorted = sorted(coords, key=lambda t: (t[1], t[0]) if cross_direction == "right" else (t[0], t[1]))
+					word = ''.join(scrabble.get_cell(cx, cy) for cx, cy in coords_sorted)
+					if len(word) >= 2 and word.upper() in wordSet:
+						letters.add(c)
+			finally:
+				# Always restore the original state
+				scrabble.game[y][x] = original
+		
+		return letters
+
+	def generate_possible_words(self, scrabble, position, direction):
+		x, y = position
+		results = []
+		seen = set()
+		max_len = self.settings[self.difficulty]["max_len"]
+
+		start_x, start_y = x, y
+
+		# rewind to true start of empty segment
+		while True:
+			prev_x = start_x - 1 if direction == "right" else start_x
+			prev_y = start_y - 1 if direction == "down" else start_y
+
+			if not (0 <= prev_x < 15 and 0 <= prev_y < 15):
+				break
+
+			if scrabble.get_cell(prev_x, prev_y) != '|':
+				start_x, start_y = prev_x, prev_y
+			else:
+				break
+
+		def backtrack(node, path, rack, px, py, anchor_used, origin):
+			if len(path) > max_len:
+				return
+
+			if "$" in node and anchor_used:
+				word = "".join(path)
+				if word not in seen:
+					seen.add(word)
+					results.append((word, origin))
+					# OPTIMIZATION: Limit results per anchor to prevent explosion
+					if len(results) >= 20:  # Max 20 words per anchor
+						return
+				return  # OPTIMIZATION: Don't continue after finding a word
+
+			if not (0 <= px < 15 and 0 <= py < 15):
+				return
+
+			# OPTIMIZATION: Early pruning - check if we can still form valid words
+			if len(rack) == 0 and "$" not in node:
+				return
+
+			cell = scrabble.get_cell(px, py)
+
+			if cell != '|':
+				# Existing tile
+				letter = cell.upper()
+				if letter in node:
+					path.append(letter)
+					if direction == "right":
+						backtrack(node[letter], path, rack, px + 1, py, True, origin)
+					else:
+						backtrack(node[letter], path, rack, px, py + 1, True, origin)
+					path.pop()
+			else:
+				# Empty tile - try letters from rack
+				cross_allowed = self.cross_check(scrabble, px, py, direction)
+				
+				# OPTIMIZATION: Limit to letters we actually have
+				rack_letters = set(rack)
+				cross_allowed = cross_allowed & rack_letters
+				
+				for letter in sorted(cross_allowed):  # Sort for consistency
+					if letter not in node:
+						continue
+						
+					rack.remove(letter)  # Temporarily remove from rack
+					path.append(letter)
+
+					if direction == "right":
+						backtrack(node[letter], path, rack, px + 1, py, True, origin)
+					else:
+						backtrack(node[letter], path, rack, px, py + 1, True, origin)
+
+					path.pop()
+					rack.append(letter)  # Restore to rack
+
+		backtrack(self.trie, [], self.letters.copy(), x, y, False, (start_x, start_y))
+		return results
+	
+
+
+
 
 
 
@@ -106,12 +321,16 @@ class Scrabble:
 
 	def __init__(self, arr) -> None:
 		self.players: list[int] = []
+		
 		self.playerLetters = {
 			"player_id": ["letters"]
 		}
+
+		self.bot_pass_streak = 0
+
 		# index of array
 		self.gameTurn = 0
-		self.game = arr
+		self.game = copy.deepcopy(arr)
 		# [[x, y], "letter", "blank replacement"]
 		self.placed = []  # [(x, y), letter, "blank replacement"]
 		self.firstPlaced = False
@@ -128,7 +347,8 @@ class Scrabble:
 
 	def export_grid(self):
 		toSend = {}
-		for [x,y], letter, blankSubstitute in self.placed:
+		print(self.placed)
+		for (x,y), letter, blankSubstitute in self.placed:
 			toSend[str((y*15)+x)] = letter if blankSubstitute == None else blankSubstitute
 		return toSend
 	
@@ -157,7 +377,7 @@ class Scrabble:
 			return -1
 		return self.players[self.gameTurn]
 	
-	def init_game(self, players: list[GamePlayer]):
+	def init_game(self, players: list[GamePlayer | BotPlayer]):
 		"""
 			Initializes the game state with a given list of players.
 
@@ -165,15 +385,62 @@ class Scrabble:
 			The game turn is set to 0, and the function returns the
 			userID of the current turn.
 		"""
+		
 		for player in players:
 			userID = int(player.userID)
-			self.players.append(userID)
+			if userID == -2:
+				# they are a bot
+				# initialise the bot?
+				self.bot = Bot(word_set=wordSet, name="Bot", difficulty="hard")
+				self.players.append(-2)
+			else:
+				self.players.append(userID)
 			self.give_player_letters(userID, 7) # base amount in a deck
+		# first index of array
 		self.gameTurn = 0
-		# return userid of current turn
+		# return userid of first index of array
 		return self.players[0] 
 
 	
+	async def bot_turn(self) -> int | bool:
+		self.bot.letters = self.fetch_player_letters(-2)
+		self.bot_pass_streak = 1
+		MAX_PASSES = 3
+		move = None
+		for _ in range(5):  # retry up to 5 times
+			move = await self.bot.choose_move(self)
+		if not move:
+			print("PASS (no valid moves)")
+			self.bot_pass_streak += 1
+			if self.bot_pass_streak >= MAX_PASSES:
+				print("\nStopping: too many passes")
+				return False
+			return True
+		else:
+			self.bot_pass_streak = 0
+
+			points, word, pos, direction = move # type: ignore
+			print(f"PLAY: {word} at {pos} {direction}")
+
+			try:
+				result = await self._place_word(word, pos, direction)
+			except Exception as e:
+				print("ERROR:", e)
+				result = False
+			if result:
+				temp_letters = self.bot.letters.copy()
+				for c in word:
+					if c in temp_letters:
+						temp_letters.remove(c)
+				self.bot.letters = temp_letters
+
+				# -2 is bot id
+				self.give_player_letters(-2, 7 - len(self.bot.letters))
+				self.bot.letters = self.fetch_player_letters(-2)
+				return result
+			else:
+				print("BOT: place word failed.")
+				return False
 	def give_player_letters(self, userID: int, amount: int):
 		"""
 		Gives a player the specified amount of letters.
@@ -200,7 +467,7 @@ class Scrabble:
 		except:
 			# Take all that is left of the self.letterarray
 			letterChoices = random.sample(self.letterArray, k=len(self.letterArray))
-			return
+		
 		if str(userID) in self.playerLetters:
 			self.playerLetters[str(userID)].extend(letterChoices)
 		else:
@@ -253,12 +520,92 @@ class Scrabble:
 
 		Returns the user ID of the player whose turn it now is.
 		"""
+		
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
 			self.gameTurn = 0
 		# Returns user id 
 		return self.fetch_turn()
+
+	async def simulate_place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = []):
+		"""
+		Simulates placing a word without modifying the game state.
+		Restores the game to its original state after simulation.
+		
+		Parameters:
+			word (str): The word to simulate placing.
+			position (tuple[int, int]): The position to place the word.
+			direction (str): The direction ('right' or 'down').
+			blanks (list[tuple[int, int]]): List of blank tile positions.
+			
+		Returns:
+			int | None: Points earned if valid, None if invalid.
+		"""
+		snapshot = copy.deepcopy(self.game)
+		snapshot_placed = copy.deepcopy(self.placed)
+		snapshot_firstPlaced = self.firstPlaced
+
+		result = await self._place_word(word, position, direction, blanks)
+
+		self.game = snapshot
+		self.placed = snapshot_placed
+		self.firstPlaced = snapshot_firstPlaced
+
+		return result if isinstance(result, int) else None
+
+	def extract_all_words_from_board(self):
+		"""Extract all horizontal and vertical words currently on the board"""
+		words = []
+		
+		# Extract horizontal words
+		for y in range(15):
+			current_word = []
+			current_coords = []
+			for x in range(15):
+				cell = self.get_cell(x, y)
+				if cell != defaultFiller:
+					current_word.append(cell)
+					current_coords.append((x, y))
+				else:
+					if len(current_word) > 1:
+						words.append((''.join(current_word), current_coords[:]))
+					current_word = []
+					current_coords = []
+			if len(current_word) > 1:
+				words.append((''.join(current_word), current_coords[:]))
+		
+		# Extract vertical words
+		for x in range(15):
+			current_word = []
+			current_coords = []
+			for y in range(15):
+				cell = self.get_cell(x, y)
+				if cell != defaultFiller:
+					current_word.append(cell)
+					current_coords.append((x, y))
+				else:
+					if len(current_word) > 1:
+						words.append((''.join(current_word), current_coords[:]))
+					current_word = []
+					current_coords = []
+			if len(current_word) > 1:
+				words.append((''.join(current_word), current_coords[:]))
+		
+		return words
+	
+	async def validate_all_board_words(self):
+		"""Validate all words currently on the board"""
+		words = self.extract_all_words_from_board()
+		for word, coords in words:
+			if len(word) > 1:  # Only validate multi-letter words
+				if not await self.check_word(word):
+					return False, word  # Return False and the invalid word
+		return True, None
+
+	def get_newly_placed_coords(self, tempPlaced):
+		"""Get coordinates of newly placed tiles"""
+		return set(coord for coord, _ in tempPlaced)
 
 	def get_cell(self, x: int, y: int):
 		""" 
@@ -309,8 +656,8 @@ class Scrabble:
 			if y > 0 and y < 15:
 				# perform
 				if self.game[y][x] != defaultFiller:
-					if [x, y] not in coordinates:
-						coordinates.append([x, y])
+					if (x, y) not in coordinates:
+						coordinates.append((x, y))
 					if traversedBack:
 						y+=1
 					else:
@@ -355,8 +702,8 @@ class Scrabble:
 			if x > 0 and x < 15:
 				# perform
 				if self.game[y][x] != defaultFiller:
-					if [x, y] not in coordinates:
-						coordinates.append([x, y])
+					if (x, y) not in coordinates:
+						coordinates.append((x, y))
 					if traversedBack:
 						x+=1
 					else:
@@ -408,13 +755,13 @@ class Scrabble:
 			x1, y1 = coords[i - 1]
 			x2, y2 = coords[i]
 
-			if direction == "RIGHT":
+			if direction == "right":
 				expected = (x1 + 1, y1)
 				# Same row, x should increase by exactly 1
 				if y1 == y2 and x2 != x1 + 1  and not check_coordinate(expected):
 					print(f'right: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
 					return False
-			elif direction == "DOWN":
+			elif direction == "down":
 				expected = (x1, y1 + 1)
 				
 				# Same column, y should increase by exactly 1
@@ -452,45 +799,52 @@ class Scrabble:
 
 		"""
 		
-		print(f"Placing word: {word} | Position: {position} | Direction: {direction} | Blanks: {blanks} | PreExisting: {preExisting}") 	
-		preExisting = [x[0] for x in self.placed] # consider type of self.placed so this just returns coordinates of previously placed letters
+		# Validate word length - must be at least 2 characters
+		if len(word) < 2:
+			# print(f"INVALID: Word '{word}' is too short (must be 2+ characters)")
+			return False
+		
+		# print(f"Placing word: {word} | Position: {position} | Direction: {direction} | Blanks: {blanks} | PreExisting: {preExisting}") 	
+		preExisting = set(preExisting) # type: ignore # consider type of self.placed so this just returns coordinates of previously placed letters
 		wordCoordinates = []
 		x = position[0]
 		y = position[1]
 		tempPlaced = []
+		direction = direction.lower().strip()
 		for i in range(len(word)):
-			if [x,y] not in preExisting:
-				wordCoordinates.append([x, y])
+			if (x,y) not in preExisting:
+				wordCoordinates.append((x, y))
 			cellContents = self.get_cell(x, y)
-			if cellContents != defaultFiller and (x, y) not in preExisting:
-				# TODO: check if there is a word that works otherwise raise an issue.
-				print("cell has already been taken!")
-				for [x, y], letter in tempPlaced:
-					self.game[y][x] = defaultFiller
-				return False
+			if cellContents != defaultFiller:
+				if cellContents != word[i]:
+					# print("conflicting letter!")
+					for (x, y), _ in tempPlaced:
+						self.game[y][x] = defaultFiller
+					return False
 			else:
 				# make it place already to imply that it can be used!
 				if (x, y) not in preExisting:
 					# TODO: make it consider blanks
-					print("temp placed letter: ", word[i])
+					# print("temp placed letter: ", word[i])
 					self.game[y][x] = word[i]
-					tempPlaced.append([[x, y], word[i]])
+					tempPlaced.append(((x, y), word[i]))
 				else:
 					if self.get_cell(x,y) == word[i]:
-						print("missed letter: ", word[i])
+						# print("missed letter: ", word[i])
+						pass
 					else:
-						print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
-						for [x, y], *_ in tempPlaced:
+						# print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
+						for (x, y), *_ in tempPlaced:
 							self.game[y][x] = defaultFiller
 						return False
 
-			if direction=="down":
+			if direction == "down":
 				y+=1
 			else:
 				x+=1
 		if not self.firstPlaced:
 			# MAKE SURE IT CROSSES THE MIDDLE AS START
-			if [7,7] not in wordCoordinates:
+			if (7,7) not in wordCoordinates:
 				return False
 			else:
 				if await self.check_word(word):
@@ -508,7 +862,7 @@ class Scrabble:
 		hasJoiningWord = False
 		# assume every connection is a word until proven wrong
 		# also we assume that they can provide us either a word, or not, if it is a word, prove wrong via connections, else it is fine.
-		print(f"word: {word}")
+		# print(f"word: {word}")
 		isWord = await self.check_word(word)
 		forceBreak = False
 		points = 0
@@ -520,10 +874,10 @@ class Scrabble:
 					potentialWord = self.expand_horizontally(currentPosition)
 				else:
 					potentialWord = self.expand_vertically(currentPosition)
-					print(potentialWord)
+					# print(potentialWord)
 				testArray = potentialWord.copy()
-				print(testArray)
-				print(wordCoordinates)
+				# print(testArray)
+				# print(wordCoordinates)
 				[testArray.remove(x) for x in wordCoordinates if x in testArray]
 				if len(testArray) != 0:
 					if testDirection == "down":
@@ -532,17 +886,38 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
-					print(wordString)
-					print(f'Checking word found: ' + wordString)
+					
+					# Validate cross-word is at least 2 characters
+					if len(wordString) < 2:
+						# print(f"INVALID CROSS-WORD: '{wordString}' is too short")
+						for (x, y), _ in tempPlaced:
+							self.game[y][x] = defaultFiller
+						return False
+					
+					# print(wordString)
+					# print(f'Checking word found: ' + wordString)
 					if not await self.check_word(wordString):
-						isWord = False
-						forceBreak = True
-						print(f"{wordString} is not a word. ")
+						# print(f"INVALID CROSS-WORD: '{wordString}' is not in dictionary")
+						for (x, y), _ in tempPlaced:
+							self.game[y][x] = defaultFiller
+						return False
+						# print(f"{wordString} is not a word. ")
 						break
 					else:
-						print(f"{wordString} is a word.")
-						print(wordOrdered)
-						points+=self.calculate_points(wordOrdered, blanks)
+						# print(f"{wordString} is a word.")
+						# print(wordOrdered)
+						# Only apply modifiers to newly placed tiles in cross-words
+						newly_placed_in_cross = [t for t in wordOrdered if tuple(t[0]) in [(c[0], c[1]) for c in wordCoordinates]]
+						existing_in_cross = [t for t in wordOrdered if tuple(t[0]) not in [(c[0], c[1]) for c in wordCoordinates]]
+						
+						# Add points for existing tiles (no modifiers)
+						for coord, letter in existing_in_cross:
+							if coord not in blanks:
+								points += pointsData[letter.upper()]
+						
+						# Add points for newly placed tiles (with modifiers)
+						points += self.calculate_points(newly_placed_in_cross, blanks)
+						
 						hasJoiningWord = True
 						isWord = True
 				else:
@@ -555,23 +930,40 @@ class Scrabble:
 			points+=50 
 		# calculate points for the literal word
 		# TODO: this will not work for future make this work.
-		print("this is here")
-		print(tempPlaced)
+		# print("this is here")
+		# print(tempPlaced)
 		points+=self.calculate_points(tempPlaced, blanks)
 
-		print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
+		# print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
+		
+		# STRICT VALIDATION: Always check that main word is valid
+		if not isWord:
+			# print(f"INVALID MAIN WORD: '{word}' is not in dictionary")
+			for (x, y), _ in tempPlaced:
+				self.game[y][x] = defaultFiller
+			return False
+		
+		# COMPREHENSIVE VALIDATION: Check all words on the board are valid
+		all_valid, invalid_word = await self.validate_all_board_words()
+		if not all_valid:
+			# print(f"INVALID WORD ON BOARD: '{invalid_word}'")
+			for (x, y), _ in tempPlaced:
+				self.game[y][x] = defaultFiller
+			return False
 		
 		if self.firstPlaced:
-			if not hasJoiningWord or isWord == None: 
-				print("removing placed letters")
+			if not hasJoiningWord: 
+				# print("removing placed letters - no joining word")
 				# remove coordinates placed
-				for [x, y], letter in tempPlaced:
+				for (x, y), letter in tempPlaced:
 					self.game[y][x] = defaultFiller
 				return False
 			else:
 				pass
 		
-		self.placed.extend(tempPlaced)
+		for x in tempPlaced:
+			coord, letter = x
+			self.placed.append([coord, letter, None])
 		return points
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
@@ -585,7 +977,7 @@ class Scrabble:
 				return False
 			
 			wordString = ""
-			for [x, y], letter, blankSubstitute in letters:
+			for (x, y), letter, blankSubstitute in letters:
 				wordString+=letter if blankSubstitute == None else blankSubstitute
 			isWord = await self.check_word(wordString)
 
@@ -595,17 +987,17 @@ class Scrabble:
 		blanks = []
 		points = 0
 
-		for i, ([x,y], letter, blankSubstitute) in enumerate(letters):
+		for i, ((x,y), letter, blankSubstitute) in enumerate(letters):
 			toPlace = (letter if blankSubstitute == None else blankSubstitute).upper()
 			if letter == " ":
 				# gather the blank positions
-				blanks.append([x,y])
+				blanks.append((x,y))
 
-			if [x,y] in boardLetters:
+			if (x,y) in boardLetters:
 				# reset the board
-				for letter in placing:
-					x, y = letter[0]
-					self.game[y][x] = defaultFiller
+				for placed_item in placing:
+					temp_x, temp_y = placed_item[0]
+					self.game[temp_y][temp_x] = defaultFiller
 				return False
 			else:
 				placing.append(letters[i])
@@ -626,8 +1018,7 @@ class Scrabble:
 					potentialWord = self.expand_vertically(currentPosition)
 					
 				testArray = potentialWord.copy()
-				[testArray.remove(x) for x in letterPositions if x in testArray]
-				# TODO: see if you can cache new checked letters?
+				[testArray.remove(x) for x in [(a[0], a[1]) for a in letterPositions] if x in testArray]
 				if len(testArray) != 0:
 					if testDirection == "down":
 						potentialWord.sort(key=lambda x: x[1] )
@@ -635,8 +1026,9 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
-					
+					print(wordOrdered)
 					print(f'Checking word found: ' + wordString)
+					self.print_board()
 					if not await self.check_word(wordString):
 						isWord = False
 						forceBreak = True
@@ -652,10 +1044,10 @@ class Scrabble:
 						hasJoiningWord = True
 						self.firstPlaced = True
 		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
-		if not hasJoiningWord or isWord == None:
+		if not hasJoiningWord or not isWord:
 			print("removing placed letters")
 			# remove coordinates placed
-			for [x, y], *_ in placing:
+			for (x, y), *_ in placing:
 				self.game[y][x] = defaultFiller
 			return False
 		# OTHERWISE IT IS A TRUE WORD.
@@ -667,6 +1059,7 @@ class Scrabble:
 
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
 		# TODO: fix blanks.
+		# This function should ONLY be called with newly placed tiles
 		doubleWord = 0
 		tripleWord = 0
 		points = 0
@@ -688,13 +1081,14 @@ class Scrabble:
 						tripleWord+=1
 					if coord not in blanks:
 						# blanks have no points
-						points += pointsData[letter.upper()] 
+						points += pointsData[letter.upper()]
+			else:
+				# Blank tiles have no points
+				pass
 
 		for _ in range(doubleWord):
-			print("[POINTS] | Doubled word points")
 			points*=2
 		for _ in range(tripleWord):
-			print("[POINTS] | Tripled word points")
 			points*=3
 		return points
 
@@ -704,7 +1098,7 @@ class Scrabble:
 				print(i, end=" ")
 			print()
 
-	async def check_word(self, word: str):
+	async def check_word(self, word: str) -> bool:
 		"""
 			Check if a word is present in the database.
 			
@@ -714,8 +1108,27 @@ class Scrabble:
 			Returns:
 				bool: True if the word is present, False otherwise.
 		"""
+		return word.upper() in wordSet
+	""" 	
 		async for session in get_session():
-			resp = await session.execute(text("SELECT * FROM tblWords WHERE word = :word"), {"word": word.lower()})
+			resp = await session.execute(text("SELECT 1 FROM tblWords WHERE word = :word LIMIT 1"), {"word": word.lower()})
 			result = resp.scalar_one_or_none()
 			print(f"Word Found: {result}")
-			return result
+			return result is not None
+		return False """
+
+
+
+
+async def load_word_set():
+	words = []
+	async for session in get_session():
+		result = await session.execute(text("SELECT word FROM tblWords"))
+		words = [row[0].upper() for row in result.fetchall()]
+	return words
+
+async def create_game():
+	word_set = await load_word_set()
+	game = Scrabble(arr)
+	bot = Bot(word_set, name="Bot", difficulty="hard")
+	return game, bot

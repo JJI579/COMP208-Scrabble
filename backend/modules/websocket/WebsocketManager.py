@@ -90,6 +90,9 @@ class WebsocketManager:
 		if type(message) == dict:
 			message = json.dumps(message)
 		for userID in users:
+			if userID == -2:
+				# ignore bot player.
+				continue
 			if userID in self.connections:
 				if not self.connections[userID]['disconnected']:
 					print(f"Sent message: {userID} | Message: {message}")
