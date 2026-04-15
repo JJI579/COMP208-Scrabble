@@ -36,6 +36,8 @@ function openExternal(url: string) {
 }
 
 
+
+
 </script>
 
 <template>
@@ -47,7 +49,9 @@ function openExternal(url: string) {
 				</div>
 
 			</div>
-			<RouterLink :to="{ name: 'dashboard' }" class="link">
+			
+			<RouterLink :to="{ name: 'home' }" class="link">
+				
 				<div class="tiles">
 					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
 						{{ l }}

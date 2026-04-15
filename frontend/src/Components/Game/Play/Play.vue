@@ -200,13 +200,15 @@ function selectedBlankTile(index: number) {
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
+
+					<button class="action" @click="chatOpen = !chatOpen"><i class="pi pi-comments"></i></button>
 				</div>
 			</div>
 			<div class="player__column right">
 				<Player :active-player="activePlayer" :user-game-data="player"
 					v-for="player in (players.length > 1 ? players[1] : [])" />
 			</div>
-			<div class="chat__panel" :class="{ open: chatOpen }">
+			<div class="chat__panel" :class="{ open: true }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
 				<Chat />
 			</div>
@@ -323,7 +325,7 @@ function selectedBlankTile(index: number) {
 	position: fixed;
 	right: -320px;
 	top: 0;
-	width: 320px;
+	width: 22vw;
 	height: 100%;
 	background: #2c8595;
 	transition: 0.3s;

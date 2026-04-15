@@ -6,6 +6,8 @@ class BasePacket(TypedDict):
 	t: PacketType
 	d: dict
 
+import datetime, random
+
 class Packets:
 
 	def __init__(self) -> None:
@@ -119,7 +121,30 @@ class DuringPackets(Packets):
 	def game_update(self, gameinfo: dict):
 
 		return self.create_packet("GAME_UPDATE_ONGOING", gameinfo)
+	
+	def chat_message(self, message: str, author: UserFetch):
 
+		# type Message = {
+		# 	id: number,
+		# 	text: string
+		# 	created_at: Date
+		# 	author: {
+		# 		id: number,
+		# 		name: string
+		# 	}
+		# }
+
+		messageObject = {
+			"id": random.randint(0,10000),
+			"text": message, 
+			"created_at": datetime.datetime.now().isoformat(),
+			"author": {
+				"id": author.userID,
+				"name": author.userName
+			}
+		}
+		return self.create_packet("CHAT_MESSAGE", messageObject)
+	
 class AuthenticationPackets(Packets):
 	
 	def __init__(self) -> None:

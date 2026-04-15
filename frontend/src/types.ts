@@ -99,5 +99,15 @@ const pointsMap: Record<string, number> = {
 
 const DEFAULT_FILLER = "|";
 
-export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers, Item, UnlockedItemType };
+type MessageType = {
+	id: number,
+	text: string
+	created_at: Date
+	author: {
+		id: number,
+		name: string
+	}
+}
+
+export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers, Item, UnlockedItemType, MessageType };
 export { debug, pointsMap, DEFAULT_FILLER };

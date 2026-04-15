@@ -4,6 +4,7 @@ from typing import Optional, Literal
 
 PacketType = Literal[
 	"GAME_END",
+	"CHAT_MESSAGE",
 	"CONFIRM_LEAVE",
 	"INVALID_GAME",
 	"NOT_FOUND",

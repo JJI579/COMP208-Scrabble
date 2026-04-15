@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import useWebsocketStore from '@/Components/Stores/websocket';
-
 
 const props = defineProps({
 	message: {
@@ -9,17 +7,13 @@ const props = defineProps({
 	}
 })
 
-const websocketStore = useWebsocketStore();
-
-function sendMessage() {
-	websocketStore.send("CHAT_MESSAGE", { message: props.message })
-}
+const emit = defineEmits(['click'])
 </script>
 
 
 
 <template>
-	<div class="preset" @click="sendMessage()">
+	<div class="preset" @click="emit('click', props.message)">
 		{{ props.message }}
 	</div>
 
