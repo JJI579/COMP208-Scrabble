@@ -58,6 +58,7 @@ const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
 
 
 class Game implements GAME {
+	partnerPlaced: Map<String, [number, string, string?]> = new Map();
 	gameTurn: number = -1;
 	id: string | number = 0;
 	leader: number = 0;
@@ -146,6 +147,11 @@ class Game implements GAME {
 		this.gameTurn = allData.turn;
 		console.log("myletters");
 		console.log(this.letters);
+	}
+
+	updatePartnerPlaced(partnerPlaced: Map<String, [number, string, string?]>): void {
+		this.partnerPlaced = partnerPlaced;
+
 	}
 
 	updateContent(allData: any) {

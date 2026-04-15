@@ -60,7 +60,7 @@ function openExternal(url: string) {
 					<div class="user">
 
 						<!-- TODO: eventually add functionality for custom pfps etc..-->
-						<img :src="userStore.userData?.profilePicture || '/profile.png'" alt="User Profile Picture" />
+						<i class="pi pi-user"></i>
 					</div>
 				</button>
 			</div>
@@ -208,13 +208,17 @@ function openExternal(url: string) {
 .user {
 	width: 40px;
 	height: 40px;
+	color: white;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: large;
+	border: 1px solid white;
 	border-radius: 50%;
 
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 	transition: transform 0.2s;
 	background: rgba(255, 255, 255, 0.08);
 	backdrop-filter: blur(10px);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
