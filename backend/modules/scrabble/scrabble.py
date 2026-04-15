@@ -54,6 +54,7 @@ class Player:
 			if availableCount[key] < val:
 				return False
 		return True
+	
 class Bot(Player):
 
 	def __init__(self, word_set, name="Bot", difficulty="hard"):
@@ -429,6 +430,7 @@ class Scrabble:
 				result = False
 
 			print("RESULT:", result)
+			print(self.print_board())
 
 			if result:
 				temp_letters = self.bot.letters.copy()
@@ -1016,8 +1018,7 @@ class Scrabble:
 					potentialWord = self.expand_vertically(currentPosition)
 					
 				testArray = potentialWord.copy()
-				[testArray.remove(x) for x in letterPositions if x in testArray]
-				# TODO: see if you can cache new checked letters?
+				[testArray.remove(x) for x in [(a[0], a[1]) for a in letterPositions] if x in testArray]
 				if len(testArray) != 0:
 					if testDirection == "down":
 						potentialWord.sort(key=lambda x: x[1] )
@@ -1025,8 +1026,9 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
-					
+					print(wordOrdered)
 					print(f'Checking word found: ' + wordString)
+					self.print_board()
 					if not await self.check_word(wordString):
 						isWord = False
 						forceBreak = True
