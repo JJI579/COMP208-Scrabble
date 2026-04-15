@@ -17,7 +17,6 @@ function toggleMenu() {
 
 
 function profileClicked() {
-	/* TODO: in future go to profile page if signed in or go to login page if not signed in */
 	console.log("pfp button clicked")
 	if (userStore.isLoggedIn) {
 		router.push({ name: 'profile' });

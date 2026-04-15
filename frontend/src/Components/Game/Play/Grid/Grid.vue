@@ -44,7 +44,6 @@ function cellClicked(index: number) {
 		if (grid.value[index] == props.filler || OPTIONS.includes(grid.value[index] || "")) {
 			var letter = letters.value[letterFocused.value];
 			if (letter !== undefined) {
-				// TODO: make placed value have a
 				const arr: [number, string, string?] = [letterFocused.value, letter, undefined];
 				if (blankLetter.value !== DEFAULT_FILLER) {
 					arr[2] = blankLetter.value

@@ -54,7 +54,6 @@ class Game:
 		direction = "RIGHT"
 		playerLetters = copy.deepcopy(self.game.fetch_player_letters(self.get_current_turn()))
 		
-		# TODO: identify if the letters used are available, and direction of play.
 		blanksIdentified = []
 		for [x,y], letter, blankReplacement in letters:
 			# identify direction
@@ -104,8 +103,10 @@ class Game:
 		return GamePlayer.model_validate(player)
 
 	def export_data(self):
-		# TODO: include scrabble board data
+
+		grid = self.game.export_grid()
 		data =  {
+			"grid": grid,
 			"leader": self.leader,
 			"game_type": self.type,
 			"players": [x.model_dump(mode="json") for x in self.players],
@@ -154,7 +155,6 @@ class Game:
 				hasGroup = False
 				for i, group in enumerate(self.groups):
 					if len(group) == 0:
-						# TODO: this needs to adjust for any index not just this scenario
 						self.groups[i].append(player.userID)
 						hasGroup = True
 						break
@@ -190,7 +190,7 @@ class Game:
 		if type(player) == int:
 			for i, p in enumerate(self.players):
 				if p.userID == player:
-					# TODO: pretty sure this errors since modifying a list whilst iterating through it
+					# TODO: pretty sure this errors since modifying a list whilst iterating through it - confirm this
 					self.players.pop(i)
 					break
 			if self.type == "GROUP":

@@ -35,7 +35,7 @@ async def fetch_items(current_user: Annotated[User, Depends(get_current_user)], 
     return items
 
 
-# TODO: make so points are earned when game is finished.
+
 
 @router.post('/{item_id}/equip')
 async def equip_item(item_id: int, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):

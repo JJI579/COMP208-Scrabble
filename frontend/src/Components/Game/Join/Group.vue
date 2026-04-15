@@ -3,6 +3,7 @@ import useWebsocketStore from '@/Components/Stores/websocket';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import type { GameUser } from '@/game_types';
+import useAlertStore from '@/Components/Stores/alert';
 
 const props = defineProps({
     group: {
@@ -31,7 +32,6 @@ const isFull = computed(() => groupPlayers.value.length >= props.maxSize)
 function joinGroup() {
     if (isFull.value) return
     websocket.send("GROUP_JOIN", {index: props.id})
-    // TODO: alert to say you have sent it.
 }
 
 

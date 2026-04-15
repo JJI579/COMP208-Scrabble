@@ -40,7 +40,6 @@ class Player:
 	def can_make(self, word: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []):
 		wordMap = {}
 		availableCount = {}
-		# TODO: consider preExisting - too late im considering it before you - hari
 		for x in word:
 			if x not in wordMap:
 				wordMap[x] = 1
@@ -817,23 +816,17 @@ class Scrabble:
 			cellContents = self.get_cell(x, y)
 			if cellContents != defaultFiller:
 				if cellContents != word[i]:
-					# print("conflicting letter!")
 					for (x, y), _ in tempPlaced:
 						self.game[y][x] = defaultFiller
 					return False
 			else:
-				# make it place already to imply that it can be used!
 				if (x, y) not in preExisting:
-					# TODO: make it consider blanks
-					# print("temp placed letter: ", word[i])
 					self.game[y][x] = word[i]
 					tempPlaced.append(((x, y), word[i]))
 				else:
 					if self.get_cell(x,y) == word[i]:
-						# print("missed letter: ", word[i])
 						pass
 					else:
-						# print(f"mis interpret of letter in preExisting: ({x},{y}) | Preexisting: {self.get_cell(x,y)} | Assumed to be: {word[i]}")
 						for (x, y), *_ in tempPlaced:
 							self.game[y][x] = defaultFiller
 						return False
@@ -925,16 +918,9 @@ class Scrabble:
 						hasJoiningWord = True
 						self.firstPlaced = True
 		
-		# TODO: fix 50 points issue and make it not consider preExisting.
 		if len(word) == 7 and len(preExisting) == 0:
 			points+=50 
-		# calculate points for the literal word
-		# TODO: this will not work for future make this work.
-		# print("this is here")
-		# print(tempPlaced)
 		points+=self.calculate_points(tempPlaced, blanks)
-
-		# print(f'{hasJoiningWord} | {isWord} | {word} | Points: {points}')
 		
 		# STRICT VALIDATION: Always check that main word is valid
 		if not isWord:
@@ -967,9 +953,6 @@ class Scrabble:
 		return points
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
-		# PLACE LETTERS ONTO THE GRID, ENSURE EVERYWHERE IS A VALID WORD, ELSE RETURN FALSE
-
-		# TODO: implement
 		isWord = False
 		if not self.firstPlaced:
 			# make sure [8,8] in the letters
@@ -1058,7 +1041,6 @@ class Scrabble:
 		
 
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
-		# TODO: fix blanks.
 		# This function should ONLY be called with newly placed tiles
 		doubleWord = 0
 		tripleWord = 0
