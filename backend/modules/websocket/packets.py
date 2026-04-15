@@ -116,6 +116,10 @@ class DuringPackets(Packets):
 	def __init__(self) -> None:
 		pass
 
+	def draft_placed(self, data: dict):
+		# {'placed': {'113': [0, 'N', None], '114': [2, 'G', None]}}
+		return self.create_packet("DRAFT_PLACED", data)
+	
 	def game_update(self, gameinfo: dict):
 
 		return self.create_packet("GAME_UPDATE_ONGOING", gameinfo)

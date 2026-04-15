@@ -287,9 +287,22 @@ class Game:
 		"""
 		if self.type == "BOT":
 			self.add_bot()
+
+		elif self.type == "GROUP":
+			self.partners = {}
+			for i, group in enumerate(self.groups):
+				if len(group) == 2:
+					# if the group is a group with a partner
+					self.partners[group[0]] = group[1]
+					self.partners[group[1]] = group[0]
 		self.hasStarted = True
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn
+	
+	def get_partner(self, userID: int):
+		if userID in self.partners:
+			return self.partners[userID]
+		return False
 	
 	def finish_game(self) -> dict:
 		# get all data from the board, input into database, continue

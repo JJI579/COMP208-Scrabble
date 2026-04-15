@@ -157,6 +157,16 @@ function selectedBlankTile(index: number) {
 		selectBlank.value = -1;
 	}
 }
+
+function handleCellClicked() {
+	if (websocketStore.game.type == "GROUP") {
+		// emit this.
+		console.log("placedawdawdawd");
+		console.log(placed.value);
+		websocketStore.send("DRAFT_PLACED", { placed: Object.fromEntries(placed.value) });
+	}
+	letterFocused.value = -1
+}
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -166,8 +176,9 @@ function selectedBlankTile(index: number) {
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
 
-	<div class="letter-selection" :class="{'letter-selection--visible': selectBlank !== -1}">
-		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray" @click="selectedBlankTile(Number(ind))">
+	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
+		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
+			@click="selectedBlankTile(Number(ind))">
 			{{ letter }}
 		</div>
 	</div>
@@ -181,7 +192,7 @@ function selectedBlankTile(index: number) {
 			<div class="center__wrapper">
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
-					@cell-clicked="letterFocused = -1" :placed="placed" :blank-letter="blankLetter" />
+					@cell-clicked="handleCellClicked()" :placed="placed" :blank-letter="blankLetter" />
 
 				<div class="actions">
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
@@ -200,6 +211,8 @@ function selectedBlankTile(index: number) {
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
+
+					<button class="action" @click="() => chatOpen = true"><i class="pi pi-messages"></i></button>
 				</div>
 			</div>
 			<div class="player__column right">
@@ -356,7 +369,7 @@ function selectedBlankTile(index: number) {
 	border-radius: 10px;
 	z-index: 9999;
 	max-width: 50vh;
-	width: auto;	
+	width: auto;
 	gap: 1rem;
 	flex-wrap: wrap;
 	justify-content: left;

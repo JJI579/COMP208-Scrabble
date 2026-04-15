@@ -104,6 +104,37 @@ class GameHandler:
 			await manager.send_direct_message(ongoing_game_update, x.userID)
 	
 	@staticmethod
+	async def draft_placed(data: dict, websocket: WebSocket):
+
+		
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			errorPacket = packets.error("You are not authenticated.")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+
+		if userConnection['game'] == None:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+		
+		game = manager.fetch_game(userConnection['game'])
+		if type(game) == bool:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+		
+		# get the partner to whoever placed the draftt
+		# send the draft to them
+		userID = websocket.user_id # type: ignore
+		partner = game.get_partner(userID)
+		# TODO: uncomment this later.
+		# if type(partner) == bool:
+		# 	print(f"{userID} has no partner, ignoring the packet.")
+		# 	# DONT NEED TO SEND ERROR, THEY JUST DO NOT HAVE A PARTNER
+		# 	return
+		
+		print(data)
+		await manager.send_direct_message(packets.during.draft_placed(data['d']), partner)
+		
+	@staticmethod
 	async def game_turn(data: dict, websocket: WebSocket):
 		"""
 			Handles the game turn packet.
@@ -124,7 +155,8 @@ class GameHandler:
 
 			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 			if type(userConnection) == bool:
-				return
+				errorPacket = packets.error("You are not authenticated.")
+				return await manager.send_message(websocket, json.dumps(errorPacket))
 
 			if userConnection['game'] == None:
 				errorPacket = packets.error("You are not in a game")
@@ -132,7 +164,9 @@ class GameHandler:
 			
 			game = manager.fetch_game(userConnection['game'])
 			if type(game) == bool:
-				return
+				errorPacket = packets.error("You are not in a game")
+				return await manager.send_message(websocket, json.dumps(errorPacket))
+				
 			if userConnection['info'].userID == game.get_current_turn():
 				pointsAmount = await game.game_turn(data['d']['letters'])
 				# check if game has finished.
@@ -209,7 +243,7 @@ class GameHandler:
 
 		# TODO: input all data into the user's stats etc
 		
-		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
@@ -390,9 +424,7 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 				# else is Connection class
 				match (packetType):
 					case "PLAYER_JOIN":
-						resp = await GameHandler.player_join(data, websocket)
-						if not resp:
-							continue
+						await GameHandler.player_join(data, websocket)
 						continue
 					case "PLAYER_LEAVE":
 						await GameHandler.player_leave(data, websocket)
@@ -408,10 +440,12 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 						continue
 					case "GAME_START":
 						await GameHandler.game_start(data, websocket)
-						
 						continue
 					case "GAME_TURN":
 						await GameHandler.game_turn(data, websocket)
+						continue
+					case "DRAFT_PLACED":
+						await GameHandler.draft_placed(data, websocket)
 						continue
 
 

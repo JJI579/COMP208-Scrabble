@@ -1,14 +1,6 @@
-Yaro - you are working on friends / profile page
-hari - dashboard
-yaro - leaderboard
-me - websocket
+how to handle groups.
+
+each player is already considered as a player with their letters etc
 
 
-Play - Jason
-Login - Jason
-Leaderboard - Yaro
-Join - Jason
-Home - Hari
-Friend - yaro
-Shop - Jason
-Profile - yaro
+instead, think i may make the first player in a group be a leader, and their teammates just get the same packets as them

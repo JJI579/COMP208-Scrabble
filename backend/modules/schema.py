@@ -23,6 +23,8 @@ PacketType = Literal[
 	"GAME_REPLACE",
 	"GAME_UPDATE",
 	"GAME_TURN",
+	"DRAFT_PLACED",
+	"DRAFT_REMOVED"
 ]
 
 GAME_TYPE = Literal[
