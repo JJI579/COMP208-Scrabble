@@ -166,8 +166,9 @@ function selectedBlankTile(index: number) {
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
 
-	<div class="letter-selection" :class="{'letter-selection--visible': selectBlank !== -1}">
-		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray" @click="selectedBlankTile(Number(ind))">
+	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
+		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
+			@click="selectedBlankTile(Number(ind))">
 			{{ letter }}
 		</div>
 	</div>
@@ -208,7 +209,7 @@ function selectedBlankTile(index: number) {
 				<Player :active-player="activePlayer" :user-game-data="player"
 					v-for="player in (players.length > 1 ? players[1] : [])" />
 			</div>
-			<div class="chat__panel" :class="{ open: true }">
+			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
 				<Chat />
 			</div>
@@ -323,7 +324,7 @@ function selectedBlankTile(index: number) {
 
 .chat__panel {
 	position: fixed;
-	right: -320px;
+	right: -50%;
 	top: 0;
 	width: 22vw;
 	height: 100%;
@@ -331,7 +332,7 @@ function selectedBlankTile(index: number) {
 	transition: 0.3s;
 	padding: 1rem;
 	color: white;
-	z-index: 100;
+	z-index: 99999999999999;
 	box-shadow: -5px 0 15px rgba(0, 0, 0, 0.4);
 }
 
@@ -358,7 +359,7 @@ function selectedBlankTile(index: number) {
 	border-radius: 10px;
 	z-index: 9999;
 	max-width: 50vh;
-	width: auto;	
+	width: auto;
 	gap: 1rem;
 	flex-wrap: wrap;
 	justify-content: left;

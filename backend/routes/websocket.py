@@ -439,6 +439,9 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 						continue
 					case "GAME_TURN":
 						await GameHandler.game_turn(data, websocket)
+					case "CHAT_MESSAGE":
+						await GameHandler.chat_message(data, websocket)
+						continue
 
 			else:
 				return
