@@ -35,34 +35,31 @@ const props = defineProps({
 
 <style lang="css" scoped>
 .player-card {
-	height: 150px;
-	width: 200px;
+	height: clamp(95px, 8vw, 140px);
+	width: clamp(170px, 13vw, 220px);
 	background: #2c8595;
 	border-radius: 14px;
 	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 	display: flex;
 	align-items: center;
-	gap: 1rem;
+	gap: 0.9rem;
 	padding: 1rem;
-	align-self: flex-start;
-	transform: translateY(-5.3rem);
+	position: relative;
 	animation: floatCard 4s ease-in-out infinite;
 }
 
 @keyframes floatCard {
-
 	0%,
 	100% {
-		transform: translateY(-5.3rem);
+		transform: translateY(0);
 	}
 
 	50% {
-		transform: translateY(-6rem);
+		transform: translateY(-8px);
 	}
 }
 
 .player-card.active {
-	transform: translateY(-5.3rem) scale(1);
 	box-shadow:
 		0 0 25px rgba(241, 188, 76, 0.8),
 		0 0 60px rgba(241, 188, 76, 0.4),
@@ -73,7 +70,7 @@ const props = defineProps({
 
 @keyframes glowCard {
 	0% {
-		transform: translateY(-5.3rem) scale(1);
+		transform: scale(1);
 		box-shadow:
 			0 0 20px rgba(241, 188, 76, 0.6),
 			0 0 50px rgba(241, 188, 76, 0.3),
@@ -81,7 +78,7 @@ const props = defineProps({
 	}
 
 	25% {
-		transform: translateY(-5.5rem) scale(1.02);
+		transform: scale(1.02);
 		box-shadow:
 			0 0 30px rgba(241, 188, 76, 0.8),
 			0 0 60px rgba(241, 188, 76, 0.4),
@@ -89,7 +86,7 @@ const props = defineProps({
 	}
 
 	50% {
-		transform: translateY(-5.8rem) scale(1.04);
+		transform: scale(1.04);
 		box-shadow:
 			0 0 40px rgba(241, 188, 76, 1),
 			0 0 80px rgba(241, 188, 76, 0.5),
@@ -97,7 +94,7 @@ const props = defineProps({
 	}
 
 	75% {
-		transform: translateY(-5.5rem) scale(1.02);
+		transform: scale(1.02);
 		box-shadow:
 			0 0 30px rgba(241, 188, 76, 0.8),
 			0 0 60px rgba(241, 188, 76, 0.4),
@@ -105,7 +102,7 @@ const props = defineProps({
 	}
 
 	100% {
-		transform: translateY(-5.3rem) scale(1);
+		transform: scale(1);
 		box-shadow:
 			0 0 20px rgba(241, 188, 76, 0.6),
 			0 0 50px rgba(241, 188, 76, 0.3),
@@ -118,7 +115,6 @@ const props = defineProps({
 }
 
 @keyframes pulseTimer {
-
 	0%,
 	100% {
 		opacity: 1;
@@ -129,34 +125,53 @@ const props = defineProps({
 	}
 }
 
-
 .pfp {
-	width: 55px;
-	height: 55px;
+	width: clamp(44px, 3.4vw, 58px);
+	height: clamp(44px, 3.4vw, 58px);
 	border-radius: 50%;
 	object-fit: cover;
 	border: 3px solid #f1bc4c;
+	flex-shrink: 0;
 }
 
 .player-info {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 4px;
+	min-width: 0;
 }
 
 .name {
 	font-weight: bold;
 	color: white;
+	font-size: clamp(0.95rem, 1vw, 1.1rem);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .score {
 	color: #f1bc4c;
 	font-weight: bold;
+	font-size: clamp(0.9rem, 0.95vw, 1rem);
 }
 
 .timer {
 	color: white;
 	font-size: 14px;
 	position: relative;
+}
+
+@media (max-width: 1100px) {
+	.player-card {
+		width: clamp(160px, 42vw, 220px);
+		height: 95px;
+		padding: 0.8rem;
+	}
+
+	.name,
+	.score {
+		font-size: 0.95rem;
+	}
 }
 </style>

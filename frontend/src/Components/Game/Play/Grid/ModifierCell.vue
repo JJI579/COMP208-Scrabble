@@ -70,7 +70,7 @@ const bgColour = computed(() => {
 
 	position: relative;
 	font-weight: bold;
-	font-size: 12px;
+	font-size: 9.5px;
 	line-height: 1.25em;
 	color: white;
 	box-shadow: 1px 1px 3px rbga(0, 0, 0, 0.3);

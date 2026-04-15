@@ -79,32 +79,44 @@ function cellClicked(index: number) {
 </template>
 
 
+<!-- grid.vue -->
 <style lang="css" scoped>
 .board-frame {
-	padding: 22px;
+	padding: clamp(0.5rem, 1.2vw, 1rem);
 	background: var(--scrabble-board);
-	border-radius: 20px;
+	border-radius: 18px;
 	box-shadow:
-		inset 0 0 15px rgba(0, 0, 0, 0.5),
-		0 10px 25px rgba(0, 0, 0, 0.5);
+		inset 0 0 14px rgba(0, 0, 0, 0.45),
+		0 8px 18px rgba(0, 0, 0, 0.45);
+	width: fit-content;
+	max-width: 100%;
 }
 
 .board-frame.active {
-	transform: scale(1.02);
-	box-shadow:
-		inset 0 0 20px rgba(0, 0, 0, 0.5),
-		0 20px 40px rgba(0, 0, 0, 0.6);
-	transition: 0.3s;
+	transform: scale(1.015);
+	transition: 0.25s ease;
 }
 
 .cells {
 	display: grid;
-	grid-template-columns: repeat(15, 40px);
-	grid-template-rows: repeat(15, 40px);
-	gap: 0;
+	grid-template-columns: repeat(15, minmax(26px, 3.9vw));
+	grid-template-rows: repeat(15, minmax(26px, 3.9vw));
+	aspect-ratio: 1;
+	max-width: min(76vh, 760px);
+	max-height: min(76vh, 760px);
+}
 
-	box-shadow:
-		inset 0 0 25px rgba(0, 0, 0, 0.3),
-		0 8px 20px rgba(0, 0, 0, 0.4);
+@media (min-width: 1800px) {
+	.cells {
+		grid-template-columns: repeat(15, 48px);
+		grid-template-rows: repeat(15, 48px);
+	}
+}
+
+@media (max-height: 900px) {
+	.cells {
+		max-width: min(66vh, 680px);
+		max-height: min(66vh, 680px);
+	}
 }
 </style>

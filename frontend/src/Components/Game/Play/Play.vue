@@ -185,6 +185,7 @@ function selectedBlankTile(index: number) {
 					@cell-clicked="letterFocused = -1" :placed="placed" :blank-letter="blankLetter" />
 
 				<div class="actions">
+					<button class="action"></button>
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
@@ -219,126 +220,138 @@ function selectedBlankTile(index: number) {
 </template>
 
 
+
 <style lang="css" scoped>
 .wrapper {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	min-height: calc(100vh - 2rem);
+	height: calc(100vh - 72px);
 	width: 100%;
-	padding: 1rem;
+	padding: 0.5rem 1rem;
+	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .wrapper__flex {
-	margin-top: 1rem;
-	height: fit-content;
 	display: flex;
 	justify-content: center;
-	gap: 2rem;
 	align-items: center;
-	flex-wrap: wrap;
+	gap: clamp(1rem, 2vw, 2rem);
 	width: 100%;
+	height: 100%;
 }
 
 .player__column {
 	display: flex;
 	flex-direction: column;
-	gap: 2rem;
-	width: fit-content;
+	gap: 1rem;
 	min-width: 180px;
+	justify-content: center;
 }
 
 .center__wrapper {
 	display: flex;
-	flex: 1 1 720px;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 1.5rem;
-	width: 100%;
-	max-width: 900px;
+	gap: 0.85rem;
+	flex: 1;
+	height: 100%;
 }
 
+/* PERFECTLY CENTERED CONTROLS */
+.actions {
+	display: grid;
+	grid-template-columns: 56px 56px 56px auto 56px 56px 56px;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: center;
+	width: fit-content;
+	max-width: 100%;
+}
 
+/* rack now hugs tiles properly */
 .rack {
-	display: flex;
-	gap: 10px;
-	padding: 15px;
-	border-radius: 12px;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: clamp(44px, 3vw, 54px);
+	gap: 0.45rem;
+	padding: 0.65rem;
+	border-radius: 14px;
 	background: linear-gradient(145deg, #b88a44, #d9a955);
-	box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.4);
+	box-shadow:
+		inset 0 4px 8px rgba(0, 0, 0, 0.35),
+		0 6px 14px rgba(0, 0, 0, 0.35);
+	width: fit-content;
 }
 
 .rack__tile {
-	width: 50px;
-	height: 50px;
+	width: clamp(44px, 3vw, 54px);
+	height: clamp(44px, 3vw, 54px);
 	background: #f1bc4c;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 22px;
-	font-weight: bold;
+	font-size: clamp(1.15rem, 1.2vw, 1.55rem);
+	font-weight: 800;
 	border-radius: 8px;
 	cursor: pointer;
-	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-	transition: 0.2s;
+	box-shadow: 0 3px 6px rgba(0,0,0,.35);
+	transition: .18s ease;
 }
 
-.rack__tile:hover {
-	transform: translateY(-3px);
-}
-
+.rack__tile:hover,
 .tile--selected {
 	transform: translateY(-3px);
 }
 
 .tile--used {
-	opacity: 0.5;
-}
-
-.actions {
-	display: flex;
-	gap: 1rem;
-	align-items: center;
-	margin: auto;
+	opacity: .45;
 }
 
 .action {
-	padding: 12px 20px;
-	font-size: large;
-	height: fit-content;
+	width: 56px;
+	height: 56px;
 	border: none;
-	border-radius: 8px;
+	border-radius: 12px;
 	background: #f1bc4c;
-
 	cursor: pointer;
-	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-	transition: 0.5s ease-in all;
+	font-size: 1.25rem;
+	box-shadow: 0 4px 10px rgba(0,0,0,.35);
+	transition: .18s ease;
+}
 
+.action:hover {
+	transform: translateY(-2px);
 }
 
 .action--disabled {
-	opacity: 0.5;
+	opacity: .45;
 	cursor: not-allowed;
+}
+
+/* hidden spacer button */
+.action--blank {
+	visibility: hidden;
+	pointer-events: none;
 }
 
 .chat__panel {
 	position: fixed;
-	right: -50%;
+	right: -420px;
 	top: 0;
-	width: 22vw;
+	width: min(380px, 92vw);
 	height: 100%;
 	background: #2c8595;
-	transition: 0.3s;
+	transition: .3s ease;
 	padding: 1rem;
 	color: white;
-	z-index: 99999999999999;
-	box-shadow: -5px 0 15px rgba(0, 0, 0, 0.4);
+	z-index: 9999;
+	box-shadow: -5px 0 15px rgba(0,0,0,.4);
 }
 
-.chat__panel.open {
-	right: 0;
-}
+.chat__panel.open { right: 0; }
 
 .panel__close {
 	background: none;
@@ -348,22 +361,78 @@ function selectedBlankTile(index: number) {
 	cursor: pointer;
 }
 
+/* laptops */
+@media (max-height: 900px) {
+	.wrapper {
+		height: calc(100vh - 64px);
+	}
+
+	.center__wrapper {
+		gap: 0.55rem;
+	}
+
+	.action {
+		width: 50px;
+		height: 50px;
+	}
+
+	.actions {
+		grid-template-columns: 50px 50px 50px auto 50px 50px 50px;
+		gap: .55rem;
+	}
+
+	.rack__tile {
+		width: 46px;
+		height: 46px;
+		font-size: 1.1rem;
+	}
+}
+
+/* mobile/tablet */
+@media (max-width: 1100px) {
+	.wrapper {
+		height: auto;
+		min-height: 100vh;
+		overflow-y: auto;
+	}
+
+	.wrapper__flex {
+		flex-wrap: wrap;
+		padding-bottom: 1rem;
+	}
+
+	.player__column {
+		flex-direction: row;
+		width: 100%;
+		justify-content: center;
+		min-width: 0;
+	}
+
+	.actions {
+		grid-template-columns: repeat(4, auto);
+	}
+
+	.rack {
+		grid-column: 1 / -1;
+		order: 20;
+		justify-self: center;
+	}
+}
+
 .letter-selection {
 	display: none;
 	visibility: hidden;
-	position: absolute;
+	position: fixed;
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
-	background-color: var(--scrabble-board);
+	background: var(--scrabble-board);
 	border-radius: 10px;
-	z-index: 9999;
-	max-width: 50vh;
-	width: auto;
-	gap: 1rem;
+	z-index: 99999;
+	padding: 1rem;
+	gap: .75rem;
 	flex-wrap: wrap;
-	justify-content: left;
-	aspect-ratio: 1/1;
+	max-width: 520px;
 }
 
 .letter-selection--visible {
@@ -371,18 +440,15 @@ function selectedBlankTile(index: number) {
 	visibility: visible;
 }
 
-/* TODO: fix the alignment of Y and Z when selecting blank */
 .letter-selection__letter {
-	height: 48px;
-	width: 48px;
-	aspect-ratio: 1/1;
+	height: 46px;
+	width: 46px;
 	color: white;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	border: 1px solid white;
-	user-select: none;
-	cursor: pointer;
 	border-radius: 8px;
+	cursor: pointer;
 }
 </style>

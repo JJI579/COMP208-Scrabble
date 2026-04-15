@@ -57,53 +57,110 @@ const messages = websocketStore.messages;
 
 <style lang="css" scoped>
 .sample {
-	margin-top: 1rem;
+	margin-bottom: 0.5rem;
 	display: flex;
 	flex-wrap: wrap;
+	gap: 0.25rem;
+	justify-content: center;
+	max-height: 120px;
+	overflow-y: auto;
+	padding: 0.25rem;
 }
 
 .sample__message {
-	padding: .175rem .25rem;
+	padding: 0.1rem 0.15rem;
 }
 
 .flex-box {
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
-	height: 70%;
+	height: calc(100% - 120px);
+	min-height: 200px;
+	gap: 0.5rem;
 }
 
 .messages {
-	background-color: pink;
+	background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+	border: 2px solid #dee2e6;
+	border-radius: 8px;
 	flex: 1;
 	width: 100%;
+	padding: 0.5rem;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: #6c757d #f8f9fa;
+	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+	min-height: 100px;
+}
+
+.messages::-webkit-scrollbar {
+	width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+	background: #f8f9fa;
+	border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+	background: #6c757d;
+	border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+	background: #495057;
 }
 
 .send {
-	padding-block: 1rem;
-	height: 2rem;
 	display: flex;
-	gap: .5rem;
-	
-	justify-content: center;
+	gap: 0.25rem;
+	align-items: center;
+	padding: 0.25rem 0;
 }
 
 .send__input {
-	height: 3rem;
-	width: 100%;
-	border-radius: 8px;
+	height: 2.5rem;
+	flex: 1;
+	border-radius: 6px;
 	box-sizing: border-box;
-	font-size: large;
-	padding-left: 1rem;
+	font-size: 0.9rem;
+	padding: 0 0.75rem;
+	border: 2px solid #dee2e6;
+	transition: border-color 0.3s ease;
+	background: white;
+}
+
+.send__input:focus {
+	outline: none;
+	border-color: var(--clr-primary-a20);
+	box-shadow: 0 0 0 2px rgba(254, 178, 254, 0.1);
 }
 
 .send__submit {
-	width: 3rem;
+	width: 2.5rem;
+	height: 2.5rem;
 	box-sizing: border-box;
-	height: 3rem;
-	background-color: var(--clr-success-a10);
+	background: linear-gradient(145deg, var(--clr-success-a10), var(--clr-success-a0));
 	border: none;
-	border-radius: 8px;
+	border-radius: 6px;
 	cursor: pointer;
+	transition: all 0.3s ease;
+	color: white;
+	font-size: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	flex-shrink: 0;
+}
+
+.send__submit:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.send__submit:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 </style>

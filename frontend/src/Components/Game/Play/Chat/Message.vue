@@ -25,17 +25,37 @@ const props = defineProps({
 
 
 <style lang='css' scoped>
-    .message {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        justify-content: left;
-    }
-    .author {
-        color: grey;
-        font-size: small;
-        text-transform: capitalize;
-    }
+.message {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	justify-content: left;
+	padding: 0.5rem;
+	margin-bottom: 0.5rem;
+	background: white;
+	border-radius: 8px;
+	border-left: 4px solid var(--clr-primary-a20);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+}
 
-    
+.message:hover {
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+	transform: translateX(2px);
+}
+
+.author {
+	color: var(--clr-primary-a40);
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-transform: capitalize;
+	margin-bottom: 2px;
+}
+
+.text {
+	color: #495057;
+	font-size: 0.95rem;
+	line-height: 1.4;
+	word-wrap: break-word;
+}
 </style>
