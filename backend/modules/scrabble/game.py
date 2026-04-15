@@ -36,6 +36,9 @@ class Game:
 				pass
 				# finish the game as bot has had too many passes
 			return False
+		# update bot score in the wrapper model
+		if len(self.players) > self.game.gameTurn:
+			self.players[self.game.gameTurn].points += resp
 		return resp
 	
 

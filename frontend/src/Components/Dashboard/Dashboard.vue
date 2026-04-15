@@ -3,7 +3,7 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import router from '@/router';
-const streak = ref(7);
+const streak = ref(1);
 
 const users = ref<any>([]);
 

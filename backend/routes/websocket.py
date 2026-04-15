@@ -91,6 +91,7 @@ class GameHandler:
 
 		gameTurn = game.start_game()
 
+		await manager.broadcast_specific(packets.start.update_game(game.export_data(), game.id), [x.userID for x in game.players])
 		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
 
 		await asyncio.sleep(.5)
@@ -172,10 +173,13 @@ class GameHandler:
 					newGrid = game.game.export_grid()
 					nextTurn = game.game.next_turn()
 					# Update the board for other players,
-					gameUpdatePacket = packets.during.game_update({
+					updateData = {
 						"grid": newGrid,
 						"turn": nextTurn,
-					})
+					}
+					if isinstance(botPoints, int):
+						updateData["points"] = botPoints
+					gameUpdatePacket = packets.during.game_update(updateData)
 					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
 				if game.game.finished:
 					return await GameHandler.finish_game(websocket)
@@ -257,6 +261,8 @@ class GameHandler:
 				sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 				await GameHandler.game_update(game.id, websocket)
 				await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+				if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted:
+					await GameHandler.game_start({"d": {"code": game.id}}, websocket)
 				return True
 			else:
 				print("Error with game not exsiting.")
@@ -273,6 +279,8 @@ class GameHandler:
 		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
 		await GameHandler.game_update(game.id, websocket)
+		if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted:
+			await GameHandler.game_start({"d": {"code": game.id}}, websocket)
 		return True
 
 	@staticmethod

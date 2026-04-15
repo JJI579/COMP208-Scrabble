@@ -71,13 +71,15 @@ class GamePlayer(UserFetch):
 
 class BotPlayer(BaseModel):
 	userID: int = -2
+	userName: str = "Bot"
 	bot: bool = True
 	placed: list[PlacedTile] = Field(default_factory=list)
 	points: int = 0
 
 	def dump_json(self):
 		return {
-			"userName": "Bot",
+			"userID": self.userID,
+			"userName": self.userName,
 			"bot": self.bot,
 			"placed": self.placed,
 			"points": self.points

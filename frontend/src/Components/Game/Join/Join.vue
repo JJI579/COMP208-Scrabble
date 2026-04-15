@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import useUserStore from '@/Components/Stores/user'
 import useWebsocketStore from '@/Components/Stores/websocket'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Group from './Group.vue'
 import Game from '../../Stores/Game'
@@ -26,6 +26,12 @@ onMounted(() => {
 	if (code !== undefined) {
 		codeModel.value = code as string
 		websocket.send('PLAYER_JOIN', { code })
+	}
+})
+
+watch([inGame, () => websocket.game.type, isLeader], ([inGameVal, type, leader]) => {
+	if (inGameVal && type === 'BOT' && leader) {
+		setTimeout(() => startGame(), 500); // small delay to ensure UI is ready
 	}
 })
 
@@ -101,7 +107,7 @@ function startGame() {
 
 			<!-- NORMAL -->
 			<div
-				v-if="websocket.game.type === 'NORMAL'"
+				v-if="websocket.game.type === 'NORMAL' || websocket.game.type === 'BOT'"
 				class="player-list"
 			>
 				<div
@@ -146,7 +152,7 @@ function startGame() {
 				</button>
 
 				<button
-					v-if="isLeader"
+					v-if="isLeader && websocket.game.type !== 'BOT'"
 					class="start-btn"
 					@click="startGame"
 				>
