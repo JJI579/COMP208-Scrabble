@@ -1,12 +1,11 @@
 import api from "@/api";
-import type { InitType, PacketType, SelfReturn, UserReturn, WebsocketPacket } from "@/types";
+import type { InitType, PacketType, WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import useUserStore from "./user";
 import router from "@/router";
 import Game from "./Game";
 import useAlertStore from "./alert";
-import { transpileModule } from "typescript";
+
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
@@ -49,7 +48,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 		websocket.value.onmessage = (event) => {
 			const data: WebsocketPacket = JSON.parse(event.data)
-			console.log(data)
+			console.log("RECEIVED: ", data)
 			switch (data.t) {
 				case "ERROR":
 					useAlertStore().alert({
@@ -119,8 +118,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					}
 					break;
 				case "CONFIRM_LEAVE":
-					// game = null;
-					router.replace({ name: "dashboard" })
+					game.reset();
 					break
 				case "GAME_START":
 					// move user to game page
@@ -182,19 +180,35 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		_send(generatePacket(type, data))
 	}
 
+	let openListenerAttached = false
+	const queue: string[] = []
+
 	function _send(packet: string) {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
 			websocket.value.send(packet)
-		} else {
-			console.log("waiting till websocket is open..")
-			websocket.value?.addEventListener(
+			return
+		}
+
+		queue.push(packet)
+
+		if (websocket.value && !openListenerAttached) {
+			console.log("waiting for open websocket")
+			openListenerAttached = true
+
+			websocket.value.addEventListener(
 				"open",
-				() => websocket.value?.send(packet),
-				{ once: true }
+				() => {
+					for (const p of queue) {
+						websocket.value?.send(p)
+					}
+					queue.length = 0
+					openListenerAttached = false
+				}
 			)
 		}
 	}
-	return { websocket, game, connect, generatePacket, send }
+
+	return { websocket, game, connect, generatePacket, send, readyToSend }
 });
 
 export default useWebsocketStore;

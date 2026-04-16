@@ -40,7 +40,7 @@ onMounted(() => {
 <style scoped>
 /* Main Content Wrapper */
 .content {
-	
+
 	margin: auto;
 }
 
@@ -48,11 +48,11 @@ onMounted(() => {
 	width: 100%;
 }
 
-@media (max-width: 999px) {
+/* @media (max-width: 999px) {
 	.content {
 		width: 80%;
 	}
-}
+} */
 
 @media (max-width: 650px) {
 	.content {

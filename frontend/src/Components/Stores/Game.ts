@@ -82,10 +82,7 @@ class Game implements GAME {
 		if (!gameCode) {
 			return
 		}
-		console.log(dictionary)
 		if (dictionary.turn !== undefined && dictionary.turn != -1) {
-			console.log("here")
-			console.log(dictionary.turn)
 			this.gameTurn = dictionary.turn
 		}
 		this.id = gameCode;
@@ -105,6 +102,33 @@ class Game implements GAME {
 		// TODO: convert time_limit to actual time limit
 		this.timeLimit = 999999999999999999;
 		this.dictionaryAllowed = dictionary.options.dictionary;
+	}
+
+
+	reset() {
+		// core state
+		this.id = 0;
+		this.type = "NORMAL";
+		this.leader = 0;
+		this.gameTurn = -1;
+
+		// collections (recreate, don't clear)
+		this.players = new Map();
+		this.partnerPlaced = new Map();
+
+		// arrays / objects
+		this.groups = [];
+		this.letters = [];
+		this.grid = [];
+
+		// flags
+		this.hasStarted = false;
+		this.dictionaryAllowed = false;
+		this.isSuggesting = false;
+
+		// config
+		this.maxGroupSize = 2;
+		this.timeLimit = 0;
 	}
 
 	createNewGrid() {
@@ -172,6 +196,8 @@ class Game implements GAME {
 		if (dictionary.turn !== undefined) {
 			this.gameTurn = dictionary.turn
 		}
+		console.log(`Current game ID: ${this.id}`)
+		console.log(`New game ID: ${gameID}`)
 		this.id = gameID;
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;

@@ -237,8 +237,10 @@ class GameHandler:
 				sendToPartner = packets.during.turn_request(dataDictionary)
 				partnerID = game.get_partner(userID)
 				if type(partnerID) == bool:
-					print("Partner does not exist")
-					return
+					# make game turn happen instead
+					print("Partner doesnt exist, performing their game turn instead")
+					return await GameHandler.game_turn(data, websocket)
+				game.game.print_board()
 				await manager.send_direct_message(sendToPartner, partnerID)
 
 			else:
@@ -334,13 +336,9 @@ class GameHandler:
 					await manager.send_direct_message(updateCurrentUser, partnerID)
 				await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 				# check if the bot is next then make the bot play.
-				print("NEXT TURN")
-				print(nextTurn)
 				if nextTurn == -2: 
 					await asyncio.sleep(1)
-					print("this is the way")
 					botPoints = await game.bot_turn()
-					print(botPoints)
 					newGrid = game.game.export_grid()
 					nextTurn = game.game.next_turn()
 					# Update the board for other players,
@@ -416,7 +414,7 @@ class GameHandler:
 			print("trying to set user game but error: ", er)
 		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
-		await asyncio.sleep(1)
+		await asyncio.sleep(.4)
 		for player in game.players:
 			await GameHandler.game_update(game.id, player.userID)
 		return True
@@ -450,6 +448,13 @@ class GameHandler:
 		leavePacket = packets.start.confirm_leave(game.id)
 		await manager.send_direct_message(leavePacket, userID)
 		game.remove_player(user['info'])
+		# remove it from the user's dictionary
+		manager.connections[userID]['game'] = None
+		
+		# perform game update to show player left.
+		for player in game.players:
+			print("Sending update to players becauuse of player leave")
+			await GameHandler.game_update(game.id, player.userID)
 		
 
 	@staticmethod

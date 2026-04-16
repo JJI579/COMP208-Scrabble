@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import SegmentedControl from '../SegmentedControl/SegmentedControl.vue';
 import CustomSelect from '../CustomSelect/CustomSelect.vue';
 import api from '@/api';
@@ -38,19 +38,16 @@ onMounted(() => {
 		groupSizeRef.value = groupSize;
 	}
 });
-// game_type: GAME_TYPE
-// group_size: Optional[int]
-// time_limit: str | bool
-// dictionary: bool # whether dictionary is allowed
 
 const websocket = useWebsocketStore()
+const waitingForWebsocket = ref(false);
 
 function goToJoin() {
 	if (websocket.game) {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
-		websocket.game = new Game(0, {})
+		
 	}
 	router.push({ name: "join" });
 }
@@ -61,9 +58,9 @@ async function createGame() {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
-		websocket.game = new Game(0, {})
+		websocket.game.reset();
+		console.log("Resetting game state");
 	}
-
 	const resp = await api.post("/game/create", {
 		game_type: gameTypeRef.value,
 		group_size: Number(groupSizeRef.value),
@@ -79,7 +76,7 @@ async function createGame() {
 
 
 <template>
-	<div class="create">
+	<div class="create" v-if="!waitingForWebsocket">
 
 		<div class="join__card card-glass">
 			<div class="join__text">
@@ -107,6 +104,9 @@ async function createGame() {
 				Create Game
 			</button>
 		</div>
+	</div>
+	<div v-else>
+		<p>Loading...</p>
 	</div>
 </template>
 

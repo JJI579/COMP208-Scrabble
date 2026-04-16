@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import useUserStore from '@/Components/Stores/user'
 import useWebsocketStore from '@/Components/Stores/websocket'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Group from './Group.vue'
-import Game from '../../Stores/Game'
 
 const route = useRoute()
 
@@ -15,7 +14,15 @@ const codeModel = ref('')
 const triedInput = ref(false)
 
 /* 2 page state */
-const inGame = computed(() => Boolean(websocket.game.id))
+// const inGame = ref(websocket.game.id !== 0)
+
+
+// watch websocket game id 
+const inGame = ref(false);
+
+watch(() => websocket.game.id, () => {
+	inGame.value = websocket.game.id !== 0
+})
 const isLeader = computed(
 	() => websocket.game.leader === user.userData?.userID
 )
@@ -26,9 +33,13 @@ onMounted(() => {
 		codeModel.value = code as string
 		websocket.send('PLAYER_JOIN', { code })
 	}
+	setTimeout(() => {
+		inGame.value = websocket.game.id !== 0
+	}, 200);
 })
 
 function joinGame() {
+	console.log("jhoining game");
 	if (codeModel.value.length !== 4) {
 		triedInput.value = true
 		return
@@ -37,6 +48,10 @@ function joinGame() {
 	websocket.send('PLAYER_JOIN', {
 		code: codeModel.value.toUpperCase()
 	})
+
+	setTimeout(() => {
+		inGame.value = websocket.game.id !== 0
+	}, 200);
 }
 
 function leaveGame() {
@@ -44,9 +59,9 @@ function leaveGame() {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
+		websocket.game.reset();
 	}
 
-	websocket.game = new Game(0, {})
 }
 
 function startGame() {
