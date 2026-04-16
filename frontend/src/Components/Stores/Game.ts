@@ -48,7 +48,7 @@ type ongoingData = {
 	players?: [],
 	grid?: Map<string, string>,
 	turn: number,
-	partnerID: number,
+	partner: number,
 	points?: number
 }
 
@@ -156,6 +156,8 @@ class Game implements GAME {
 	}
 
 	updateOngoing(allData: ongoingData) {
+		this.isSuggesting = false;
+		this.partnerPlaced = new Map();
 
 		if (allData.letters) {
 			this.letters = allData.letters;
@@ -167,6 +169,7 @@ class Game implements GAME {
 			})
 		}
 		// update player points before updating gameturn
+
 		if (allData.points !== undefined) {
 			if (this.players.has(this.gameTurn) === true) {
 				this.players.get(this.gameTurn)!.points += allData.points;
@@ -174,10 +177,14 @@ class Game implements GAME {
 		}
 		// Check if it equals the user's turn, if it does then set gameturn to them else set it to alldata.turn
 		const userStore = useUserStore();
-
-		if (allData.partnerID == userStore.userData?.userID) {
-			this.gameTurn = allData.partnerID;
+		console.log("checking here...")
+		console.log(allData.partner);
+		console.log(allData);
+		if (allData.partner == userStore.userData?.userID) {
+			this.gameTurn = allData.partner;
 		} else {
+			console.log("Turn has been changed");
+			console.log(allData.turn);
 			this.gameTurn = allData.turn;
 		}
 		console.log("myletters");

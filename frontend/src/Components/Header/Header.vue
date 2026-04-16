@@ -60,6 +60,7 @@ function openExternal(url: string) {
 					<div class="user">
 
 						<!-- TODO: eventually add functionality for custom pfps etc..-->
+						{{ userStore.userData?.userID }}
 						<i class="pi pi-user"></i>
 					</div>
 				</button>

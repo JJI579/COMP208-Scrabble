@@ -522,9 +522,6 @@ class Scrabble:
 		Returns the user ID of the player whose turn it now is.
 		"""
 
-		
-		
-		
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
@@ -765,6 +762,7 @@ class Scrabble:
 				# Same row, x should increase by exactly 1
 				if y1 == y2 and x2 != x1 + 1  and not check_coordinate(expected):
 					print(f'right: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
+					
 					return False
 			elif direction == "down":
 				expected = (x1, y1 + 1)
@@ -964,6 +962,7 @@ class Scrabble:
 		if not self.firstPlaced:
 			# make sure [8,8] in the letters
 			if [7,7] not in [x[0] for x in letters]:
+				print("Not first required placement in grid so returning false")
 				return False
 			
 			wordString = ""
@@ -1034,7 +1033,7 @@ class Scrabble:
 					if not self.firstPlaced:
 						hasJoiningWord = True
 						self.firstPlaced = True
-		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
+		print(f'has join word: {hasJoiningWord} | isword: {isWord} | {letters} | Points: {points}')
 		if not hasJoiningWord or not isWord:
 			print("removing placed letters")
 			# remove coordinates placed

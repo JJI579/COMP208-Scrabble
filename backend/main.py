@@ -34,7 +34,10 @@ app = FastAPI(title="Scrabble Websocket Application", lifespan=lifespan)
 
 origins = [
 	"http://127.0.0.1:5173",
-	"http://localhost:5173"
+	"http://127.0.0.1",
+	"http://localhost:5173",
+	"http://localhost:8000",
+	"https://w11-desktop.tail57640.ts.net"
 ]
 
 app.add_middleware(
@@ -45,16 +48,31 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
+
+
+
 @app.get("/")
-async def root():
-	return {"message": "Hello World"}
+def serve_vue():
+    return {"text": "hello world"}
 
 
 from routes import auth, users, friends, websocket
 
-app.include_router(websocket.router)
+from fastapi import APIRouter
+
+router = APIRouter(
+	prefix="/api",
+	tags=["api"],
+)
+
+
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(friends.router)
 app.include_router(websocket.router)
 app.include_router(websocket.gameRouter)
+
+
+
+
+# app.mount("/assets", StaticFiles(directory="dist/assets", html=True), name="frontend")

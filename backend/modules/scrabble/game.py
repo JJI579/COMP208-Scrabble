@@ -23,9 +23,56 @@ class Game:
 		self.dictionary_allowed = options.dictionary
 		self.time_limit = options.time_limit
 		
-	def get_current_turn(self):
-		return self.game.fetch_turn()
+		# index of the group leaders in self.groupPlayers
+		self.groupTurn = 0
+		# group leader's userID
+		self.groupPlayers = []
 	
+	def mm_give_points(self, points: int):
+		gameTurn = self.mm_get_current_turn()
+		print(f"Trying to give {gameTurn} points {points}")
+		try:
+			self.players[gameTurn].points += points
+		except Exception as er:
+			print("did not give points?")
+			print(er)
+		return points
+
+
+	def mm_get_current_turn(self):		
+		"""
+		Returns the current turn of the game.
+
+		If the game type is GROUP, return the userID of the current group leader.
+		Otherwise, return the result of calling self.game.fetch_turn().
+		"""
+		if self.type == "GROUP":
+			userID = self.groupPlayers[self.groupTurn]
+			return userID
+		else:
+			return self.game.fetch_turn()
+	
+	def mm_next_turn(self):
+		# THIS IS A MIDDLE-MAN to separate between groups and normal
+		"""
+		Advances the game state to the next player's turn.
+
+		If the game type is GROUP, cycles through the group leaders.
+		Otherwise, calls the next_turn() method of the game object.
+
+		Returns the userID of the player whose turn it now is.
+		"""
+		if self.type == "GROUP":
+			print(self.groupTurn)
+			
+			if (self.groupTurn + 1) == len(self.groupPlayers):
+				self.groupTurn = 0
+			else:
+				self.groupTurn += 1
+			return self.mm_get_current_turn()
+		else:
+			return self.game.next_turn()
+		
 	async def bot_turn(self):
 		resp = await self.game.bot_turn()
 		if type(resp) == bool:
@@ -59,7 +106,7 @@ class Game:
 
 		firstCoordinate = None
 		direction = "RIGHT"
-		playerLetters = copy.deepcopy(self.game.fetch_player_letters(self.get_current_turn()))
+		playerLetters = copy.deepcopy(self.game.fetch_player_letters(self.mm_get_current_turn()))
 		
 		blanksIdentified = []
 		for [x,y], letter, blankReplacement in letters:
@@ -84,6 +131,7 @@ class Game:
 					blanksIdentified.append((x,y))
 				else:
 					# Invalid placement, deep copied the player's letters to not affect their actual deck unless it works.
+					print("Invalid placement, deep copied the player's letters to not affect their actual deck unless it works")
 					return False
 		print("Player has all letters required for this turn.")
 		# this should not have a side effect of moving to the next turn.
@@ -94,9 +142,12 @@ class Game:
 		
 		# Update letters and return result.
 		# get_current_turn should be the same, otherwise place_word changes the current turn.
-		self.game.set_player_letters(self.get_current_turn(), playerLetters)
+		self.game.set_player_letters(self.mm_get_current_turn(), playerLetters)
 		
-		self.players[self.game.gameTurn].points += result
+		self.mm_give_points(result)
+		
+		
+		# self.players[self.game.gameTurn].points += result
 		print(self.players)
 		print(f"result: {result}")
 		
@@ -309,8 +360,13 @@ class Game:
 					groupLeaderID = group[0]
 					players.append([x for x in self.players if x.userID == groupLeaderID][0])
 			currentTurn = self.game.init_game(players)
+			# Because it is a group it has a different turn system handled in this file.
+			self.groupPlayers = [x[0] for x in self.groups if len(x) > 0]
+			self.groupTurn = 0
 		else:
 			currentTurn = self.game.init_game(self.players)
+		currentTurn = self.mm_get_current_turn()
+		print(currentTurn)
 		return currentTurn
 	
 	def get_partner(self, userID: int) -> int | bool:

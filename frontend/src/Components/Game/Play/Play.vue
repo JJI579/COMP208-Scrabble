@@ -9,6 +9,7 @@ import router from '@/router';
 import useUserStore from '@/Components/Stores/user';
 import type { GameUser } from '@/game_types';
 import useAlertStore from '@/Components/Stores/alert';
+import GroupPlayer from './GroupPlayer.vue';
 
 // Stores
 const websocketStore = useWebsocketStore();
@@ -117,6 +118,12 @@ function handleTileClick(index: number) {
 	blankLetter.value = DEFAULT_FILLER;
 	letterFocused.value = index;
 }
+
+
+const playerGroups = ref<GameUser[][]>([]);
+
+
+
 onMounted(() => {
 	const websocket = useWebsocketStore();
 	setTimeout(() => {
@@ -124,6 +131,22 @@ onMounted(() => {
 		if (websocket.game.gameTurn == -1) {
 			router.replace({ name: "dashboard" })
 		}
+		if (websocketStore.game.type == "GROUP") {
+			var groups = [];
+			for (const [key, value] of Object.entries(websocket.game.groups)) {
+				var group: GameUser[] = [];
+				for (const user of value) {
+					var userObject = websocket.game.players.get(Number(user))
+					if (userObject !== undefined) {
+						group.push(userObject)
+					}
+				}
+				groups.push(group)
+			}
+			console.log(groups)
+			playerGroups.value = groups;
+		}
+
 	}, 2000);
 	window.addEventListener("keyup", handleKeyboardPress)
 })
@@ -163,6 +186,14 @@ const players = computed(() => {
 })
 
 
+onMounted(() => {
+	if (websocketStore.game.type == "GROUP") {
+		console.log("players")
+		console.log(websocketStore.game.players);
+	}
+})
+
+
 const alphabetArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 const selectBlank = ref(-1);
 
@@ -193,7 +224,8 @@ function handleCellClicked() {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-	<button @click="useAlertStore().alert({ 'text': 'hello', 'type': 'game' })">hell</button>
+	{{ websocketStore.game.groups }}
+	{{ websocketStore.game.players }}
 	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
 		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
 			@click="selectedBlankTile(Number(ind))">
@@ -204,8 +236,10 @@ function handleCellClicked() {
 
 		<div class="wrapper__flex">
 			<div class="player__column left">
-				<Player :active-player="activePlayer" :user-game-data="player"
-					v-for="player in (players.length > 0 ? players[0] : [])" />
+				<GroupPlayer :users="group" :active-player="1"
+					v-for="group in (playerGroups.length > 0 ? playerGroups.slice(0, 2) : [])" />
+				<!-- <Player :active-player="activePlayer" :user-game-data="player"
+					v-for="player in (players.length > 0 ? players[0] : [])" /> -->
 			</div>
 			<div class="center__wrapper">
 				{{ websocketStore.game.partnerPlaced }}

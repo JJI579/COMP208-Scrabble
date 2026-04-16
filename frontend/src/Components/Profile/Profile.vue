@@ -33,9 +33,11 @@ onMounted(() => {
 })
 
 function logout() {
+	const userStore = useUserStore()
 	localStorage.removeItem('token');
 	localStorage.removeItem('refresh_token');
 	localStorage.removeItem('userID');
+	userStore.isLoggedIn = false;
 	router.push({ name: 'login' });
 }
 
