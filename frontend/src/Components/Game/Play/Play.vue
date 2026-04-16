@@ -123,7 +123,6 @@ function handleTileClick(index: number) {
 const playerGroups = ref<GameUser[][]>([]);
 
 
-
 onMounted(() => {
 	const websocket = useWebsocketStore();
 	setTimeout(() => {
@@ -143,6 +142,8 @@ onMounted(() => {
 				}
 				groups.push(group)
 			}
+			playerGroups.value = groups.sort((a, b) => b.length - a.length);
+			console.log("ALL THE GROUPS")
 			console.log(groups)
 			playerGroups.value = groups;
 		}
@@ -216,6 +217,27 @@ function handleCellClicked() {
 	}
 	letterFocused.value = -1
 }
+
+const isLaptop = ref(false);
+
+onMounted(() => {
+	window.addEventListener("resize", () => {
+		if (window.innerWidth <= 1024) {
+			isLaptop.value = true;
+		} else {
+			isLaptop.value = false;
+		}
+	});
+	if (window.innerWidth <= 1024) {
+		isLaptop.value = true;
+	} else {
+		isLaptop.value = false;
+	}
+});
+
+onUnmounted(() => {
+	window.removeEventListener("resize", () => { });
+});
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -224,8 +246,6 @@ function handleCellClicked() {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-	{{ websocketStore.game.groups }}
-	{{ websocketStore.game.players }}
 	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
 		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
 			@click="selectedBlankTile(Number(ind))">
@@ -237,12 +257,12 @@ function handleCellClicked() {
 		<div class="wrapper__flex">
 			<div class="player__column left">
 				<GroupPlayer :users="group" :active-player="1"
-					v-for="group in (playerGroups.length > 0 ? playerGroups.slice(0, 2) : [])" />
-				<!-- <Player :active-player="activePlayer" :user-game-data="player"
-					v-for="player in (players.length > 0 ? players[0] : [])" /> -->
+					v-for="group in (playerGroups.length > 0 ? playerGroups.slice(0, isLaptop ? 4 : 2) : [])"
+					v-if="websocketStore.game.type == 'GROUP'" />
+				<Player :active-player="activePlayer" :user-game-data="player"
+					v-for="player in (players.length > 0 ? players[0] : [])" v-else />
 			</div>
 			<div class="center__wrapper">
-				{{ websocketStore.game.partnerPlaced }}
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
 					@cell-clicked="handleCellClicked()"
@@ -274,8 +294,12 @@ function handleCellClicked() {
 				</div>
 			</div>
 			<div class="player__column right">
+				<GroupPlayer :users="group" :active-player="1"
+					v-for="group in (playerGroups.length > 2 && !isLaptop ? playerGroups.slice(2, 4) : [])"
+					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"
-					v-for="player in (players.length > 1 ? players[1] : [])" />
+					v-for="player in (players.length > 1 ? players[1] : [])" v-else />
+
 			</div>
 			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
@@ -315,6 +339,8 @@ function handleCellClicked() {
 	width: fit-content;
 	min-width: 180px;
 }
+
+
 
 .center__wrapper {
 	display: flex;
@@ -452,5 +478,15 @@ function handleCellClicked() {
 	user-select: none;
 	cursor: pointer;
 	border-radius: 8px;
+}
+
+@media (min-width: 900px) and (max-width: 1200px) {
+	.player__column {
+		flex-direction: row;
+	}
+
+	.left {
+		margin-top: 10rem;
+	}
 }
 </style>
