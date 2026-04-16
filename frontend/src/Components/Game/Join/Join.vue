@@ -186,6 +186,7 @@ function startGame() {
 .ingame__players {
 	width: 100%;
 	max-width: 720px;
+	margin: 0 auto;
 	padding: 2rem;
 	border-radius: 24px;
 	background: rgba(255,255,255,.08);
@@ -194,10 +195,6 @@ function startGame() {
 	box-shadow:
 		0 12px 30px rgba(0,0,0,.25),
 		0 0 25px rgba(77,148,255,.12);
-}
-
-.join {
-	translate: 57vh 0vh;
 }
 
 .join__card {
