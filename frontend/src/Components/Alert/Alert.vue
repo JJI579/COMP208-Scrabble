@@ -47,8 +47,8 @@ function decline() {
 			<i class="pi pi-times alert__close" @click.stop="alertStore.dismiss()"></i>
 		</div>
 		<div class="alert__actions" v-if="alertStore.currentAlert?.type == 'game'">
-			<button class="action" @click="accept()">Accept</button>
-			<button class="action" @click="decline()">Decline</button>
+			<button class="action action--accept" @click="accept()">Accept</button>
+			<button class="action action--decline" @click="decline()">Decline</button>
 		</div>
 	</div>
 </template>
@@ -101,15 +101,42 @@ function decline() {
 }
 
 .action {
-	/* HARI: this is accept / decline button */
+	flex: 1;
+	padding: .75rem 1rem;
+	border: none;
+	border-radius: 12px;
+	font-weight: 700;
+	font-size: .95rem;
+	letter-spacing: .25px;
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.action:hover {
+	transform: translateY(-1px);
+}
+
+.action:active {
+	transform: translateY(0);
 }
 
 .action--accept {
-	/* accept button... */
+	color: white;
+	background: linear-gradient(135deg, #28be8a, #1b7f5c);
+}
+
+.action--accept:hover {
+	box-shadow: 0 0 18px rgba(40, 190, 138, 0.35);
 }
 
 .action--decline {
-	/* decline button... */
+	color: white;
+	background: linear-gradient(135deg, #d06262, #b13535);
+}
+
+.action--decline:hover {
+	box-shadow: 0 0 18px rgba(208, 98, 98, 0.35);
 }
 
 .alert__icon {
