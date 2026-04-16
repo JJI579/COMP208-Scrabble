@@ -319,14 +319,16 @@ class GameHandler:
 					letterOwnerID = userID
 				
 				letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
+				partnerID = game.get_partner(userID)
 				updateCurrentUser = packets.during.game_update({
 					"grid": newGrid,
 					"turn": nextTurn,
+					"partner": partnerID,
 					"points": pointsAmount,
 					"letters": letters
 				})
 				
-				partnerID = game.get_partner(userID)
+				
 				if type(partnerID) == int:
 					print("Sending partner game_update with their letters")
 					await manager.send_direct_message(updateCurrentUser, partnerID)
@@ -414,7 +416,9 @@ class GameHandler:
 			print("trying to set user game but error: ", er)
 		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
-		await GameHandler.game_update(game.id, websocket)
+		await asyncio.sleep(1)
+		for player in game.players:
+			await GameHandler.game_update(game.id, player.userID)
 		return True
 
 	@staticmethod

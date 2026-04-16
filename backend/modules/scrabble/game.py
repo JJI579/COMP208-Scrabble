@@ -12,6 +12,7 @@ class Game:
 		self.type: GAME_TYPE = options.game_type
 		self.players: list[GamePlayer | BotPlayer] = []
 		self.hasStarted = False
+		self.groups = []
 		if self.type == "GROUP":
 			if options.group_size:
 				self.groups: list[list[int]] = [[] for _ in range(options.group_size)] # makes array of groups
@@ -113,7 +114,7 @@ class Game:
 			"grid": grid,
 			"leader": self.leader,
 			"game_type": self.type,
-			"players": [x.model_dump(mode="json") for x in self.players],
+			"players": [x.model_dump(mode="json") for x in self.players],	
 			"has_started": self.hasStarted,
 			"turn": self.game.fetch_turn(),
 			"options": self.options
@@ -300,7 +301,16 @@ class Game:
 					self.partners[group[0]] = group[1]
 					self.partners[group[1]] = group[0]
 		self.hasStarted = True
-		currentTurn = self.game.init_game(self.players)
+		if self.type == "GROUP":
+			# only want to start the game with the leaders
+			players = []
+			for group in self.groups:
+				if len(group) >= 1:
+					groupLeaderID = group[0]
+					players.append([x for x in self.players if x.userID == groupLeaderID][0])
+			currentTurn = self.game.init_game(players)
+		else:
+			currentTurn = self.game.init_game(self.players)
 		return currentTurn
 	
 	def get_partner(self, userID: int) -> int | bool:

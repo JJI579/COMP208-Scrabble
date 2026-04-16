@@ -3,6 +3,7 @@ import { DEFAULT_FILLER, type modifiers, type UserReturn } from "@/types"
 import { all } from "axios"
 import { isTypeAliasDeclaration } from "typescript"
 import { ref, type Ref } from "vue"
+import useUserStore from "./user"
 
 type GAME_TYPE = "NORMAL" | "GROUP" | "BOT"
 
@@ -46,7 +47,8 @@ type ongoingData = {
 	letters?: [],
 	players?: [],
 	grid?: Map<string, string>,
-	turn: number
+	turn: number,
+	partnerID: number,
 	points?: number
 }
 
@@ -146,8 +148,14 @@ class Game implements GAME {
 				this.players.get(this.gameTurn)!.points += allData.points;
 			}
 		}
+		// Check if it equals the user's turn, if it does then set gameturn to them else set it to alldata.turn
+		const userStore = useUserStore();
 
-		this.gameTurn = allData.turn;
+		if (allData.partnerID == userStore.userData?.userID) {
+			this.gameTurn = allData.partnerID;
+		} else {
+			this.gameTurn = allData.turn;
+		}
 		console.log("myletters");
 		console.log(this.letters);
 	}
