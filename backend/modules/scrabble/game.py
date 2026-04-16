@@ -38,6 +38,13 @@ class Game:
 			return False
 		return resp
 	
+	def get_group_leader_id(self, userID: int):
+		for group in self.groups:
+			if userID in group:
+				return group[0]
+		# This shouldnt return false
+		
+
 
 	async def game_turn(self, letters):
 		"""

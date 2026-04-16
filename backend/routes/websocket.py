@@ -96,7 +96,19 @@ class GameHandler:
 		await asyncio.sleep(.5)
 		for x in game.players:
 			await GameHandler.game_update(data['code'], x.userID)
-			letters = game.game.fetch_player_letters(x.userID)
+			letterOwnerID = None
+			if game.type == "GROUP":
+				checkResponse = game.get_group_leader_id(x.userID)
+				if checkResponse == None:
+					# This shouldnt happen
+					# TODO: RETURN ERROR SAYING THAT USER CANNOT BE FOUND?
+					return
+				else:
+					letterOwnerID = checkResponse
+					del checkResponse
+			else:
+				letterOwnerID = x.userID
+			letters = game.game.fetch_player_letters(letterOwnerID)
 			ongoing_game_update = packets.during.game_update({
 				"turn": gameTurn,
 				"letters": letters
@@ -105,8 +117,6 @@ class GameHandler:
 	
 	@staticmethod
 	async def draft_placed(data: dict, websocket: WebSocket):
-
-		
 		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 		if type(userConnection) == bool:
 			errorPacket = packets.error("You are not authenticated.")
@@ -188,12 +198,20 @@ class GameHandler:
 				})
 				await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 				# Update the board for the user who just played.
+				letterOwnerID = None
+				if game.type == "GROUP":
+					# get partner 
+					letterOwnerID = game.get_group_leader_id(websocket.user_id) # type: ignore
+				else:
+					letterOwnerID = game.game.fetch_player_letters(websocket.user_id) # type: ignore
+					
+
 				updateCurrentUser = packets.during.game_update({
 					"grid": newGrid,
 					"turn": nextTurn,
 					"points": pointsAmount,
-					"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
-				})	
+					"letters": letterOwnerID
+				})
 				await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 				# check if the bot is next then make the bot play.
 				print("NEXT TURN")

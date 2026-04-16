@@ -352,6 +352,8 @@ class Scrabble:
 		return toSend
 	
 	def fetch_player_letters(self, userID: int):
+		# IF GROUP IS TRUE, FETCH LETTERS OF THE PARTNER'S DECK
+		
 		"""
 			Fetches the letters of a given player.
 
