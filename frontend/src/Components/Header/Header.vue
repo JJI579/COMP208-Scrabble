@@ -78,7 +78,7 @@ function openExternal(url: string) {
 					<span>Close</span>
 				</button>
 
-				<button class="menu-item" :class="{ active: route.name === 'dashboard' }" @click="goTo('dashboard')">
+				<button class="menu-item" :class="{ active: route.name === 'home' }" @click="goTo('home')">
 					<i class="pi pi-home"></i>
 					<span>Home</span>
 				</button>
