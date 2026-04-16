@@ -56,6 +56,9 @@ type PacketType =
 	| "CHAT_MESSAGE"
 	| "GAME_END"
 	| "DRAFT_PLACED"
+	| "TURN_CONFIRMATION"
+	| "TURN_DECLINE"
+	| "TURN_REQUEST"
 
 type WebsocketPacket = {
 	t: PacketType | InitType

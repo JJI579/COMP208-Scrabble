@@ -6,13 +6,12 @@ import useUserStore from "./user";
 import router from "@/router";
 import Game from "./Game";
 import useAlertStore from "./alert";
-import { isBreakStatement } from "typescript";
+import { transpileModule } from "typescript";
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
 	const websocketURL = 'ws://localhost:8000/ws'
 	const websocket = ref<WebSocket | null>(null);
 	const game = reactive<Game>(new Game(0, {}));
-	const userStore = useUserStore();
 	const readyToSend = ref(false)
 
 	function connect() {
@@ -145,6 +144,27 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				case "DRAFT_PLACED":
 					game.updatePartnerPlaced(data.d.placed);
 					break
+				case "TURN_CONFIRMATION":
+					useAlertStore().alert({
+						text: `${data.d.name} has accepted your word suggestion.`,
+						type: "success",
+					})
+					break;
+				case "TURN_REQUEST":
+					useAlertStore().alert({
+						text: "Your partner is suggesting a word...",
+						type: "game",
+						persistent: true
+					})
+					game.isSuggesting = true;
+					break;
+				case "TURN_DECLINE":
+					useAlertStore().alert({
+						text: `${data.d.name} has declined your word suggestion.`,
+						type: "error",
+					})
+					break;
+
 			}
 		}
 	}

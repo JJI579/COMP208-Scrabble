@@ -8,6 +8,7 @@ import useWebsocketStore from '@/Components/Stores/websocket';
 import router from '@/router';
 import useUserStore from '@/Components/Stores/user';
 import type { GameUser } from '@/game_types';
+import useAlertStore from '@/Components/Stores/alert';
 
 // Stores
 const websocketStore = useWebsocketStore();
@@ -27,12 +28,21 @@ watch(() => websocketStore.game.grid, () => {
 	grid.value = websocketStore.game.grid;
 })
 
+
+
 const letters = ref<string[]>([]);
 const grid = ref<(string | modifiers)[]>([]);
 const placed = ref<Map<number, [number, string, string?]>>(new Map());
 
 // Groups implementation
 const showPartners = ref(false);
+
+watch(() => websocketStore.game.isSuggesting, () => {
+	if (websocketStore.game.isSuggesting) {
+		// show partners letters.
+		showPartners.value = true;
+	}
+})
 
 const orderPlacement = ref<number[]>([]);
 const blankLetter = ref<string>(DEFAULT_FILLER);
@@ -54,7 +64,11 @@ function submitTurn() {
 		toSend.push([[x, y], letter, value[2]])
 	})
 
-	websocketStore.send("GAME_TURN", { letters: toSend });
+	if (websocketStore.game.type == "GROUP") {
+		websocketStore.send("TURN_REQUEST", { letters: toSend });
+	} else {
+		websocketStore.send("GAME_TURN", { letters: toSend });
+	}
 }
 
 const activePlayer = computed(() => {
@@ -167,9 +181,6 @@ function selectedBlankTile(index: number) {
 
 function handleCellClicked() {
 	if (websocketStore.game.type == "GROUP") {
-		// emit this.
-		console.log("placedawdawdawd");
-		console.log(placed.value);
 		websocketStore.send("DRAFT_PLACED", { placed: Object.fromEntries(placed.value) });
 	}
 	letterFocused.value = -1
@@ -182,7 +193,7 @@ function handleCellClicked() {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-
+	<button @click="useAlertStore().alert({ 'text': 'hello', 'type': 'game' })">hell</button>
 	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
 		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
 			@click="selectedBlankTile(Number(ind))">
@@ -215,7 +226,7 @@ function handleCellClicked() {
 							{{ letter.toUpperCase() }}
 						</div>
 					</div>
-					<button @click="submitTurn" class="action" :disabled="activePlayer !== userStore.userData?.userID"
+					<button @click="submitTurn()" class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-check "></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"

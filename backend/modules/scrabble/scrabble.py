@@ -521,6 +521,9 @@ class Scrabble:
 
 		Returns the user ID of the player whose turn it now is.
 		"""
+
+		
+		
 		
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
@@ -724,6 +727,7 @@ class Scrabble:
 		return coordinates
 
 	async def place_word(self, letters, direction: str, blanks: list[tuple[int, int]]):
+		print(letters)
 		"""
 		Places a word on the game board based on the given letters and direction.
 
@@ -955,6 +959,7 @@ class Scrabble:
 		return points
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
+		
 		isWord = False
 		if not self.firstPlaced:
 			# make sure [8,8] in the letters
@@ -983,6 +988,7 @@ class Scrabble:
 				for placed_item in placing:
 					temp_x, temp_y = placed_item[0]
 					self.game[temp_y][temp_x] = defaultFiller
+				print("Exited here")
 				return False
 			else:
 				placing.append(letters[i])

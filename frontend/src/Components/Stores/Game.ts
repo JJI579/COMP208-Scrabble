@@ -58,7 +58,10 @@ const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
 
 
 class Game implements GAME {
+	// Map<number, [number, string, string?]>
 	partnerPlaced: Map<String, [number, string, string?]> = new Map();
+	isSuggesting = false;
+
 	gameTurn: number = -1;
 	id: string | number = 0;
 	leader: number = 0;
@@ -138,12 +141,12 @@ class Game implements GAME {
 			})
 		}
 		// update player points before updating gameturn
-		if (allData.points !== undefined)  {
+		if (allData.points !== undefined) {
 			if (this.players.has(this.gameTurn) === true) {
 				this.players.get(this.gameTurn)!.points += allData.points;
 			}
 		}
-		
+
 		this.gameTurn = allData.turn;
 		console.log("myletters");
 		console.log(this.letters);

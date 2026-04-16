@@ -43,7 +43,6 @@ class Game:
 			if userID in group:
 				return group[0]
 		# This shouldnt return false
-		
 
 
 	async def game_turn(self, letters):
@@ -99,9 +98,7 @@ class Game:
 		self.players[self.game.gameTurn].points += result
 		print(self.players)
 		print(f"result: {result}")
-		if self.type == "BOT":
-			# play bot turn
-			pass
+		
 		
 		return result
 
@@ -306,7 +303,7 @@ class Game:
 		currentTurn = self.game.init_game(self.players)
 		return currentTurn
 	
-	def get_partner(self, userID: int):
+	def get_partner(self, userID: int) -> int | bool:
 		if userID in self.partners:
 			return self.partners[userID]
 		return False
