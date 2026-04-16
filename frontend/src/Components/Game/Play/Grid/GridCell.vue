@@ -70,7 +70,6 @@ const bgColour = computed(() => {
 
 .scrabble--placed {
 	background: linear-gradient(145deg, var(--tile-background-colour), #e9d7a6);
-	border-radius: 6px;
 	box-shadow:
 		inset 0 2px 2px rgba(255, 255, 255, 0.4),
 		inset 0 -2px 3px rgba(0, 0, 0, 0.3),
@@ -86,7 +85,7 @@ const bgColour = computed(() => {
 	margin: 0;
 	max-height: 90%;
 	max-width: 90%;
-	font-size: 24px;
+	font-size: 17px;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -96,8 +95,8 @@ const bgColour = computed(() => {
 .cell__score {
 	position: absolute;
 	bottom: 3px;
-	right: 3px;
-	font-size: 12px;
+	right: 2.5px;
+	font-size: 7.5px;
 	margin: 0;
 }
 </style>

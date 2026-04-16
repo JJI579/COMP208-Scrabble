@@ -23,7 +23,7 @@ const props = defineProps({
 
 <template>
 
-	<div class="player-card" :class="{ active: activePlayer === 1 }">
+	<div class="player-card" :class="{ active: activePlayer === props.userGameData.userID }">
 		<img class="pfp" src="https://i.pravatar.cc/1000?img=50" />
 		<div class="player-info">
 			<p class="name">{{ props.userGameData.userName }}</p>
@@ -35,14 +35,14 @@ const props = defineProps({
 
 <style lang="css" scoped>
 .player-card {
-	height: clamp(95px, 8vw, 140px);
-	width: clamp(170px, 13vw, 220px);
+	height: 150px;
+	width: 250px;
 	background: #2c8595;
 	border-radius: 14px;
 	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 	display: flex;
 	align-items: center;
-	gap: 0.9rem;
+	gap: 0.6rem;
 	padding: 1rem;
 	position: relative;
 	animation: floatCard 4s ease-in-out infinite;
@@ -137,7 +137,6 @@ const props = defineProps({
 .player-info {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
 	min-width: 0;
 }
 

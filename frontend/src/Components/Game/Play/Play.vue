@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onActivated, onMounted, onUnmounted, ref, watch, type Ref } from 'vue';
-import { DEFAULT_FILLER, type modifiers } from '@/types';
+import { DEFAULT_FILLER, type modifiers, pointsMap } from '@/types';
 import Player from './Player.vue';
 import Grid from './Grid/Grid.vue';
 import Chat from './Chat/Chat.vue';
@@ -193,7 +193,8 @@ function selectedBlankTile(index: number) {
 					<div class="rack">
 						<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
 							:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
-							{{ letter.toUpperCase() }}
+							<span class="tile__letter">{{ letter.toUpperCase() }}</span>
+							<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
 						</div>
 					</div>
 					<button @click="submitTurn" class="action" :disabled="activePlayer !== userStore.userData?.userID"
@@ -245,8 +246,8 @@ function selectedBlankTile(index: number) {
 .player__column {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
-	min-width: 180px;
+	gap: 8rem;
+	min-width: 250px;
 	justify-content: center;
 }
 
@@ -299,6 +300,23 @@ function selectedBlankTile(index: number) {
 	cursor: pointer;
 	box-shadow: 0 3px 6px rgba(0,0,0,.35);
 	transition: .18s ease;
+	position: relative;
+}
+
+.tile__letter {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 22px;
+}
+
+.tile__score {
+	position: absolute;
+	bottom: 6px;
+	right: 8px;
+	font-size: 12px;
+	color: #000;
 }
 
 .rack__tile:hover,
