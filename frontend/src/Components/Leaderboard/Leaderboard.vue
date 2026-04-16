@@ -69,15 +69,34 @@ watch(searchUser, () => {
 				</tr>
 				<tr v-for="(user, i) in users" :key="user.userID"
 					:class="{ me: currentUser && user.userID === currentUser.userID }">
-					<td> {{ Number(i) + 1 }}</td>
-					<td>
-						<span v-if="currentUser && user.userID === currentUser.userID"> (You)</span>
-						{{ user.userName }}
+
+					<!-- RANK COLUMN -->
+					<td class="rank-cell">
+
+						<!-- TOP 3 MEDALS -->
+						<span v-if="i === 0" class="medal gold">🥇</span>
+						<span v-else-if="i === 1" class="medal silver">🥈</span>
+						<span v-else-if="i === 2" class="medal bronze">🥉</span>
+						<span v-else>{{ i + 1 }}</span>
+
 					</td>
-					<td> {{ user.totalScore }}</td>
-					<td> {{ user.wins + user.loses }}</td>
-					<td> {{ user.bestScore }}</td>
-					<td> {{ user.wins }}</td>
+
+					<!-- USERNAME -->
+					<td>
+						{{ user.userName }}
+
+						<span
+							v-if="currentUser && user.userID === currentUser.userID"
+							class="you-badge">
+							YOU
+						</span>
+					</td>
+
+					<td>{{ user.totalScore }}</td>
+					<td>{{ user.wins + user.loses }}</td>
+					<td>{{ user.bestScore }}</td>
+					<td>{{ user.wins }}</td>
+
 				</tr>
 			</table>
 		</div>
@@ -88,6 +107,7 @@ watch(searchUser, () => {
 
 
 <style lang="css" scoped>
+
 /* PAGE WRAPPER */
 .contentMe {
 	display: flex;
@@ -95,6 +115,8 @@ watch(searchUser, () => {
 	gap: 1.5rem;
 	width: 100%;
 	color: #fff;
+	padding: 1rem;
+	box-sizing: border-box;
 }
 
 /* TITLE */
@@ -104,64 +126,77 @@ h1 {
 	text-align: center;
 	color: #ffffff;
 	text-shadow: 0 0 12px rgba(77, 148, 255, 0.7);
+	margin: 0;
 }
 
-/* ROW 2: SEARCH + FILTER */
+/* SEARCH + FILTER ROW */
 .search {
 	display: flex;
 	justify-content: space-between;
-	width: 100%;
-	max-width: 1100px;
-	margin-left: auto;
-	margin-right: auto;
 	align-items: center;
 	gap: 1rem;
 	flex-wrap: wrap;
-
+	width: 100%;
+	max-width: 1100px;
+	margin: 0 auto;
 }
 
 .searchUser {
 	flex: 1;
+	min-width: 250px;
 }
 
-/* SEARCH */
+/* SEARCH INPUT */
 .searchUser input {
-	padding: 0.7rem 1rem;
-	border-radius: 10px;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
-	min-width: 220px;
 	width: 100%;
-	backdrop-filter: blur(6px);
+	padding: 0.75rem 1rem;
+	border-radius: 12px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.78);
+	color: #000;
+	font-size: 1rem;
+	outline: none;
+	backdrop-filter: blur(8px);
+	transition: 0.2s;
+}
+
+.searchUser input:focus {
+	border-color: #4d94ff;
+	box-shadow: 0 0 12px rgba(77, 148, 255, 0.4);
 }
 
 .searchUser input::placeholder {
-	color: rgba(255, 255, 255, 0.6);
+	color: rgba(0, 0, 0, 0.65);
 }
 
 /* FILTER */
 .filterUsers select {
-	padding: 0.7rem 1rem;
-	border-radius: 10px;
+	padding: 0.75rem 1rem;
+	border-radius: 12px;
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
+	background: rgba(255, 255, 255, 0.78);
+	color: #000;
+	font-size: 1rem;
 	cursor: pointer;
-	backdrop-filter: blur(6px);
+	outline: none;
+	backdrop-filter: blur(8px);
+	transition: 0.2s;
+}
+
+.filterUsers select:hover {
+	box-shadow: 0 0 10px rgba(77, 148, 255, 0.35);
 }
 
 /* TABLE CONTAINER */
 .leaderboard {
 	width: 100%;
 	max-width: 1100px;
-	margin-left: auto;
-	margin-right: auto;
-	background: rgba(255, 255, 255, 0.12);
-	backdrop-filter: blur(12px);
-	border-radius: 16px;
+	margin: 0 auto;
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(14px);
+	border-radius: 18px;
 	padding: 1rem;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 	overflow-x: auto;
 }
 
@@ -169,44 +204,187 @@ h1 {
 table {
 	width: 100%;
 	border-collapse: collapse;
-	min-width: 600px;
+	min-width: 700px;
 }
 
 /* HEADER */
 th {
-	color: #a9c9ff;
-	font-weight: 600;
-	padding: 0.8rem;
-	border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+	padding: 1rem 0.8rem;
 	text-align: left;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #a9c9ff;
+	border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+	letter-spacing: 0.4px;
 }
 
 /* CELLS */
 td {
-	padding: 0.8rem;
+	padding: 0.95rem 0.8rem;
 	color: #ffffff;
+	font-size: 0.95rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* ROWS */
 tr {
-	transition: 0.2s;
+	transition: 0.25s ease;
 }
 
 /* STRIPES */
 tr:nth-child(even) {
-	background: rgba(255, 255, 255, 0.05);
+	background: rgba(255, 255, 255, 0.04);
 }
 
 /* HOVER */
 tr:hover {
-	background: rgba(77, 148, 255, 0.2);
+	background: rgba(77, 148, 255, 0.18);
+	transform: scale(1.005);
 }
 
-/* CURRENT USER */
+/* CURRENT USER ROW */
 .me {
-	background: rgba(77, 148, 255, 0.2);
-	border-left: 4px solid #4d94ff;
-	font-weight: 600;
+	background: linear-gradient(
+		90deg,
+		rgba(255, 60, 60, 0.45),
+		rgba(255, 60, 60, 0.15)
+	) !important;
+	border-left: 5px solid #ff2d2d;
+	font-weight: 700;
+	box-shadow:
+		inset 0 0 18px rgba(255, 60, 60, 0.45),
+		0 0 12px rgba(255, 60, 60, 0.35);
+}
+
+/* KEEP RED ON HOVER TOO */
+.me:hover {
+	background: linear-gradient(
+		90deg,
+		rgba(255, 60, 60, 0.55),
+		rgba(255, 60, 60, 0.2)
+	) !important;
+}
+
+
+
+/* YOU BADGE */
+.you-badge {
+	margin-left: 0.6rem;
+	padding: 0.22rem 0.6rem;
+	border-radius: 999px;
+	background: #ff2d2d;
+	color: white;
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.8px;
+	box-shadow: 0 0 12px rgba(255, 45, 45, 0.55);
+	vertical-align: middle;
+}
+
+/* RANK CELL */
+.rank-cell,
+th:first-child,
+td:first-child {
+	text-align: center;
+	width: 70px;
+}
+
+/* MEDALS */
+.medal {
+	display: inline-block;
+	position: relative;
+	font-size: 1.6rem;
+	cursor: default;
+	transition: transform 0.25s ease;
+	overflow: hidden;
+	border-radius: 50%;
+}
+
+/* MEDAL HOVER */
+.medal:hover {
+	transform: scale(1.18) rotate(-6deg);
+}
+
+/* SHINE EFFECT */
+.medal::after {
+	content: "";
+	position: absolute;
+	top: -40%;
+	left: -120%;
+	width: 55%;
+	height: 190%;
+	background: linear-gradient(
+		120deg,
+		rgba(255,255,255,0) 0%,
+		rgba(255,255,255,0.15) 35%,
+		rgba(255,255,255,0.9) 50%,
+		rgba(255,255,255,0.15) 65%,
+		rgba(255,255,255,0) 100%
+	);
+	transform: rotate(25deg);
+	filter: blur(1px);
+	opacity: 0;
+}
+
+.medal:hover::after {
+	opacity: 1;
+	animation: medalShine 0.75s ease forwards;
+}
+@keyframes medalShine {
+	from {
+		left: -120%;
+	}
+	to {
+		left: 140%;
+	}
+}
+/* GLOW COLORS */
+.gold {
+	filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+}
+
+.silver {
+	filter: drop-shadow(0 0 8px rgba(220, 220, 220, 0.7));
+}
+
+.bronze {
+	filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.7));
+}
+
+/* SCROLLBAR */
+.leaderboard::-webkit-scrollbar {
+	height: 8px;
+}
+
+.leaderboard::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.18);
+	border-radius: 999px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+	h1 {
+		font-size: 2rem;
+	}
+
+	.search {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.filterUsers select,
+	.searchUser input {
+		width: 100%;
+	}
+
+	table {
+		min-width: 620px;
+	}
+
+	td, th {
+		font-size: 0.88rem;
+		padding: 0.8rem 0.6rem;
+	}
 }
 
 </style>

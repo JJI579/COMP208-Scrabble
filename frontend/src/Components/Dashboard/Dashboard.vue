@@ -3,8 +3,17 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import router from '@/router';
+import type { Item } from '@/types';
 const streak = ref(1);
 
+
+const currentUser = ref<any>(null);
+
+async function getCurrentUser() {
+	const res = await api.get('/users/@me');
+	console.log(res.data);
+	currentUser.value = res.data;
+}
 const users = ref<any>([]);
 
 const flameLevel = computed(() => {
@@ -14,6 +23,32 @@ const flameLevel = computed(() => {
 	return 'idle';
 });
 
+const userRank = computed(() => {
+	if (!currentUser.value || !users.value.length) return null;
+	const index = users.value.findIndex(
+		u => u.userID === currentUser.value.userID
+	);
+	return index === -1 ? null : index + 1;
+});
+
+const shopPreview = ref<Item[]>([
+	{
+		itemID: 1,
+		name: "Gradient Name",
+		xpRequired: 300,
+	},
+	{
+		itemID: 2,
+		name: "Bronze Border",
+		xpRequired: 600,
+	},
+	{
+		itemID: 3,
+		name: "Silver Border",
+		xpRequired: 900,
+	}
+]);
+
 async function getLeaderboard() {
 	const res = await api.get('/users/leaderboard', { params: { sort_by: "totalScore", limit: 5 } });
 	console.log(res.data);
@@ -22,6 +57,7 @@ async function getLeaderboard() {
 
 onMounted(() => {
 	getLeaderboard();
+	getCurrentUser();
 })
 
 
@@ -67,31 +103,57 @@ onMounted(async () => {
 
 			<h1 class="play-text glow-text">Play a Game</h1>
 			<div class="play-options">
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">Solo Vs
-					Bot</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">Play Vs
-					Friends</button>
-				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">Team
-					Mode</button>
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('BOT', 2)">
+					<i class="pi pi-android"></i>
+					<span>Solo Vs Bot</span>
+				</button>
+
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('NORMAL', 2)">
+					<i class="pi pi-users"></i>
+					<span>Play Vs Friends</span>
+				</button>
+
+				<button class="play-btn card-glass glow-hover card-hover" @click="createPage('GROUP', 4)">
+					<i class="pi pi-sitemap"></i>
+					<span>Team Mode</span>
+				</button>
 			</div>
 
 			<RouterLink to="/leaderboard" class="leaderboard-link">
 				<button class="leaderboard card-glass hover-shadow card-hover">
 					<h2 class="glow-text">🏆 Lifetime Leaderboard</h2>
+
 					<div class="leaderboard-header">
 						<span>Rank</span>
 						<span>Player</span>
 						<span>Score</span>
 					</div>
 
-					<ul class="leaderboard-list" v-for="(user, i) in users" :key="user.userID">
-						<li class="leaderboard-item">
-							<span> {{ Number(i) + 1 }}</span>
-							<span> {{ user.userName }}</span>
-							<span> {{ user.totalScore }}</span>
+					<!-- TOP 3 -->
+					<ul class="leaderboard-list">
+						<li
+							v-for="(user, i) in users.slice(0,3)"
+							:key="user.userID"
+							class="leaderboard-item">
+
+							<!-- RANK -->
+							<span class="rank-wrap">
+								<span v-if="i === 0" class="medal gold">🥇</span>
+								<span v-else-if="i === 1" class="medal silver">🥈</span>
+								<span v-else class="medal bronze">🥉</span>
+							</span>
+
+							<span>{{ user.userName }}</span>
+							<span>{{ user.totalScore }}</span>
+						</li>
+
+						<!-- CURRENT USER ROW -->
+						<li class="leaderboard-item-self">
+							<span>{{ userRank ?? '-' }}</span>
+							<span>{{ currentUser?.userName || 'You' }}</span>
+							<span>{{ score }}</span>
 						</li>
 					</ul>
-
 				</button>
 			</RouterLink>
 
@@ -101,8 +163,14 @@ onMounted(async () => {
 			</div>
 
 			<RouterLink to="/shop" class="score-shop card-glass hover-shadow">
-				<h2 class="glow-text">🛒Shop</h2>
+				<h2 class="glow-text">🛒 Shop</h2>
 				<p>Unlock exclusive rewards!</p>
+
+				<div class="shop-preview">
+					<span v-for="item in shopPreview" :key="item.itemID">
+						{{ item.name }} • {{ item.xpRequired }} XP
+					</span>
+				</div>
 			</RouterLink>
 		</main>
 	</div>
@@ -114,9 +182,23 @@ onMounted(async () => {
 
 
 <style lang="css" scoped>
+
+.shop-preview {
+	margin-top: 0.8rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.85rem;
+	opacity: 0.8;
+}
+
+.shop-preview span {
+	padding: 0.2rem 0.4rem;
+	border-radius: 6px;
+	background: rgba(255,255,255,0.08);
+}
 .dashboard {
 	position: relative;
-
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
@@ -127,14 +209,19 @@ onMounted(async () => {
 	box-sizing: border-box;
 	margin-left: calc(-50vw + 50%);
 	min-height: 100vh;
-
+	width: 100vw;
+	overflow-x: hidden;
 }
 
 .main {
 	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+	min-height: calc(100vh - 4rem);
 }
 
-
+/* GENERIC CARD EFFECTS */
 .card-hover {
 	transition: all 0.3s ease;
 }
@@ -142,13 +229,13 @@ onMounted(async () => {
 .card-hover:hover {
 	transform: translateY(-6px) scale(1.03);
 	box-shadow:
-		0 15px 30px rgba(0, 0, 0, .25),
+		0 15px 30px rgba(0, 0, 0, 0.25),
 		0 0 25px rgba(77, 148, 255, 0.35);
 }
 
 .card-glass {
-	background: rgba(255, 255, 255, 0.2);
-	backdrop-filter: blur(10px);
+	background: rgba(255, 255, 255, 0.18);
+	backdrop-filter: blur(12px);
 	border-radius: 20px;
 	padding: 1.5rem 2rem;
 	transition: all 0.3s ease;
@@ -162,63 +249,10 @@ onMounted(async () => {
 
 .glow-text {
 	color: #4d94ff;
+	text-shadow: 0 0 12px rgba(77, 148, 255, 0.45);
 }
 
-.menu-btn {
-	position: fixed;
-	top: 1rem;
-	left: 1rem;
-	font-size: 1.5rem;
-	background: none;
-	border: none;
-	cursor: pointer;
-	z-index: 1001;
-}
-
-.sidebar {
-	position: fixed;
-	top: 0;
-	left: -220px;
-	height: 100%;
-	width: 220px;
-	background: #f0f0f0;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 1.5rem;
-	padding-top: 4rem;
-	transition: left 0.3s ease;
-	z-index: 1000;
-}
-
-.sidebar.open {
-	left: 0;
-}
-
-.icon {
-	font-size: 1.2rem;
-	cursor: pointer;
-}
-
-.theme-icon {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-	font-size: 1.2rem;
-}
-
-.theme-btn {
-	font-size: 1.2rem;
-	cursor: pointer;
-}
-
-.main {
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-	min-height: calc(100vh - 4rem);
-}
-
+/* STREAK */
 .streak-box {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
@@ -227,31 +261,21 @@ onMounted(async () => {
 	background: linear-gradient(135deg, #ffe0e0, #ffd6d6);
 }
 
-
 .flame {
 	font-size: 2rem;
 	animation: flame-bounce 1s infinite alternate;
-	text-align: left;
 }
 
 .flame.idle {
-	opacity: 0.3;
-	transform: scale(0.9);
-	text-shadow: none;
+	opacity: 0.35;
 }
 
 .flame.warm {
-	text-shadow:
-		0 0 8px #ffae42,
-		0 0 16px #ff8c00;
-	transform: scale(1);
+	text-shadow: 0 0 8px #ffae42, 0 0 16px #ff8c00;
 }
 
 .flame.hot {
-	text-shadow:
-		0 0 12px #ff5500,
-		0 0 25px #ff2a00,
-		0 0 40px #ff7300;
+	text-shadow: 0 0 12px #ff5500, 0 0 25px #ff2a00;
 	transform: scale(1.2);
 }
 
@@ -261,66 +285,28 @@ onMounted(async () => {
 		0 0 35px #ff4d00,
 		0 0 60px #ffaa00;
 	transform: scale(1.4);
-	animation: flameLegend 1s infinite alternate;
-}
-
-@keyframes flameLegend {
-	from {
-		transform: scale(1.35) rotate(-3deg);
-	}
-
-	to {
-		transform: scale(1.45) rotate(3deg);
-	}
 }
 
 @keyframes flame-bounce {
-	from {
-		transform: translateY(0);
-	}
-
-	to {
-		transform: translateY(-5px);
-	}
+	from { transform: translateY(0); }
+	to { transform: translateY(-5px); }
 }
-
 
 .streak-text {
 	font-size: 1.6rem;
-	font-weight: 500;
+	font-weight: 600;
+	color: #111;
 	text-align: center;
-	color: #000000;
 }
 
 .streak-number {
-	color: #ff6b6b;
-	text-shadow:
-		0 0 8px #ff6b6b,
-		0 0 16px rgba(255, 107, 107, 0.5);
 	font-size: 2rem;
-	font-weight: 700;
-	text-align: center;
-	animation: streakPulse 2s ease-in-out infinite;
+	font-weight: 800;
+	color: #ff5d5d;
+	text-shadow: 0 0 12px rgba(255, 90, 90, 0.7);
 }
 
-@keyframes streakPulse {
-
-	0%,
-	100% {
-		transform: scale(1);
-		text-shadow:
-			0 0 6px rgba(255, 80, 80, 0.8),
-			0 0 12px rgba(255, 80, 80, 0.5);
-	}
-
-	50% {
-		transform: scale(1.08);
-		text-shadow:
-			0 0 10px rgba(255, 80, 80, 1),
-			0 0 20px rgba(255, 80, 80, 0.7);
-	}
-}
-
+/* PLAY */
 .play-text {
 	text-align: center;
 	font-size: 2.2rem;
@@ -332,79 +318,75 @@ onMounted(async () => {
 	gap: 2rem;
 }
 
-
 .play-btn {
 	padding: 3rem 1rem;
-	font-size: 1.4rem;
-	font-weight: 600;
+	font-size: 1.35rem;
+	font-weight: 700;
 	border-radius: 20px;
 	border: none;
 	cursor: pointer;
 	background: linear-gradient(135deg, #2a4d8f, #4169a9);
-	color: #f0f0f0;
-	transition: all 0.3s ease;
-}
-
-.glow-hover:hover {
-	transform: scale(1.05);
-	box-shadow: 0 0 20px rgba(77, 148, 255, 0.7);
+	color: white;
+	transition: 0.3s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	flex-direction: column;
 }
 
 .play-btn:hover {
-	background: linear-gradient(135deg, #4169a9, #5a7dbb);
-	box-shadow: 0 0 20px rgba(65, 105, 169, 0.5);
 	transform: scale(1.05);
+	box-shadow: 0 0 20px rgba(77, 148, 255, 0.65);
 }
 
 .play-btn:active {
-	background: linear-gradient(135deg, #1f3a6b, #2a4d8f);
 	transform: scale(0.98);
 }
 
-.play-btn:focus {
-	outline: 2px solid #8080ff;
-}
-
-.leaderboard h2 {
-	margin-bottom: 1rem;
+/* DASHBOARD LEADERBOARD BUTTON */
+.leaderboard-link {
+	text-decoration: none;
+	color: inherit;
 }
 
 .leaderboard {
 	background: linear-gradient(135deg, #1e3a5f, #2a4d8f);
 	padding: 1.5rem;
-	border-radius: 12px;
+	border-radius: 16px;
 	width: 100%;
 	border: none;
 	cursor: pointer;
 	color: #fff;
+	text-align: left;
 }
 
 .leaderboard:hover {
-	background: linear-gradient(135deg, #2a4d8f, #3b61b0);
+	background: linear-gradient(135deg, #294c7a, #3963b5);
 }
 
-.leaderboard:active {
-	background: linear-gradient(135deg, #1b3050, #254172);
-	transform: scale(0.98);
+.leaderboard h2 {
+	margin: 0 0 1rem 0;
+	text-align: center;
+	font-size: 2rem;
 }
 
-.leaderboard:focus {
-	outline: 2px solid #ccc056;
-}
-
-
+/* LEADERBOARD GRID */
 .leaderboard-header,
 .leaderboard-item,
 .leaderboard-item-self {
 	display: grid;
 	grid-template-columns: 80px 1fr 100px;
 	align-items: center;
+	column-gap: 0.5rem;
 }
 
 .leaderboard-header {
-	font-weight: 600;
-	margin-bottom: 0.5rem;
-	color: #e0e0ff;
+	font-weight: 700;
+	color: #dbe7ff;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid rgba(255,255,255,0.15);
+	margin-bottom: 0.3rem;
 }
 
 .leaderboard-list {
@@ -415,208 +397,229 @@ onMounted(async () => {
 
 .leaderboard-item,
 .leaderboard-item-self {
-	padding: 0.5rem 0;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	padding: 0.7rem 0;
+	border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
+.leaderboard-item:last-child {
+	border-bottom: none;
+}
+
+/* USER ROW */
 .leaderboard-item-self {
-	background: rgba(253, 0, 0, 0.664);
+	background: linear-gradient(
+		90deg,
+		rgba(255, 60, 60, 0.45),
+		rgba(255, 60, 60, 0.15)
+	);
+	border-left: 5px solid #ff2d2d;
+	padding-left: 0.6rem;
+	border-radius: 10px;
+	margin-top: 0.45rem;
 	font-weight: 600;
+	box-shadow:
+		inset 0 0 18px rgba(255,60,60,0.45),
+		0 0 12px rgba(255,60,60,0.28);
 }
 
-.rank-badge {
+/* RANK */
+.rank-wrap {
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	font-weight: bold;
-	color: white;
-	font-size: 0.9rem;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-	justify-self: center;
+	align-items: center;
+}
+
+/* MEDALS */
+.medal {
+	display: inline-block;
 	position: relative;
-
+	font-size: 1.55rem;
+	cursor: default;
+	transition: transform 0.25s ease;
+	overflow: hidden;
+	border-radius: 50%;
 }
 
-.rank-badge.gold {
-	background: linear-gradient(135deg, #ffd700, #ffc700);
-	box-shadow: 0 0 12px #ffd700, 0 0 25px rgba(255, 215, 0, 0.6);
+.medal:hover {
+	transform: scale(1.18) rotate(-6deg);
 }
 
-.rank-badge.silver {
-	background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-	box-shadow: 0 0 12px #c0c0c0, 0 0 25px rgba(192, 192, 192, 0.6);
-}
-
-.rank-badge.bronze {
-	background: linear-gradient(135deg, #cd7f32, #b06b2b);
-	box-shadow: 0 0 12px #cd7f32, 0 0 25px rgba(205, 127, 50, 0.6);
-}
-
-.rank-badge::after {
+.medal::after {
 	content: "";
 	position: absolute;
-	width: 100%;
-	height: 100%;
-	border-radius: 50%;
-	background: linear-gradient(120deg,
-			transparent,
-			rgba(255, 255, 255, 0.6),
-			transparent);
+	top: -40%;
+	left: -120%;
+	width: 55%;
+	height: 190%;
+	background: linear-gradient(
+		120deg,
+		rgba(255,255,255,0) 0%,
+		rgba(255,255,255,0.15) 35%,
+		rgba(255,255,255,0.95) 50%,
+		rgba(255,255,255,0.15) 65%,
+		rgba(255,255,255,0) 100%
+	);
+	transform: rotate(25deg);
+	filter: blur(1px);
 	opacity: 0;
-	transition: opacity 0.3s;
 }
 
-.rank-badge:hover::after {
+.medal:hover::after {
 	opacity: 1;
+	animation: medalShine 0.75s ease forwards;
 }
 
+@keyframes medalShine {
+	from { left: -120%; }
+	to { left: 140%; }
+}
+
+.gold {
+	filter: drop-shadow(0 0 8px rgba(255,215,0,0.75));
+}
+
+.silver {
+	filter: drop-shadow(0 0 8px rgba(220,220,220,0.75));
+}
+
+.bronze {
+	filter: drop-shadow(0 0 8px rgba(205,127,50,0.75));
+}
+
+/* SCORE CARD */
 .score-box {
-	background-color: #f0f0f0;
-	padding: 1rem 1.5rem;
-	border-radius: 12px;
 	text-align: center;
-}
-
-.score-box h2 {
-	font-size: 1.7rem;
-	font-weight: 700;
-	margin-bottom: 0.5rem;
-}
-
-.score-number {
-	font-size: 1.8rem;
-	font-weight: 700;
-	color: #4d94ff;
-}
-
-.score-shop {
-	display: inline-block;
-	text-decoration: none;
-	color: inherit;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.18),
+		rgba(255, 255, 255, 0.08)
+	);
+	backdrop-filter: blur(14px);
+	border-radius: 22px;
 	padding: 2rem 1.5rem;
-	margin-top: 1rem;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow:
+		0 12px 30px rgba(0, 0, 0, 0.28),
+		inset 0 0 20px rgba(255, 255, 255, 0.05);
+	position: relative;
+	overflow: hidden;
+	transition: 0.3s ease;
+}
+
+
+.score-box:hover {
+	transform: translateY(-4px) scale(1.015);
+	box-shadow:
+		0 18px 35px rgba(0, 0, 0, 0.32),
+		0 0 22px rgba(77, 148, 255, 0.22);
+}
+
+.score-box::after {
+	content: "";
+	position: absolute;
+	top: -40%;
+	left: -60%;
+	width: 40%;
+	height: 180%;
+	background: linear-gradient(
+		120deg,
+		rgba(255,255,255,0),
+		rgba(255,255,255,0.22),
+		rgba(255,255,255,0)
+	);
+	transform: rotate(20deg);
+	transition: 0.8s ease;
+}
+
+.score-box:hover::after {
+	left: 130%;
+}
+
+/* TITLE */
+.score-box h2 {
+	margin: 0;
+	font-size: 2.4rem;
+	font-weight: 700;
+	color: #dbe8ff;
+	letter-spacing: 0.4px;
+}
+
+/* BIG SCORE NUMBER */
+.score-number {
+	margin-top: 0.8rem;
+	font-size: 3.4rem;
+	font-weight: 900;
+	line-height: 1;
+	color: #4d94ff;
+	text-shadow:
+		0 0 10px rgba(77, 148, 255, 0.65),
+		0 0 22px rgba(77, 148, 255, 0.35);
+	animation: scorePulse 2.2s ease-in-out infinite;
+}
+@keyframes scorePulse {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+}
+
+/* SHOP */
+.score-shop {
+	text-decoration: none;
+	color: white;
 	text-align: center;
 	background: linear-gradient(135deg, #4b4bff, #6a6aff);
-	transition: all 0.3s ease;
-	color: #fff;
-}
-
-.score-shop h2 {
-	font-size: 1.7rem;
-	font-weight: 600;
-	margin-bottom: 0.5rem;
+	padding: 2rem;
+	border-radius: 18px;
+	transition: 0.3s ease;
 }
 
 .score-shop:hover {
-	background: linear-gradient(135deg, #6a6aff, #8c8cff);
 	transform: scale(1.02);
-	box-shadow: 0 0 20px rgba(106, 106, 255, 0.3);
+	box-shadow: 0 0 20px rgba(106,106,255,0.35);
 }
 
-.score-shop:active {
-	background: linear-gradient(135deg, #2f2fff, #4b4bff);
-	transform: scale(0.98);
+.score-shop h2 {
+	margin: 0 0 0.5rem 0;
 }
 
-.score-shop:focus {
-	outline: 2px solid #8080ff;
-}
-
-@media (max-width: 900px) {
-	.dashboard {
-		grid-template-columns: 1fr;
-	}
-
-	.sidebar {
-		display: none;
-	}
-
-	.play-btn {
-		grid-template-columns: 1fr;
-	}
-}
-
+/* FOOTER */
 .footer {
-
 	width: 100%;
-	padding: 0.75rem 0;
+	padding: 0.8rem 0;
 	text-align: center;
 	background: #f0f0f0;
+	color: #222;
 }
 
-/*
-.bg-aurora {
-  position: fixed;
-  inset: 0;
-  z-index: -3;
-  background: linear-gradient(
-    120deg,
-    #000000,
-    #424242,
-    #868686,
-    #ffffff
-  );
-  background-size: 400% 400%;
-  animation: auroraMove 10s ease infinite;
-  opacity: 0.8;
+/* MOBILE */
+@media (max-width: 900px) {
+	.play-options {
+		grid-template-columns: 1fr;
+	}
 }
 
-.bg-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.7;
-  z-index: -2;
-  mix-blend-mode: screen;
-}
+@media (max-width: 768px) {
+	.dashboard {
+		padding: 1rem;
+		padding-bottom: 5rem;
+	}
 
-.orb1 {
-  width: 400px;
-  height: 400px;
-  background: #010a16;
-  top: 10%;
-  left: 10%;
-  animation: float1 12s infinite ease-in-out;
-}
+	.play-text {
+		font-size: 1.8rem;
+	}
 
-.orb2 {
-  width: 300px;
-  height: 300px;
-  background: #210124;
-  bottom: 15%;
-  right: 15%;
-  animation: float2 14s infinite ease-in-out;
-}
+	.streak-text {
+		font-size: 1.2rem;
+	}
 
-.orb3 {
-  width: 250px;
-  height: 250px;
-  background: #02252b;
-  top: 50%;
-  right: 5%;
-  animation: float3 10s infinite ease-in-out;
+	.leaderboard-header,
+	.leaderboard-item,
+	.leaderboard-item-self {
+		grid-template-columns: 65px 1fr 80px;
+		font-size: 0.92rem;
+	}
 }
-
-@keyframes float1 {
-  0%,100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-80px) scale(1.08); }
-}
-@keyframes float2 {
-  0%,100% { transform: translateX(0) scale(1); }
-  50% { transform: translateX(-100px) scale(1.08); }
-}
-@keyframes float3 {
-  0%,100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(120px) scale(1.1); }
-}
-
-@keyframes auroraMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-*/
 </style>
