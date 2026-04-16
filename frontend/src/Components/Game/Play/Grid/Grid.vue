@@ -88,8 +88,13 @@ function cellClicked(index: number) {
 	box-shadow:
 		inset 0 0 14px rgba(0, 0, 0, 0.45),
 		0 8px 18px rgba(0, 0, 0, 0.45);
-	width: fit-content;
-	max-width: 100%;
+	width: min(80vmin, 700px);
+	height: min(80vmin, 700px);
+	box-sizing: border-box;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .board-frame.active {
@@ -99,18 +104,29 @@ function cellClicked(index: number) {
 
 .cells {
 	display: grid;
-	grid-template-columns: repeat(15, minmax(26px, 3.9vw));
-	grid-template-rows: repeat(15, minmax(26px, 3.9vw));
-	aspect-ratio: 1;
-	max-width: min(76vh, 760px);
-	max-height: min(76vh, 760px);
+	grid-template-columns: repeat(15, 1fr);
+	grid-template-rows: repeat(15, 1fr);
+
+	width: 100%;
+	height: 100%;
+
+	gap: 0;
+	box-sizing: border-box;
 }
 
-@media (min-width: 1800px) {
-	.cells {
-		grid-template-columns: repeat(15, 48px);
-		grid-template-rows: repeat(15, 48px);
-	}
+.cell {
+	user-select: none;
+	aspect-ratio: 1/1;
+	border: 1px solid white;
+	position: relative;
+	font-weight: bold;
+	font-size: 20px;
+	color: #000;
+
+	/* CRITICAL FIX */
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
 }
 
 @media (max-height: 900px) {

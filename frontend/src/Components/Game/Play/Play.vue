@@ -259,6 +259,16 @@ function selectedBlankTile(index: number) {
 	gap: 0.85rem;
 	flex: 1;
 	height: 100%;
+	min-width: 0;
+}
+.center__wrapper :deep(.grid),
+.center__wrapper :deep(.board),
+.center__wrapper :deep(.scrabble-grid) {
+	width: min(80vmin, 700px);
+	height: min(80vmin, 700px);
+	aspect-ratio: 1 / 1;
+
+	display: grid;
 }
 
 /* PERFECTLY CENTERED CONTROLS */

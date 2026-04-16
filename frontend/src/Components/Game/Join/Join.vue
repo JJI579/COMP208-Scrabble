@@ -31,7 +31,7 @@ onMounted(() => {
 
 watch([inGame, () => websocket.game.type, isLeader], ([inGameVal, type, leader]) => {
 	if (inGameVal && type === 'BOT' && leader) {
-		setTimeout(() => startGame(), 500); // small delay to ensure UI is ready
+		setTimeout(() => startGame(), 200); // small delay to ensure UI is ready
 	}
 })
 

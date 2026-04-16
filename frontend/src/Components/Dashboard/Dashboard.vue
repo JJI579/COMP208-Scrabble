@@ -36,16 +36,22 @@ const shopPreview = ref<Item[]>([
 		itemID: 1,
 		name: "Gradient Name",
 		xpRequired: 300,
+		description: '',
+		unlocked: false
 	},
 	{
 		itemID: 2,
 		name: "Bronze Border",
 		xpRequired: 600,
+		description: '',
+		unlocked: false
 	},
 	{
 		itemID: 3,
 		name: "Silver Border",
 		xpRequired: 900,
+		description: '',
+		unlocked: false
 	}
 ]);
 
