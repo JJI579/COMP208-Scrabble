@@ -151,7 +151,6 @@ class Game implements GAME {
 
 	updatePartnerPlaced(partnerPlaced: Map<String, [number, string, string?]>): void {
 		this.partnerPlaced = partnerPlaced;
-
 	}
 
 	updateContent(allData: any) {

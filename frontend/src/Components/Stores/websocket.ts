@@ -142,8 +142,9 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 						}
 					})
 					break
-
-
+				case "DRAFT_PLACED":
+					game.updatePartnerPlaced(data.d.placed);
+					break
 			}
 		}
 	}

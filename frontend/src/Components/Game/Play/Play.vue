@@ -30,6 +30,10 @@ watch(() => websocketStore.game.grid, () => {
 const letters = ref<string[]>([]);
 const grid = ref<(string | modifiers)[]>([]);
 const placed = ref<Map<number, [number, string, string?]>>(new Map());
+
+// Groups implementation
+const showPartners = ref(false);
+
 const orderPlacement = ref<number[]>([]);
 const blankLetter = ref<string>(DEFAULT_FILLER);
 onMounted(() => {
@@ -67,6 +71,7 @@ function undo() {
 	const last = orderPlacement.value.pop();
 	if (last !== undefined) {
 		placed.value.delete(last);
+		websocketStore.send("DRAFT_PLACED", { placed: Object.fromEntries(placed.value) });
 	}
 }
 
@@ -158,6 +163,8 @@ function selectedBlankTile(index: number) {
 	}
 }
 
+
+
 function handleCellClicked() {
 	if (websocketStore.game.type == "GROUP") {
 		// emit this.
@@ -190,9 +197,12 @@ function handleCellClicked() {
 					v-for="player in (players.length > 0 ? players[0] : [])" />
 			</div>
 			<div class="center__wrapper">
+				{{ websocketStore.game.partnerPlaced }}
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
-					@cell-clicked="handleCellClicked()" :placed="placed" :blank-letter="blankLetter" />
+					@cell-clicked="handleCellClicked()"
+					:placed="!showPartners ? placed : (new Map(Object.entries(websocketStore.game.partnerPlaced).map(([k, v]) => [Number(k), v])))"
+					:blank-letter="blankLetter" :show-partners="showPartners" />
 
 				<div class="actions">
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
@@ -212,7 +222,10 @@ function handleCellClicked() {
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
 
-					<button class="action" @click="() => chatOpen = true"><i class="pi pi-messages"></i></button>
+					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
+					<button class="action" @click="showPartners = !showPartners"><i class="pi"
+							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
+							v-if="websocketStore.game.type == 'GROUP'"></i></button>
 				</div>
 			</div>
 			<div class="player__column right">
