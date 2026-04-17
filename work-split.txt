@@ -1,6 +1,0 @@
-how to handle groups.
-
-each player is already considered as a player with their letters etc
-
-
-instead, think i may make the first player in a group be a leader, and their teammates just get the same packets as them
