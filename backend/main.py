@@ -48,16 +48,12 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
-
-
-
 @app.get("/")
 def serve_vue():
     return {"text": "hello world"}
 
 
 from routes import auth, users, friends, websocket
-
 from fastapi import APIRouter
 
 router = APIRouter(

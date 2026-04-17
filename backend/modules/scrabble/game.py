@@ -184,6 +184,7 @@ class Game:
 		}
 		if self.type == "GROUP":
 			data['groups'] = self.groups
+			data['partners'] = self.partners
 		
 		return data
 	

@@ -640,8 +640,12 @@ class GameHandler:
 			elif type(websocket) == WebSocket:
 				await manager.send_message(websocket, errorPacket)
 			return False
-		packetData = packets.start.update_game(game.export_data(), game.id)
 		
+		
+		packetData = packets.start.update_game(game.export_data(), game.id)
+		if game.hasStarted:
+			userID = websocket.user_id if type(websocket) == WebSocket else websocket # type: ignore
+			packetData['d']['letters'] = game.game.fetch_player_letters(userID) # type: ignore
 		await manager.send_direct_message(packetData, websocket.user_id if type(websocket) == WebSocket else websocket) # type: ignore
 	
 	class GroupJoinData(TypedDict):
@@ -724,6 +728,7 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 			websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
 			hasIdentified = True
 			if type(userData) != bool:
+				await asyncio.sleep(1)
 				# send game update to the user.
 				if type(userData['game']) == str:
 					await GameHandler.game_update(userData['game'], websocket)

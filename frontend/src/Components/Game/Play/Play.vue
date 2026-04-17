@@ -292,7 +292,7 @@ function endGame() {
 							class="pi pi-check "></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID" @click="endGame"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
-							class="pi pi-flag">end</i></button>
+							class="pi pi-flag"></i></button>
 					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
 
 				</div>

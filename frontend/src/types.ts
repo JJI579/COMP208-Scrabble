@@ -117,10 +117,13 @@ type MessageType = {
 	}
 }
 
-// const BASE_HOST = 'w11-desktop.tail57640.ts.net';
-const BASE_HOST = 'localhost:8000';
-const SECURE_URL = false;
-const BASE_URL = `${SECURE_URL ? 'https' : 'http'}://${BASE_HOST}`
+const BASE_HOST = 'w11-desktop.tail57640.ts.net';
+// const BASE_HOST = 'localhost:8000';
+const SECURE_URL = true;
+var BASE_URL = `${SECURE_URL ? 'https' : 'http'}://${BASE_HOST}`
+if (BASE_HOST.includes('w11-desktop')) {
+	BASE_URL += '/api';
+}
 
 export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers, Item, UnlockedItemType, MessageType };
 export { debug, pointsMap, DEFAULT_FILLER, BASE_URL, BASE_HOST, SECURE_URL };

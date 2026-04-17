@@ -76,7 +76,6 @@ function getPartner(leader: number) {
 				<div><span v-if="player.userID == finalData.winner.userID"><i class="pi pi-crown"></i></span> {{
 					player.userName }}</div>
 				<div>{{ player.points }}</div>
-
 			</div>
 		</div>
 	</div>
