@@ -113,15 +113,8 @@ function startGame() {
 			</h2>
 
 			<!-- NORMAL -->
-			<div
-				v-if="websocket.game.type === 'NORMAL' || websocket.game.type === 'BOT'"
-				class="player-list"
-			>
-				<div
-					v-for="player in websocket.game.players.values()"
-					:key="player.userID"
-					class="player"
-				>
+			<div v-if="websocket.game.type === 'NORMAL' || websocket.game.type === 'BOT'" class="player-list">
+				<div v-for="player in websocket.game.players.values()" :key="player.userID" class="player">
 					<span>{{ player.userName }}</span>
 
 					<div class="player__icon">
@@ -149,11 +142,7 @@ function startGame() {
 					Leave
 				</button>
 
-				<button
-					v-if="isLeader && websocket.game.type !== 'BOT'"
-					class="start-btn"
-					@click="startGame"
-				>
+				<button v-if="isLeader && websocket.game.type !== 'BOT'" class="start-btn" @click="startGame">
 					Start Game
 				</button>
 			</div>
