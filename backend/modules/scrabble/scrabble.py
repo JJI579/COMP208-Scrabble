@@ -63,7 +63,7 @@ class Bot(Player):
 		self.settings = {
 			"easy": {"top_n": 15, "max_len": 4},
 			"medium": {"top_n": 5, "max_len": 6},
-			"hard": {"top_n": 1, "max_len": 45},
+			"hard": {"top_n": 1, "max_len": 15},
 		}
 		self.word_set = word_set
 		self.trie = {}
