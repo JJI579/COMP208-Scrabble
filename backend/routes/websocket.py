@@ -295,7 +295,7 @@ class GameHandler:
 			
 			game = manager.fetch_game(userConnection['game'])
 			if type(game) == bool:
-				errorPacket = packets.error("You are not in a game")
+				errorPacket = packets.error("The game does not exist")
 				return await manager.send_message(websocket, json.dumps(errorPacket))
 				
 			# Check if the pairing's turn
