@@ -257,7 +257,6 @@ function endGame() {
 		</div>
 	</div>
 	<div class="wrapper">
-
 		<div class="wrapper__flex">
 			<div class="player__column left">
 				<GroupPlayer :users="group" :active-player="1"

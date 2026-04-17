@@ -69,7 +69,7 @@ class GamePlayer(UserFetch):
 		return {
 			"userID": self.userID,
 			"userName": self.userName,
-			"userCreatedAt": self.userCreatedAt,
+			"userCreatedAt": self.userCreatedAt.isoformat(),
 			"placed": self.placed,
 			"points": self.points
 		}

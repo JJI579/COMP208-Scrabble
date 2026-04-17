@@ -6,11 +6,12 @@ from typing import Annotated, TypedDict
 from modules.database.models import User
 from modules.schema import GameOptions, PacketType, UserFetch
 from modules.websocket.WebsocketManager import manager
-from sqlmodel import insert
-from modules.database.models import Word
+from sqlmodel import select
 import asyncio, secrets, json
 from modules.websocket.packets import packets
 import copy
+
+
 router = APIRouter(
 	prefix="",
 	tags=[],
@@ -414,13 +415,41 @@ class GameHandler:
 		if type(game) == bool:
 			return
 		
-		# game is game object
+		# {
+		# 	"grid": grid,
+		# 	"players": players,
+		# 	"winner": winner,
+		# }
 		gameResult = game.finish_game()
-		[x.userID for x in game.players]
+		
 		gameFinishPacket = packets.end.game_end(gameResult)
+	
+		async for session in get_session():
+			if game.type == "BOT" or game.type == "NORMAL":
+				for player in gameResult['players']:
+					if player['userID'] != -2:
+						resp = await session.execute(select(User).where(User.userID == player['userID']))
+						playerObject = resp.scalar_one_or_none()
+						if not playerObject:
+							print(f"{player['userID']}: This player doesnt exist")
+							continue
 
-		# TODO: input all data into the user's stats etc
-		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+						if player == gameResult['winner']:
+							playerObject.wins+=1 # type: ignore
+						else:
+							playerObject.loses+=1 # type: ignore
+						
+						if playerObject.bestScore < player['points']:
+							playerObject.bestScore = player['points']
+						playerObject.totalScore += player['points']
+						playerObject.rank = None
+						session.add(playerObject)
+				await session.commit()
+			else:
+				# game type == "GROUP"
+				
+				pass
+		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 		
 	@staticmethod
 	async def chat_message(data: dict, websocket: WebSocket):

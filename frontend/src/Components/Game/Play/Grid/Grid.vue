@@ -82,6 +82,14 @@ onMounted(() => {
 		const hours = Math.floor(diff / 3600);
 		const minutes = Math.floor(diff / 60) % 60;
 		const seconds = Math.floor(diff % 60);
+		if (hours > 3) {
+			timeLeft.value = ''
+			if (timerObject !== null) {
+				clearInterval(timerObject)
+				timerObject = null
+			}
+			return
+		}
 		if (hours == 0) {
 			timeLeft.value = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`
 		} else {
@@ -97,10 +105,11 @@ onUnmounted(() => {
 
 
 <template>
-	<div class="timer">
+	<div class="timer" v-if="timeLeft !== ''">
 		<h1>{{ timeLeft }}</h1>
 	</div>
-	<div class="board-frame" :class="{ active: activePlayer === userStore.userData?.userID }">
+	<div class="board-frame"
+		:class="{ active: activePlayer === userStore.userData?.userID, 'board--margin': timeLeft === '' }">
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
 				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />
@@ -122,6 +131,7 @@ onUnmounted(() => {
 }
 
 .board-frame {
+
 	padding: clamp(0.5rem, 1.2vw, 1rem);
 	background: var(--scrabble-board);
 	border-radius: 18px;
@@ -135,6 +145,10 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+.board--margin {
+	margin-top: 4rem;
 }
 
 .board-frame.active {

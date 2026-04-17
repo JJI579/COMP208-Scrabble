@@ -12,7 +12,11 @@ type UserReturn = {
 	userID: number
 	userName: string
 	userCreatedAt: string
-	profilePicture: string | undefined
+	wins: number
+	loses: number
+	totalScore: number
+	bestScore: number
+	rank?: number
 }
 
 type Item = {

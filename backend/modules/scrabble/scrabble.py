@@ -467,7 +467,6 @@ class Scrabble:
 				return
 
 		letterChoices = random.sample(self.letterArray, k=min(amount, len(self.letterArray)))
-		letterChoices[0] = ' '
 		if str(userID) not in self.playerLetters:
 			self.playerLetters[str(userID)] = []
 		self.playerLetters[str(userID)].extend(letterChoices)

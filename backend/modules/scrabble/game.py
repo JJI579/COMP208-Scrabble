@@ -387,6 +387,8 @@ class Game:
 			return self.partners[userID]
 		return False
 	
+	
+	
 	def finish_game(self) -> dict:
 		# get all data from the board, input into database, continue
 		
@@ -404,7 +406,9 @@ class Game:
 		players = [x.dump_json() for x in self.players]
 		# players sorted in order of 1st,2nd,3rd etc.
 		players.sort(key=lambda x: x['points'], reverse=True)
-		winner = max(self.players, key=lambda x: x.points)
+		winner = max(self.players, key=lambda x: x.points).dump_json()
+		
+
 		return {
 			"grid": grid,
 			"players": players,

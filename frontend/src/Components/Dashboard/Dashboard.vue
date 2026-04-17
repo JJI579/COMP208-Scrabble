@@ -3,7 +3,7 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import router from '@/router';
-import type { Item } from '@/types';
+import type { Item, UserReturn } from '@/types';
 const streak = ref(1);
 
 
@@ -14,7 +14,7 @@ async function getCurrentUser() {
 	console.log(res.data);
 	currentUser.value = res.data;
 }
-const users = ref<any>([]);
+const users = ref<UserReturn[]>([]);
 
 const flameLevel = computed(() => {
 	if (streak.value >= 5) return 'legend';
@@ -137,10 +137,7 @@ onMounted(async () => {
 
 					<!-- TOP 3 -->
 					<ul class="leaderboard-list">
-						<li
-							v-for="(user, i) in users.slice(0,3)"
-							:key="user.userID"
-							class="leaderboard-item">
+						<li v-for="(user, i) in users.slice(0, 3)" :key="user.userID" class="leaderboard-item">
 
 							<!-- RANK -->
 							<span class="rank-wrap">
@@ -188,7 +185,6 @@ onMounted(async () => {
 
 
 <style lang="css" scoped>
-
 .shop-preview {
 	margin-top: 0.8rem;
 	display: flex;
@@ -201,8 +197,9 @@ onMounted(async () => {
 .shop-preview span {
 	padding: 0.2rem 0.4rem;
 	border-radius: 6px;
-	background: rgba(255,255,255,0.08);
+	background: rgba(255, 255, 255, 0.08);
 }
+
 .dashboard {
 	position: relative;
 	display: flex;
@@ -294,8 +291,13 @@ onMounted(async () => {
 }
 
 @keyframes flame-bounce {
-	from { transform: translateY(0); }
-	to { transform: translateY(-5px); }
+	from {
+		transform: translateY(0);
+	}
+
+	to {
+		transform: translateY(-5px);
+	}
 }
 
 .streak-text {
@@ -391,7 +393,7 @@ onMounted(async () => {
 	font-weight: 700;
 	color: #dbe7ff;
 	padding-bottom: 0.5rem;
-	border-bottom: 1px solid rgba(255,255,255,0.15);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 	margin-bottom: 0.3rem;
 }
 
@@ -404,7 +406,7 @@ onMounted(async () => {
 .leaderboard-item,
 .leaderboard-item-self {
 	padding: 0.7rem 0;
-	border-bottom: 1px solid rgba(255,255,255,0.08);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .leaderboard-item:last-child {
@@ -413,19 +415,17 @@ onMounted(async () => {
 
 /* USER ROW */
 .leaderboard-item-self {
-	background: linear-gradient(
-		90deg,
-		rgba(255, 60, 60, 0.45),
-		rgba(255, 60, 60, 0.15)
-	);
+	background: linear-gradient(90deg,
+			rgba(255, 60, 60, 0.45),
+			rgba(255, 60, 60, 0.15));
 	border-left: 5px solid #ff2d2d;
 	padding-left: 0.6rem;
 	border-radius: 10px;
 	margin-top: 0.45rem;
 	font-weight: 600;
 	box-shadow:
-		inset 0 0 18px rgba(255,60,60,0.45),
-		0 0 12px rgba(255,60,60,0.28);
+		inset 0 0 18px rgba(255, 60, 60, 0.45),
+		0 0 12px rgba(255, 60, 60, 0.28);
 }
 
 /* RANK */
@@ -457,14 +457,12 @@ onMounted(async () => {
 	left: -120%;
 	width: 55%;
 	height: 190%;
-	background: linear-gradient(
-		120deg,
-		rgba(255,255,255,0) 0%,
-		rgba(255,255,255,0.15) 35%,
-		rgba(255,255,255,0.95) 50%,
-		rgba(255,255,255,0.15) 65%,
-		rgba(255,255,255,0) 100%
-	);
+	background: linear-gradient(120deg,
+			rgba(255, 255, 255, 0) 0%,
+			rgba(255, 255, 255, 0.15) 35%,
+			rgba(255, 255, 255, 0.95) 50%,
+			rgba(255, 255, 255, 0.15) 65%,
+			rgba(255, 255, 255, 0) 100%);
 	transform: rotate(25deg);
 	filter: blur(1px);
 	opacity: 0;
@@ -476,30 +474,33 @@ onMounted(async () => {
 }
 
 @keyframes medalShine {
-	from { left: -120%; }
-	to { left: 140%; }
+	from {
+		left: -120%;
+	}
+
+	to {
+		left: 140%;
+	}
 }
 
 .gold {
-	filter: drop-shadow(0 0 8px rgba(255,215,0,0.75));
+	filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.75));
 }
 
 .silver {
-	filter: drop-shadow(0 0 8px rgba(220,220,220,0.75));
+	filter: drop-shadow(0 0 8px rgba(220, 220, 220, 0.75));
 }
 
 .bronze {
-	filter: drop-shadow(0 0 8px rgba(205,127,50,0.75));
+	filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.75));
 }
 
 /* SCORE CARD */
 .score-box {
 	text-align: center;
-	background: linear-gradient(
-		135deg,
-		rgba(255, 255, 255, 0.18),
-		rgba(255, 255, 255, 0.08)
-	);
+	background: linear-gradient(135deg,
+			rgba(255, 255, 255, 0.18),
+			rgba(255, 255, 255, 0.08));
 	backdrop-filter: blur(14px);
 	border-radius: 22px;
 	padding: 2rem 1.5rem;
@@ -527,12 +528,10 @@ onMounted(async () => {
 	left: -60%;
 	width: 40%;
 	height: 180%;
-	background: linear-gradient(
-		120deg,
-		rgba(255,255,255,0),
-		rgba(255,255,255,0.22),
-		rgba(255,255,255,0)
-	);
+	background: linear-gradient(120deg,
+			rgba(255, 255, 255, 0),
+			rgba(255, 255, 255, 0.22),
+			rgba(255, 255, 255, 0));
 	transform: rotate(20deg);
 	transition: 0.8s ease;
 }
@@ -562,10 +561,14 @@ onMounted(async () => {
 		0 0 22px rgba(77, 148, 255, 0.35);
 	animation: scorePulse 2.2s ease-in-out infinite;
 }
+
 @keyframes scorePulse {
-	0%, 100% {
+
+	0%,
+	100% {
 		transform: scale(1);
 	}
+
 	50% {
 		transform: scale(1.05);
 	}
@@ -584,7 +587,7 @@ onMounted(async () => {
 
 .score-shop:hover {
 	transform: scale(1.02);
-	box-shadow: 0 0 20px rgba(106,106,255,0.35);
+	box-shadow: 0 0 20px rgba(106, 106, 255, 0.35);
 }
 
 .score-shop h2 {
