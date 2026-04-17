@@ -43,26 +43,30 @@ console.log(leaderIDs.value)
 
 
 
+function getPartner(leader: number) {
+	if (finalData.partners === undefined) {
+		return ''
+	}
 
+	var resp = playerMap.value.get(finalData.partners[leader.toString()])
+	if (resp === undefined) {
+		return ''
+	}
+	return ` & ${resp.userName}`;
+}
 
 </script>
 
 
 <template>
 	<div class="content">
-		CONTENT HERE
-		should be variable with all details about the previous Game
-		{{ finalData }}
-
-
 		<div class="leaderboard">
 			<div class="groups" v-if="finalData.groups">
 				<div class="player" v-for="(leader, ind) in leaderIDs">
 
 					<div>{{ ind + 1 }}.</div>
 					<div><span v-if="leader == finalData.winner.userID"><i class="pi pi-crown"></i></span> {{
-						playerMap.get(leader)?.userName }} & {{ finalData.partners ?
-							playerMap.get(finalData.partners[leader.toString()])?.userName : '' }}
+						playerMap.get(leader)?.userName }}{{ finalData.partners && getPartner(leader) }}
 					</div>
 					<div>{{ playerMap.get(leader)?.points }}</div>
 				</div>

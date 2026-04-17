@@ -324,21 +324,16 @@ class GameHandler:
 					"points": pointsAmount
 				})
 				
-				
-				
 				letterOwnerID = None
 				if game.type == "GROUP":
-					# get partner 
-					# get leader of the group
-					# if leader == partner and turn == partner
-					# turn = this user
 					turnPartnersID = game.get_partner(nextTurn)
+					# this is the packet that gets sent to everyone, but if the turn if of their leaders, the turn needs to change to them.
 					if turnPartnersID != None:
 						originalTurn = game.mm_get_current_turn()
 						for player in game.players:
 							if player.userID == userID:
 								continue
-							# this is the packet that gets sent to everyone, but if the turn if of their leaders, the turn needs to change to them.
+							
 							if player.userID == turnPartnersID:
 								gameUpdatePacket['d']['turn'] = player.userID
 							else:
@@ -478,7 +473,47 @@ class GameHandler:
 			else:
 				# game type == "GROUP"
 				gameResult['groups'] = game.groups
+				gameGroups = copy.deepcopy(game.groups)
+				leaderIDs = [x[0] for x in gameGroups if len(x) > 0]
+				for player in gameResult['players']:
+					if player['userID'] in leaderIDs:
+						# do them and their partners
+						resp = await session.execute(select(User).where(User.userID == player['userID']))
+						playerObject = resp.scalar_one_or_none()
+
+						partnerID = game.get_partner(player['userID'])
+						partnerObject = None
+						if type(partnerID) == int:
+							# there is a partner
+							resp = await session.execute(select(User).where(User.userID == partnerID))
+							partnerObject = resp.scalar_one_or_none()
+							
+
+						if player == gameResult['winner']:
+							playerObject.wins+=1 # type: ignore
+							if partnerObject != None:
+								partnerObject.wins+=1 # type: ignore
+						else:
+							playerObject.loses+=1 # type: ignore
+							if partnerObject != None:
+								partnerObject.loses+=1 # type: ignore
+
+						if partnerObject != None:
+							if partnerObject.bestScore < player['points']:
+								partnerObject.bestScore = player['points']
+
+						if playerObject.bestScore < player['points']: # type: ignore
+							playerObject.bestScore = player['points'] # type: ignore
+						playerObject.totalScore += player['points'] # type: ignore
+						
+						if partnerObject != None:
+							partnerObject.totalScore += player['points']
+
+						session.add(playerObject)
+						if partnerObject != None:
+							session.add(partnerObject)
 				gameResult['partners'] = game.partners
+				await session.commit()
 		gameFinishPacket = packets.end.game_end(gameResult)
 		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 		
