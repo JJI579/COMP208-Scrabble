@@ -20,8 +20,6 @@ router = APIRouter(
 
 @router.post('/request')
 async def send_friend_request(data: FriendRequest, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
-    print("This has been called")
-    print(data.toUserID, current_user.userID)
     receivedID = data.toUserID
     senderID = current_user.userID
     
@@ -119,7 +117,6 @@ async def get_friend_requests(current_user: Annotated[User, Depends(get_current_
     search = search.scalars().all()
     res = await session.execute(select(User).where(User.userID.in_(search)))
     requests = res.scalars().all()
-    print(requests)
     return requests
 
 @router.get('/sent')
@@ -128,5 +125,4 @@ async def get_sent_requests(current_user: Annotated[User, Depends(get_current_us
     search = search.scalars().all()
     res = await session.execute(select(User.userID).where(User.userID.in_(search)))
     requests = res.scalars().all()
-    print(requests)
     return requests

@@ -59,6 +59,51 @@ const score = computed(() => {
 	animation: floatCard 4s ease-in-out infinite;
 }
 
+.player-card.active .timer {
+	animation: pulseTimer 1s infinite;
+}
+
+.pfp {
+	width: 55px;
+	height: 55px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 3px solid #f1bc4c;
+}
+
+.player-info {
+	display: flex;
+	flex-direction: column;
+	/* gap: 3px; */
+}
+
+.name {
+	font-weight: bold;
+	color: white;
+}
+
+.score {
+	color: #f1bc4c;
+	font-weight: bold;
+}
+
+.timer {
+	color: white;
+	font-size: 14px;
+	position: relative;
+}
+
+.player-card.active {
+	transform: translateY(-5.3rem) scale(1);
+	box-shadow:
+		0 0 25px rgba(241, 188, 76, 0.8),
+		0 0 60px rgba(241, 188, 76, 0.4),
+		0 0 40px rgba(241, 188, 76, 0.6) inset;
+	animation: glowCard 4s ease-in-out infinite;
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+
 @keyframes floatCard {
 
 	0%,
@@ -71,15 +116,7 @@ const score = computed(() => {
 	}
 }
 
-.player-card.active {
-	transform: translateY(-5.3rem) scale(1);
-	box-shadow:
-		0 0 25px rgba(241, 188, 76, 0.8),
-		0 0 60px rgba(241, 188, 76, 0.4),
-		0 0 40px rgba(241, 188, 76, 0.6) inset;
-	animation: glowCard 4s ease-in-out infinite;
-	transition: transform 0.3s, box-shadow 0.3s;
-}
+
 
 @keyframes glowCard {
 	0% {
@@ -123,9 +160,7 @@ const score = computed(() => {
 	}
 }
 
-.player-card.active .timer {
-	animation: pulseTimer 1s infinite;
-}
+
 
 @keyframes pulseTimer {
 
@@ -137,36 +172,5 @@ const score = computed(() => {
 	50% {
 		opacity: 0.3;
 	}
-}
-
-
-.pfp {
-	width: 55px;
-	height: 55px;
-	border-radius: 50%;
-	object-fit: cover;
-	border: 3px solid #f1bc4c;
-}
-
-.player-info {
-	display: flex;
-	flex-direction: column;
-	/* gap: 3px; */
-}
-
-.name {
-	font-weight: bold;
-	color: white;
-}
-
-.score {
-	color: #f1bc4c;
-	font-weight: bold;
-}
-
-.timer {
-	color: white;
-	font-size: 14px;
-	position: relative;
 }
 </style>

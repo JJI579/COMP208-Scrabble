@@ -83,10 +83,10 @@ class WebsocketManager:
 			message = json.dumps(message)
 		if userID in self.connections:
 			if not self.connections[userID]['disconnected']:
+				print(f"Sending direct message: {message}")
 				await self.send_message(self.connections[userID]['websocket'], message)
 
 	async def broadcast_specific(self, message, users: list[int]):
-		originalMessage = message
 		if type(message) == dict:
 			message = json.dumps(message)
 		for userID in users:

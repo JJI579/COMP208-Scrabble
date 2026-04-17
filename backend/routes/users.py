@@ -45,18 +45,12 @@ async def get_users(search: str = '', session: AsyncSession = Depends(get_sessio
 
 @router.get('/leaderboard', response_model=list[UserFetch])
 async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: int = 100, session: AsyncSession = Depends(get_session)):
-	
-	print(limit)
-
 	if sort_by == "totalScore":
 		order_by = User.totalScore
-		print("sorting by totalScore")
 	elif sort_by == "wins":
 		order_by = User.wins
-		print("sorting by wins")
 	elif sort_by == "games":
 		order_by = User.wins + User.loses
-		print("sorting by games")
 	else:
 		order_by = User.bestScore
 		

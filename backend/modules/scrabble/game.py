@@ -77,7 +77,6 @@ class Game:
 		Returns the userID of the player whose turn it now is.
 		"""
 		if self.type == "GROUP":
-			print(self.groupTurn)
 			
 			if (self.groupTurn + 1) == len(self.groupPlayers):
 				self.groupTurn = 0
@@ -98,9 +97,7 @@ class Game:
 				pass
 				# finish the game as bot has had too many passes
 			return False
-		# update bot score in the wrapper model
-		if len(self.players) > self.game.gameTurn:
-			self.players[self.game.gameTurn].points += resp
+		self.mm_give_points(resp)
 		return resp
 	
 	def get_group_leader_id(self, userID: int):
@@ -163,9 +160,6 @@ class Game:
 		
 		self.mm_give_points(result)
 		
-		
-		# self.players[self.game.gameTurn].points += result
-		print(self.players)
 		print(f"result: {result}")
 		
 		
@@ -361,7 +355,6 @@ class Game:
 		"""
 		if self.type == "BOT":
 			self.add_bot()
-
 		elif self.type == "GROUP":
 			self.partners = {}
 			for i, group in enumerate(self.groups):
@@ -385,10 +378,11 @@ class Game:
 		else:
 			currentTurn = self.game.init_game(self.players)
 		currentTurn = self.mm_get_current_turn()
-		print(currentTurn)
 		return currentTurn
 	
 	def get_partner(self, userID: int) -> int | bool:
+		if self.type != "GROUP":
+			return False
 		if userID in self.partners:
 			return self.partners[userID]
 		return False

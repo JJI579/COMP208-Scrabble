@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { DEFAULT_FILLER, type modifiers } from '@/types';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GridCell from './GridCell.vue';
 import ModifierCell from './ModifierCell.vue';
 import useUserStore from '@/Components/Stores/user';
+import useWebsocketStore from '@/Components/Stores/websocket';
 
 const emit = defineEmits(['cellClicked']);
 
@@ -66,11 +67,39 @@ function cellClicked(index: number) {
 	}
 }
 
+const websocket = useWebsocketStore()
+// minutes/seconds
+const timeLeft = ref("00:00");
+let timerObject: number | null = null;
+
+onMounted(() => {
+	timerObject = setInterval(() => {
+		// set hour:minute
+		var finishesAt = websocket.game.finishesAt;
+		const now = Math.floor(Date.now() / 1000); // current time in seconds
+		const diff = finishesAt - now;
+		console.log(diff);
+		const hours = Math.floor(diff / 3600);
+		const minutes = Math.floor(diff / 60) % 60;
+		const seconds = Math.floor(diff % 60);
+		if (hours == 0) {
+			timeLeft.value = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`
+		} else {
+			timeLeft.value = `${hours}:${minutes}:${seconds < 10 ? "0" + seconds : seconds}`
+		}
+	}, 1000)
+})
+
+onUnmounted(() => {
+	if (timerObject !== null) clearInterval(timerObject);
+})
 </script>
 
 
-
 <template>
+	<div class="timer">
+		<h1>{{ timeLeft }}</h1>
+	</div>
 	<div class="board-frame" :class="{ active: activePlayer === userStore.userData?.userID }">
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
@@ -87,6 +116,11 @@ function cellClicked(index: number) {
 
 <!-- grid.vue -->
 <style lang="css" scoped>
+.timer {
+	color: white;
+
+}
+
 .board-frame {
 	padding: clamp(0.5rem, 1.2vw, 1rem);
 	background: var(--scrabble-board);

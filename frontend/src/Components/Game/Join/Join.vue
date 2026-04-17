@@ -38,14 +38,7 @@ onMounted(() => {
 	}, 200);
 })
 
-watch([inGame, () => websocket.game.type, isLeader], ([inGameVal, type, leader]) => {
-	if (inGameVal && type === 'BOT' && leader) {
-		setTimeout(() => startGame(), 200); // small delay to ensure UI is ready
-	}
-})
-
 function joinGame() {
-	console.log("jhoining game");
 	if (codeModel.value.length !== 4) {
 		triedInput.value = true
 		return

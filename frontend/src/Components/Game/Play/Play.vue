@@ -238,6 +238,10 @@ onMounted(() => {
 onUnmounted(() => {
 	window.removeEventListener("resize", () => { });
 });
+
+function endGame() {
+	websocketStore.send("GAME_END", {});
+}
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -270,7 +274,9 @@ onUnmounted(() => {
 					:blank-letter="blankLetter" :show-partners="showPartners" />
 
 				<div class="actions">
-					<button class="action"></button>
+					<button class="action" @click="showPartners = !showPartners"><i class="pi"
+							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
+							v-if="websocketStore.game.type == 'GROUP'"></i></button>
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
@@ -285,13 +291,11 @@ onUnmounted(() => {
 					<button @click="submitTurn()" class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-check "></i></button>
-					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
+					<button class="action" :disabled="activePlayer !== userStore.userData?.userID" @click="endGame"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
-							class="pi pi-flag"></i></button>
+							class="pi pi-flag">end</i></button>
 					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
-					<button class="action" @click="showPartners = !showPartners"><i class="pi"
-							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
-							v-if="websocketStore.game.type == 'GROUP'"></i></button>
+
 				</div>
 			</div>
 			<div class="player__column right">
@@ -300,7 +304,6 @@ onUnmounted(() => {
 					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"
 					v-for="player in (players.length > 1 ? players[1] : [])" v-else />
-
 			</div>
 			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
@@ -318,8 +321,8 @@ onUnmounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: calc(100vh - 72px);
 	width: 100%;
+	margin: auto;
 	padding: 0.5rem 1rem;
 	overflow: hidden;
 	box-sizing: border-box;
@@ -330,7 +333,7 @@ onUnmounted(() => {
 	justify-content: center;
 	align-items: center;
 	gap: clamp(1rem, 2vw, 2rem);
-	width: 100%;
+	width: 80%;
 	height: 100%;
 }
 

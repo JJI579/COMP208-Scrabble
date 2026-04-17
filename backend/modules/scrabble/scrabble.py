@@ -98,8 +98,6 @@ class Bot(Player):
 		# OPTIMIZATION: Sort anchors by potential score (near premium squares)
 		anchors = self._prioritize_anchors(scrabble, anchors)
 		
-		# print(f"Evaluating {len(anchors)} anchor cells")
-		
 		total_moves_evaluated = 0
 		
 		for anchor_x, anchor_y in anchors:
@@ -346,7 +344,6 @@ class Scrabble:
 
 	def export_grid(self):
 		toSend = {}
-		print(self.placed)
 		for (x,y), letter, blankSubstitute in self.placed:
 			toSend[str((y*15)+x)] = letter if blankSubstitute == None else blankSubstitute
 		return toSend
@@ -386,6 +383,7 @@ class Scrabble:
 			The game turn is set to 0, and the function returns the
 			userID of the current turn.
 		"""
+
 		
 		for player in players:
 			userID = int(player.userID)
@@ -723,8 +721,7 @@ class Scrabble:
 
 		return coordinates
 
-	async def place_word(self, letters, direction: str, blanks: list[tuple[int, int]]):
-		print(letters)
+	async def place_word(self, letters, direction: str):
 		"""
 		Places a word on the game board based on the given letters and direction.
 
@@ -871,10 +868,7 @@ class Scrabble:
 					potentialWord = self.expand_horizontally(currentPosition)
 				else:
 					potentialWord = self.expand_vertically(currentPosition)
-					# print(potentialWord)
 				testArray = potentialWord.copy()
-				# print(testArray)
-				# print(wordCoordinates)
 				[testArray.remove(x) for x in wordCoordinates if x in testArray]
 				if len(testArray) != 0:
 					if testDirection == "down":
