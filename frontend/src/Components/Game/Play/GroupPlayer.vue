@@ -25,7 +25,12 @@ const name = computed(() => {
 })
 
 const score = computed(() => {
-	return props.users[0]?.points
+	for (const user of props.users) {
+		if (user.points) {
+			return user.points
+		}
+	}
+	return 0
 })
 </script>
 

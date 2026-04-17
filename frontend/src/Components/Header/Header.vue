@@ -49,9 +49,9 @@ function openExternal(url: string) {
 				</div>
 
 			</div>
-			
+
 			<RouterLink :to="{ name: 'home' }" class="link">
-				
+
 				<div class="tiles">
 					<div v-for="l in ['S', 'C', 'R', 'A', 'B', 'B', 'L', 'E']" :key="l" class="tile">
 						{{ l }}
@@ -62,7 +62,7 @@ function openExternal(url: string) {
 			<div class="end">
 				<button class="user-btn" @click="profileClicked">
 					<div class="user">
-
+						{{ userStore.userData?.userID }}
 						<!-- TODO: eventually add functionality for custom pfps etc..-->
 						<i class="pi pi-user"></i>
 					</div>

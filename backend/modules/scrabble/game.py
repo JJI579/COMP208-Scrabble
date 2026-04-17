@@ -402,12 +402,13 @@ class Game:
 
 		"""
 
+		# {'grid': {'112': 'J', '113': 'A', '114': 'W'}, 'players': [{'userID': 1, 'userName': 'jason12', 'userCreatedAt': '2026-04-13T19:46:36.996330', 'placed': [], 'points': 26}, {'userID': 2, 'userName': '123', 'userCreatedAt': '2026-04-13T19:48:11.519338', 'placed': [], 'points': 0}], 'winner': {'userID': 1, 'userName': 'jason12', 'userCreatedAt': '2026-04-13T19:46:36.996330', 'placed': [], 'points': 26}}
+		print(self.groupPlayers)
 		grid = self.game.export_grid()
 		players = [x.dump_json() for x in self.players]
 		# players sorted in order of 1st,2nd,3rd etc.
 		players.sort(key=lambda x: x['points'], reverse=True)
 		winner = max(self.players, key=lambda x: x.points).dump_json()
-		
 
 		return {
 			"grid": grid,

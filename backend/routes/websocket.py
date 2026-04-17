@@ -324,48 +324,63 @@ class GameHandler:
 					"points": pointsAmount
 				})
 				await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
-				# Update the board for the user who just played.
+				
 				letterOwnerID = None
 				if game.type == "GROUP":
 					# get partner 
-					letterOwnerID = game.get_group_leader_id(websocket.user_id) # type: ignore
+					# get leader of the group
+					# if leader == partner and turn == partner
+					# turn = this user
+					leaderID = game.get_group_leader_id(userID) # type: ignore
+					if (leaderID == None):
+						print("Leader ID is none...")
+						return
+					letters = game.game.fetch_player_letters(leaderID)
+					partnerID = game.get_partner(userID)
+					gameUpdatePacket = packets.during.game_update({
+						"grid": newGrid,
+						"turn": nextTurn,
+						"points": pointsAmount,
+						"partner": partnerID,
+						"letters": letters
+					})
+					if leaderID == partnerID and nextTurn == partnerID:
+						gameUpdatePacket['d']['turn'] = userID
+					# send packet to the person who just send the confirmation
+					print(f"Sending user (ID: {userID})\nPacket: {gameUpdatePacket}")
+					await manager.send_direct_message(gameUpdatePacket, userID)
+					# now gets user's partner
+					# if nextturn == userid, change to the partner
+					if nextTurn == userID:
+						gameUpdatePacket['d']['turn'] = partnerID
+					gameUpdatePacket['d']['partner'] = userID
+					del gameUpdatePacket['d']['points']
+					print(f"Sending partner (ID: {partnerID})\nPacket: {gameUpdatePacket}")
+					await manager.send_direct_message(gameUpdatePacket, partnerID)
 				else:
 					letterOwnerID = userID
-				
-				letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
-				partnerID = game.get_partner(userID)
-
-				# partner is userID since in the end it is their partner who sends the turn confirmation
-				print(f"current user: {userID} and partner: {partnerID}")
-				updateCurrentUser = packets.during.game_update({
-					"grid": newGrid,
-					"turn": nextTurn,
-					"partner": partnerID,
-					"points": pointsAmount,
-					"letters": letters
-				})
+					letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
+					updateCurrentUser = packets.during.game_update({
+						"grid": newGrid,
+						"turn": nextTurn,
+						"points": pointsAmount,
+						"letters": letters
+					})
+					await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 				
 
-				# UPDATE THE TURN FOR USER IF IT IS THEIR PARTNER'S TURN
 				
-				if letterOwnerID == None:
-					# ignore it since it isnt your go
-					pass
-				else:
-					# check if the gameTurn == letterOwnerID and if it does set it to the user ID
-					if letterOwnerID == nextTurn:
-						# set it to your user ID
-						print("Set current turn to the partner/user's turn so their game recognises its their game also")
-						updateCurrentUser['d']['turn'] = userID
 
-				# updateCurrentUser['d']['partner'] = partnerID
-				await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
-				if type(partnerID) == int:
-					print(f"Sending partner {partnerID} game_update with {userID}")
-					print(userID)
-					updateCurrentUser['d']['partner'] = userID
-					print("Sending partner game_update with their letters")
-					await manager.send_direct_message(updateCurrentUser, partnerID)
+
+
+				# await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
+				# if type(partnerID) == int:
+				# 	print(f"Sending partner {partnerID} game_update with {userID}")
+				# 	print(userID)
+				# 	updateCurrentUser['d']['partner'] = userID
+				# 	del updateCurrentUser['d']['points']
+				# 	print("Sending partner game_update with their letters")
+				# 	await manager.send_direct_message(updateCurrentUser, partnerID)
 				# check if the bot is next then make the bot play.
 				if nextTurn == -2: 
 					await asyncio.sleep(1)
@@ -433,7 +448,6 @@ class GameHandler:
 						if not playerObject:
 							print(f"{player['userID']}: This player doesnt exist")
 							continue
-
 						if player == gameResult['winner']:
 							playerObject.wins+=1 # type: ignore
 						else:
@@ -447,9 +461,9 @@ class GameHandler:
 				await session.commit()
 			else:
 				# game type == "GROUP"
-				
+				print(gameResult)
 				pass
-		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
+		# await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 		
 	@staticmethod
 	async def chat_message(data: dict, websocket: WebSocket):

@@ -993,6 +993,7 @@ class Scrabble:
 		forceBreak = False
 		hasJoiningWord = False
 		
+		haveTested = []
 		for currentPosition in letterPositions:
 			if forceBreak:
 				break
@@ -1012,6 +1013,7 @@ class Scrabble:
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
 					print(wordOrdered)
+					
 					print(f'Checking word found: ' + wordString)
 					self.print_board()
 					if not await self.check_word(wordString):
@@ -1020,10 +1022,14 @@ class Scrabble:
 						print(f"{wordString} is not a word. ")
 						break
 					else:
-						print(f"{wordString} is a word.")
-						points+=self.calculate_points(wordOrdered, blanks)
-						hasJoiningWord = True
-						isWord = True
+						if wordOrdered in haveTested:
+							print("Already tested this word, skipping.")
+						else:
+							print(f"{wordString} is a word.")
+							points+=self.calculate_points(wordOrdered, blanks)
+							hasJoiningWord = True
+							isWord = True
+							haveTested.append(wordOrdered)
 				else:
 					if not self.firstPlaced:
 						hasJoiningWord = True
@@ -1041,7 +1047,8 @@ class Scrabble:
 		# OTHERWISE IT IS A TRUE WORD.
 		self.placed.extend(placing)
 		print("before giving points")
-		points+=self.calculate_points(placing, blanks)
+		if points == 0:
+			points+=self.calculate_points(placing, blanks)
 		print(points)
 		return points
 	
