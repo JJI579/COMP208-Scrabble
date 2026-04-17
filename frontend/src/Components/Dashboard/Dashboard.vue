@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import router from '@/router';
 import type { Item, UserReturn } from '@/types';
-const streak = ref(1);
 
+const streak = ref(1);
 
 const currentUser = ref<any>(null);
 

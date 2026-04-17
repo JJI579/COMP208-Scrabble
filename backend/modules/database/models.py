@@ -33,7 +33,6 @@ class Token(Base):
 
 class Friend(Base):
 	__tablename__ = "tblFriends"
-	 
 	senderID = Column(Integer, ForeignKey("tblUsers.userID"),  primary_key=True, index=True)
 	receiverID = Column(Integer, ForeignKey("tblUsers.userID"), primary_key=True, index=True)
 	status = Column(String, index=True)
