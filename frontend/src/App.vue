@@ -13,12 +13,16 @@ const websocket = useWebsocketStore()
 onMounted(() => {
 	var hasToken = localStorage.getItem('token');
 	const userStore = useUserStore();
-	if (hasToken) userStore.login();
-	if (!websocket.websocket) {
-		console.log("Try to connect...")
-		websocket.connect()
+	if (hasToken) {
+		userStore.login();
+		if (!websocket.websocket) {
+			console.log("Try to connect...")
+			websocket.connect()
+		}
+
 	}
 	watch(() => userStore.isLoggedIn, () => {
+		console.log("User has been logged in, now connecting to websocket.")
 		if (userStore.isLoggedIn) {
 			if (!websocket.websocket) {
 				websocket.connect()

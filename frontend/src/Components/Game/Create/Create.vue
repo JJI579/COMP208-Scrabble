@@ -18,11 +18,16 @@ const options: Option[] = [['NORMAL', "Normal", "pi pi-play"], ['GROUP', "Team",
 const timeLimitRef = ref("none");
 const timeLimitOptions: Option[] = [["none", "None"], ["45", "45 Minutes"], ["1", "1 Hour"], ["2", "2 Hours"]]
 
-const useDictionaryRef = ref("false");
-const dictionaryOptions: Option[] = [["false", "No"], ["true", "Yes"]]
+// const useDictionaryRef = ref("false");
+// const dictionaryOptions: Option[] = [["false", "No"], ["true", "Yes"]]
 
 const groupSizeRef = ref("4");
 const groupSizeOptions: Option[] = [["2", "2"], ["3", "3"], ["4", "4"]]
+
+const gtModel = ref(false);
+const tlModel = ref(false);
+const ngModel = ref(false);
+
 
 const router = useRouter();
 
@@ -47,7 +52,6 @@ function goToJoin() {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
-
 	}
 	router.push({ name: "join" });
 }
@@ -65,12 +69,39 @@ async function createGame() {
 		game_type: gameTypeRef.value,
 		group_size: Number(groupSizeRef.value),
 		time_limit: timeLimitRef.value,
-		dictionary: useDictionaryRef.value === "true"
+		dictionary: false
+		// dictionary: useDictionaryRef.value === "true"
 	})
 	router.push({ name: "join", query: { code: resp.data.code } })
 }
 
+function closeOthers(whichMenu: string) {
+	console.log(whichMenu)
+	if (whichMenu === "Game Type") {
+		gtModel.value = true;
+		tlModel.value = false;
+		ngModel.value = false;
+	} else if (whichMenu == "Time Limit") {
+		console.log("time limit")
+		tlModel.value = true;
+		gtModel.value = false;
+		ngModel.value = false;
+	} else {
+		ngModel.value = true;
+		gtModel.value = false;
+		tlModel.value = false;
+	}
+}
+function closeMenu(whichMenu: String) {
+	if (whichMenu === "Game Type") {
+		gtModel.value = false;
+	} else if (whichMenu === "Time Limit") {
+		tlModel.value = false;
+	} else {
+		ngModel.value = false;
+	}
 
+}
 </script>
 
 
@@ -94,11 +125,14 @@ async function createGame() {
 		</div>
 		<div class="create__card card-glass">
 			<div class="create__grid">
-				<CustomSelect :options="options" label="Game Type" v-model:selected="gameTypeRef" />
-				<CustomSelect :options="timeLimitOptions" label="Time Limit" v-model:selected="timeLimitRef" />
-				<CustomSelect :options="dictionaryOptions" label="Dictionary Allowed"
-					v-model:selected="useDictionaryRef" />
-				<CustomSelect :options="groupSizeOptions" label="Number of Groups" v-model:selected="groupSizeRef" />
+				<CustomSelect :options="options" label="Game Type" v-model:selected="gameTypeRef" @open="closeOthers"
+					@close="closeMenu" v-model:isopen="gtModel" />
+				<CustomSelect :options="timeLimitOptions" label="Time Limit" v-model:selected="timeLimitRef"
+					@close="closeMenu" @open="closeOthers" v-model:isopen="tlModel" />
+				<!-- <CustomSelect :options="dictionaryOptions" label="Dictionary Allowed"
+					v-model:selected="useDictionaryRef" /> -->
+				<CustomSelect :options="groupSizeOptions" label="Number of Groups" v-model:selected="groupSizeRef"
+					@close="closeMenu" @open="closeOthers" v-model:isopen="ngModel" />
 			</div>
 			<button class="create__btn glow-hover" @click="createGame">
 				Create Game

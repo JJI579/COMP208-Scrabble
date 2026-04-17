@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 
 import api from '@/api';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { resolveComponent } from 'vue';
 import router from '../../router';
 import useUserStore from '../Stores/user';
 import "../../base.css";
 import type { UserReturn } from '@/types';
 const userStore = useUserStore();
-const user = ref();
+const user = ref<UserReturn | 0>(0);
 const friends = ref<UserReturn[]>([]);
 
 async function getFriends() {
@@ -23,7 +23,7 @@ async function getFriends() {
 async function getCurrentUser() {
 	const res = await api.get('users/@me');
 	user.value = res.data;
-	console.log(user.value);
+	console.log(user);
 }
 
 
@@ -41,7 +41,7 @@ function logout() {
 	router.push({ name: 'login' });
 }
 
-function calculateWinRate() {
+const calculateWinRate = computed(() => {
 	if (!user.value) {
 		return 0;
 	}
@@ -51,10 +51,13 @@ function calculateWinRate() {
 		return 0;
 	}
 	const winRate = (wins / totalGames) * 100;
+	if (winRate % 1 == 0) {
+		return Number(winRate)
+	}
 	return winRate.toFixed(2);
-}
+})
 
-function calculateAverageScore() {
+const calculateAverageScore = computed(() => {
 	if (!user.value) {
 		return 0;
 	}
@@ -63,9 +66,14 @@ function calculateAverageScore() {
 	if (totalGames === 0) {
 		return 0;
 	}
+
+
 	const averageScore = totalScore / totalGames;
+	if (averageScore % 1 == 0) {
+		return Number(averageScore)
+	}
 	return averageScore.toFixed(2);
-}
+})
 
 </script>
 
@@ -119,8 +127,8 @@ function calculateAverageScore() {
 		<h1 class="profile__title">Statistics</h1>
 		<div class="stats">
 			<div class="statsPart1">
-				<h3>Win rate: {{ calculateWinRate() }}% </h3>
-				<h3>Average Score: {{ calculateAverageScore() }}</h3>
+				<h3>Win rate: {{ calculateWinRate }}% </h3>
+				<h3>Average Score: {{ calculateAverageScore }}</h3>
 			</div>
 
 			<div class="statsPart2">

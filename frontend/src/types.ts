@@ -117,11 +117,12 @@ type MessageType = {
 	}
 }
 
-const BASE_HOST = 'w11-desktop.tail57640.ts.net';
-// const BASE_HOST = 'localhost:8000';
-const SECURE_URL = true;
+// const BASE_HOST = 'w11-desktop.tail57640.ts.net';
+const BASE_HOST = 'localhost:8000';
+var SECURE_URL = false;
 var BASE_URL = `${SECURE_URL ? 'https' : 'http'}://${BASE_HOST}`
 if (BASE_HOST.includes('w11-desktop')) {
+	SECURE_URL = true;
 	BASE_URL += '/api';
 }
 
