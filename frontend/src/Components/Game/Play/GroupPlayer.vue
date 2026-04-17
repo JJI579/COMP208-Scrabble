@@ -1,11 +1,7 @@
 <script lang="ts" setup>
 import type { GameUser } from '@/game_types';
-import type { UserReturn } from '@/types';
 import { computed, type PropType } from 'vue';
 
-// userID: number
-// 	userName: string
-// 	userCreatedAt: string
 
 const props = defineProps({
 	activePlayer: {
@@ -49,8 +45,8 @@ const score = computed(() => {
 
 <style lang="css" scoped>
 .player-card {
-	height: 150px;
-	width: 200px;
+	/* height: 150px;
+	width: 200px; */
 	background: #2c8595;
 	border-radius: 14px;
 	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
@@ -155,7 +151,7 @@ const score = computed(() => {
 .player-info {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	/* gap: 3px; */
 }
 
 .name {

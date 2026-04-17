@@ -22,7 +22,8 @@ type GAME = {
 	hasStarted: boolean,
 	timeLimit: number,
 	dictionaryAllowed: boolean,
-	gameTurn: number
+	gameTurn: number,
+	finishesAt: number
 }
 
 
@@ -41,6 +42,7 @@ type initData = {
 	leader: number,
 	turn?: number
 	letters?: []
+	finishes: number
 }
 
 type ongoingData = {
@@ -73,6 +75,7 @@ class Game implements GAME {
 	maxGroupSize: number = 2;
 	hasStarted: boolean = false;
 	timeLimit: number = 0;
+	finishesAt = 0;
 	dictionaryAllowed: boolean = false;
 	letters: string[] = [];
 	grid: string[] = [];
@@ -209,6 +212,8 @@ class Game implements GAME {
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;
 		this.letters = [];
+		this.finishesAt = dictionary.finishes;
+		console.log(`Finish time: ${this.finishesAt}`)
 		this.players.clear();
 		for (let i = 0; i < dictionary.players.length; i++) {
 			var player = dictionary.players[i];

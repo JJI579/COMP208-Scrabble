@@ -342,8 +342,6 @@ onUnmounted(() => {
 	justify-content: center;
 }
 
-
-
 .center__wrapper {
 	display: flex;
 	flex-direction: column;

@@ -49,6 +49,7 @@ const props = defineProps({
 }
 
 @keyframes floatCard {
+
 	0%,
 	100% {
 		transform: translateY(0);
@@ -115,6 +116,7 @@ const props = defineProps({
 }
 
 @keyframes pulseTimer {
+
 	0%,
 	100% {
 		opacity: 1;

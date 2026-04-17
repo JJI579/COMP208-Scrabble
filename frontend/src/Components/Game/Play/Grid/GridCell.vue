@@ -39,10 +39,7 @@ const isPlaced = computed(() => {
 	return props.cellValue !== '|' && props.cellValue !== '';
 })
 
-// center highlight
-const bgColour = computed(() => {
-	return '#37a8bd';
-})
+
 
 </script>
 
@@ -50,8 +47,8 @@ const bgColour = computed(() => {
 
 <template>
 	<div class="cell"
-		:class="{ 'scrabble--placed': cellValue.length > 1, 'cell--draft': isDraft, 'cell--partners': props.isPartners }"
-		:style="{ backgroundColor: bgColour }">
+		:class="{ 'scrabble--placed': isPlaced && !props.isDraft, 'cell--draft': isDraft && !props.isPartners, 'cell--partners': props.isPartners && isDraft }">
+
 		<p class="cell__letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
 		<p class="cell__score" v-if="cellValue !== '|'">{{ score }}</p>
 	</div>
@@ -67,6 +64,7 @@ const bgColour = computed(() => {
 	font-weight: bold;
 	font-size: 20px;
 	color: #000;
+	background-color: #37a8bd;
 }
 
 .cell:hover {
@@ -80,6 +78,7 @@ const bgColour = computed(() => {
 		inset 0 -2px 3px rgba(0, 0, 0, 0.3),
 		0 3px 5px rgba(0, 0, 0, 0.4);
 	border: 1px solid #c5a569;
+
 }
 
 .cell--draft {
@@ -90,7 +89,8 @@ const bgColour = computed(() => {
 	margin: 0;
 	max-height: 90%;
 	max-width: 90%;
-	font-size: 17px;
+	/* font-size: 17px; */
+	font-size: x-large;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -101,7 +101,8 @@ const bgColour = computed(() => {
 	position: absolute;
 	bottom: 3px;
 	right: 2.5px;
-	font-size: 7.5px;
+	/* font-size: 7.5px; */
+	font-size: small;
 	margin: 0;
 }
 

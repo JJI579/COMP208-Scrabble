@@ -77,7 +77,6 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 							if (data.d.gameID != game.id) {
 								// new game, sync to new content
 								console.log("[GAME UPDATE] | New game, reset the dictionary")
-
 								game.updateContent(data.d)
 							} else {
 								// update game content

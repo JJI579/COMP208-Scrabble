@@ -115,7 +115,7 @@ class FriendRequest(BaseModel):
 class GameOptions(BaseModel):
     game_type: GAME_TYPE
     group_size: Optional[int] = None
-    time_limit: str
+    time_limit: int | str
     dictionary: bool
 
 class PersonalItemReturn(BaseModel):

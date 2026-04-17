@@ -35,6 +35,17 @@ gameRouter = APIRouter(
 
 @gameRouter.post("/create")
 async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
+	
+	print(options.time_limit)
+	if options.time_limit == "none":
+		options.time_limit = 999999999
+	elif options.time_limit == "45":
+		options.time_limit = 2700
+	elif options.time_limit == "1":
+		options.time_limit = 3600
+	elif options.time_limit == "2":
+		options.time_limit = 7200
+	
 	CODE = manager.create_game(options, current_user.userID) # type: ignore
 	# Add the creator to the game immediately so they become the leader lobby
 	try:
@@ -90,6 +101,7 @@ class GameHandler:
 			return
 
 		gameTurn = game.start_game()
+		print(game.finishesAt)
 
 		await manager.broadcast_specific(packets.start.update_game(game.export_data(), game.id), [x.userID for x in game.players])
 		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
@@ -468,7 +480,6 @@ class GameHandler:
 		message = data['d']['message']
 		sendPacket = packets.during.chat_message(message, fetchModel)
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
-		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):

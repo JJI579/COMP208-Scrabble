@@ -1,6 +1,7 @@
 from .scrabble import Scrabble, arr
 from modules.schema import UserFetch, GameOptions, GamePlayer, GAME_TYPE, BotPlayer
 import copy
+import datetime
 
 class Game:
 
@@ -21,23 +22,36 @@ class Game:
 		elif self.type == "BOT":
 			self.bot = True
 		self.dictionary_allowed = options.dictionary
-		self.time_limit = options.time_limit
-		
+		if type(options.time_limit) == int:
+			self.time_limit: int = options.time_limit
+		else:
+			raise Exception("Time limit has been set wrong")
 		# index of the group leaders in self.groupPlayers
 		self.groupTurn = 0
 		# group leader's userID
 		self.groupPlayers = []
+		self.finishesAt = 0
 	
 	def mm_give_points(self, points: int):
+		""" 
+		Gives the current player points.
+
+		Args:
+			points (int): The number of points to give.
+
+			Returns:
+			int: The number of points given.
+		""" 
+		
 		gameTurn = self.mm_get_current_turn()
 		print(f"Trying to give {gameTurn} points {points}")
 		try:
-			self.players[gameTurn].points += points
+			# it gave them points!
+			[x for x in self.players if x.userID == gameTurn][0].points += points
 		except Exception as er:
 			print("did not give points?")
 			print(er)
 		return points
-
 
 	def mm_get_current_turn(self):		
 		"""
@@ -171,7 +185,8 @@ class Game:
 			"players": [x.model_dump(mode="json") for x in self.players],	
 			"has_started": self.hasStarted,
 			"turn": self.game.fetch_turn(),
-			"options": self.options
+			"options": self.options,
+			"finishes": self.finishesAt
 		}
 		if self.type == "GROUP":
 			data['groups'] = self.groups
@@ -355,6 +370,7 @@ class Game:
 					self.partners[group[0]] = group[1]
 					self.partners[group[1]] = group[0]
 		self.hasStarted = True
+		self.finishesAt = datetime.datetime.now().timestamp() + int(self.time_limit)
 		if self.type == "GROUP":
 			# only want to start the game with the leaders
 			players = []

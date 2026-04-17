@@ -47,7 +47,7 @@ function goToJoin() {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
-		
+
 	}
 	router.push({ name: "join" });
 }
