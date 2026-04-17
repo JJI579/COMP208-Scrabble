@@ -3,6 +3,7 @@ import { DEFAULT_FILLER, type modifiers, type UserReturn } from "@/types"
 import { all } from "axios"
 import { isTypeAliasDeclaration } from "typescript"
 import { ref, type Ref } from "vue"
+import useUserStore from "./user"
 
 type GAME_TYPE = "NORMAL" | "GROUP" | "BOT"
 
@@ -46,7 +47,8 @@ type ongoingData = {
 	letters?: [],
 	players?: [],
 	grid?: Map<string, string>,
-	turn: number
+	turn: number,
+	partner: number,
 	points?: number
 }
 
@@ -58,6 +60,10 @@ const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
 
 
 class Game implements GAME {
+	// Map<number, [number, string, string?]>
+	partnerPlaced: Map<String, [number, string, string?]> = new Map();
+	isSuggesting = false;
+
 	gameTurn: number = -1;
 	id: string | number = 0;
 	leader: number = 0;
@@ -76,10 +82,7 @@ class Game implements GAME {
 		if (!gameCode) {
 			return
 		}
-		console.log(dictionary)
 		if (dictionary.turn !== undefined && dictionary.turn != -1) {
-			console.log("here")
-			console.log(dictionary.turn)
 			this.gameTurn = dictionary.turn
 		}
 		this.id = gameCode;
@@ -99,6 +102,33 @@ class Game implements GAME {
 		// TODO: convert time_limit to actual time limit
 		this.timeLimit = 999999999999999999;
 		this.dictionaryAllowed = dictionary.options.dictionary;
+	}
+
+
+	reset() {
+		// core state
+		this.id = 0;
+		this.type = "NORMAL";
+		this.leader = 0;
+		this.gameTurn = -1;
+
+		// collections (recreate, don't clear)
+		this.players = new Map();
+		this.partnerPlaced = new Map();
+
+		// arrays / objects
+		this.groups = [];
+		this.letters = [];
+		this.grid = [];
+
+		// flags
+		this.hasStarted = false;
+		this.dictionaryAllowed = false;
+		this.isSuggesting = false;
+
+		// config
+		this.maxGroupSize = 2;
+		this.timeLimit = 0;
 	}
 
 	createNewGrid() {
@@ -126,6 +156,8 @@ class Game implements GAME {
 	}
 
 	updateOngoing(allData: ongoingData) {
+		this.isSuggesting = false;
+		this.partnerPlaced = new Map();
 
 		if (allData.letters !== undefined) {
 			this.letters = allData.letters;
@@ -137,15 +169,30 @@ class Game implements GAME {
 			})
 		}
 		// update player points before updating gameturn
-		if (allData.points !== undefined)  {
+
+		if (allData.points !== undefined) {
 			if (this.players.has(this.gameTurn) === true) {
 				this.players.get(this.gameTurn)!.points += allData.points;
 			}
 		}
-		
-		this.gameTurn = allData.turn;
+		// Check if it equals the user's turn, if it does then set gameturn to them else set it to alldata.turn
+		const userStore = useUserStore();
+		console.log("checking here...")
+		console.log(allData.partner);
+		console.log(allData);
+		if (allData.partner == userStore.userData?.userID) {
+			this.gameTurn = allData.partner;
+		} else {
+			console.log("Turn has been changed");
+			console.log(allData.turn);
+			this.gameTurn = allData.turn;
+		}
 		console.log("myletters");
 		console.log(this.letters);
+	}
+
+	updatePartnerPlaced(partnerPlaced: Map<String, [number, string, string?]>): void {
+		this.partnerPlaced = partnerPlaced;
 	}
 
 	updateContent(allData: any) {
@@ -156,6 +203,8 @@ class Game implements GAME {
 		if (dictionary.turn !== undefined) {
 			this.gameTurn = dictionary.turn
 		}
+		console.log(`Current game ID: ${this.id}`)
+		console.log(`New game ID: ${gameID}`)
 		this.id = gameID;
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;

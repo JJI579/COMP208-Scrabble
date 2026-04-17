@@ -1,8 +1,7 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import router from './router';
 import Logger from './logging/Logger';
-
-const BASE_URL = 'http://127.0.0.1:8000';
+import { BASE_URL } from './types';
 
 
 const api: AxiosInstance = axios.create({

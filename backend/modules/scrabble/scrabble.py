@@ -352,6 +352,8 @@ class Scrabble:
 		return toSend
 	
 	def fetch_player_letters(self, userID: int):
+		# IF GROUP IS TRUE, FETCH LETTERS OF THE PARTNER'S DECK
+		
 		"""
 			Fetches the letters of a given player.
 
@@ -519,7 +521,7 @@ class Scrabble:
 
 		Returns the user ID of the player whose turn it now is.
 		"""
-		
+
 		if (self.gameTurn+1) < len(self.players):
 			self.gameTurn += 1
 		else:
@@ -722,6 +724,7 @@ class Scrabble:
 		return coordinates
 
 	async def place_word(self, letters, direction: str, blanks: list[tuple[int, int]]):
+		print(letters)
 		"""
 		Places a word on the game board based on the given letters and direction.
 
@@ -759,6 +762,7 @@ class Scrabble:
 				# Same row, x should increase by exactly 1
 				if y1 == y2 and x2 != x1 + 1  and not check_coordinate(expected):
 					print(f'right: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
+					
 					return False
 			elif direction == "down":
 				expected = (x1, y1 + 1)
@@ -953,10 +957,12 @@ class Scrabble:
 		return points
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
+		
 		isWord = False
 		if not self.firstPlaced:
 			# make sure [8,8] in the letters
 			if [7,7] not in [x[0] for x in letters]:
+				print("Not first required placement in grid so returning false")
 				return False
 			
 			wordString = ""
@@ -981,6 +987,7 @@ class Scrabble:
 				for placed_item in placing:
 					temp_x, temp_y = placed_item[0]
 					self.game[temp_y][temp_x] = defaultFiller
+				print("Exited here")
 				return False
 			else:
 				placing.append(letters[i])
@@ -1026,7 +1033,7 @@ class Scrabble:
 					if not self.firstPlaced:
 						hasJoiningWord = True
 						self.firstPlaced = True
-		print(f'has join word: {hasJoiningWord} | isword: {isWord} | theletters | Points: {points}')
+		print(f'has join word: {hasJoiningWord} | isword: {isWord} | {letters} | Points: {points}')
 		if not hasJoiningWord or not isWord:
 			print("removing placed letters")
 			# remove coordinates placed

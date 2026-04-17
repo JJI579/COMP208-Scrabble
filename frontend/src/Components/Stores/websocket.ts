@@ -1,18 +1,19 @@
-import type { InitType, MessageType, PacketType, WebsocketPacket } from "@/types";
+import { BASE_HOST, SECURE_URL, type InitType, type MessageType, type PacketType, type WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import useUserStore from "./user";
 import router from "@/router";
 import Game from "./Game";
 import useAlertStore from "./alert";
-import { isBreakStatement } from "typescript";
+
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
-	const websocketURL = 'ws://localhost:8000/ws'
+	const websocketURL = `ws${SECURE_URL ? 's' : ''}://${BASE_HOST}/ws`
+	console.log(websocketURL);
 	const websocket = ref<WebSocket | null>(null);
 	const game = reactive<Game>(new Game(0, {}));
 
 	const messages = ref<MessageType[]>([]);
+
 	const readyToSend = ref(false)
 
 	function connect() {
@@ -50,7 +51,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 
 		websocket.value.onmessage = (event) => {
 			const data: WebsocketPacket = JSON.parse(event.data)
-			console.log(data)
+			console.log("RECEIVED: ", data)
 			switch (data.t) {
 				case "ERROR":
 					useAlertStore().alert({
@@ -122,8 +123,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					}
 					break;
 				case "CONFIRM_LEAVE":
-					// game = null;
-					router.replace({ name: "dashboard" })
+					game.reset();
 					break
 				case "GAME_START":
 					// move user to game page
@@ -144,7 +144,29 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 						}
 					})
 					break
-
+				case "DRAFT_PLACED":
+					game.updatePartnerPlaced(data.d.placed);
+					break
+				case "TURN_CONFIRMATION":
+					useAlertStore().alert({
+						text: `${data.d.name} has accepted your word suggestion.`,
+						type: "success",
+					})
+					break;
+				case "TURN_REQUEST":
+					useAlertStore().alert({
+						text: "Your partner is suggesting a word...",
+						type: "game",
+						persistent: true
+					})
+					game.isSuggesting = true;
+					break;
+				case "TURN_DECLINE":
+					useAlertStore().alert({
+						text: `${data.d.name} has declined your word suggestion.`,
+						type: "error",
+					})
+					break;
 
 			}
 		}
@@ -163,19 +185,35 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 		_send(generatePacket(type, data))
 	}
 
+	let openListenerAttached = false
+	const queue: string[] = []
+
 	function _send(packet: string) {
 		if (websocket.value?.readyState === WebSocket.OPEN) {
 			websocket.value.send(packet)
-		} else {
-			console.log("waiting till websocket is open..")
-			websocket.value?.addEventListener(
+			return
+		}
+
+		queue.push(packet)
+
+		if (websocket.value && !openListenerAttached) {
+			console.log("waiting for open websocket")
+			openListenerAttached = true
+
+			websocket.value.addEventListener(
 				"open",
-				() => websocket.value?.send(packet),
-				{ once: true }
+				() => {
+					for (const p of queue) {
+						websocket.value?.send(p)
+					}
+					queue.length = 0
+					openListenerAttached = false
+				}
 			)
 		}
 	}
-	return { websocket, game, connect, generatePacket, send, messages }
+
+	return { websocket, game, connect, generatePacket, send, readyToSend, messages }
 });
 
 export default useWebsocketStore;

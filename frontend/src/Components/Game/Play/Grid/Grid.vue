@@ -18,6 +18,7 @@ const placed = defineModel<Map<number, [number, string, string?]>>("placed", {
 	required: true,
 	type: Map
 });
+
 const placedIndexes = computed(() => {
 	const values = placed.value.values();
 	return Array.from(values).map((value) => value[0]);
@@ -28,6 +29,10 @@ const OPTIONS = ["DOUBLE_WORD", "DOUBLE_LETTER", "TRIPLE_WORD", "TRIPLE_LETTER",
 const props = defineProps({
 	filler: {
 		type: String,
+		required: true
+	},
+	showPartners: {
+		type: Boolean,
 		required: true
 	}
 })
@@ -70,8 +75,9 @@ function cellClicked(index: number) {
 		<div class="cells">
 			<div class="cell" v-for="(value, i) in grid" @click="cellClicked(i)">
 				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />
-				<GridCell :cell-value="placed.get(i)?.[2] || placed.get(i)?.[1] || value" :score="''" :is-draft="placed.get(i) !== undefined"
-					:x="i % 15" :y="Math.floor(i / 15)" v-else />
+				<GridCell :cell-value="placed.get(i)?.[2] || placed.get(i)?.[1] || value" :score="''"
+					:is-draft="placed.get(i) !== undefined" :x="i % 15" :y="Math.floor(i / 15)"
+					:is-partners="showPartners" v-else />
 			</div>
 		</div>
 	</div>

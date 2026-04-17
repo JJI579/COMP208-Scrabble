@@ -8,6 +8,8 @@ import useWebsocketStore from '@/Components/Stores/websocket';
 import router from '@/router';
 import useUserStore from '@/Components/Stores/user';
 import type { GameUser } from '@/game_types';
+import useAlertStore from '@/Components/Stores/alert';
+import GroupPlayer from './GroupPlayer.vue';
 
 // Stores
 const websocketStore = useWebsocketStore();
@@ -27,9 +29,22 @@ watch(() => websocketStore.game.grid, () => {
 	grid.value = websocketStore.game.grid;
 })
 
+
+
 const letters = ref<string[]>([]);
 const grid = ref<(string | modifiers)[]>([]);
 const placed = ref<Map<number, [number, string, string?]>>(new Map());
+
+// Groups implementation
+const showPartners = ref(false);
+
+watch(() => websocketStore.game.isSuggesting, () => {
+	if (websocketStore.game.isSuggesting) {
+		// show partners letters.
+		showPartners.value = true;
+	}
+})
+
 const orderPlacement = ref<number[]>([]);
 const blankLetter = ref<string>(DEFAULT_FILLER);
 onMounted(() => {
@@ -50,7 +65,11 @@ function submitTurn() {
 		toSend.push([[x, y], letter, value[2]])
 	})
 
-	websocketStore.send("GAME_TURN", { letters: toSend });
+	if (websocketStore.game.type == "GROUP") {
+		websocketStore.send("TURN_REQUEST", { letters: toSend });
+	} else {
+		websocketStore.send("GAME_TURN", { letters: toSend });
+	}
 }
 
 const activePlayer = computed(() => {
@@ -67,6 +86,7 @@ function undo() {
 	const last = orderPlacement.value.pop();
 	if (last !== undefined) {
 		placed.value.delete(last);
+		websocketStore.send("DRAFT_PLACED", { placed: Object.fromEntries(placed.value) });
 	}
 }
 
@@ -98,6 +118,11 @@ function handleTileClick(index: number) {
 	blankLetter.value = DEFAULT_FILLER;
 	letterFocused.value = index;
 }
+
+
+const playerGroups = ref<GameUser[][]>([]);
+
+
 onMounted(() => {
 	const websocket = useWebsocketStore();
 	setTimeout(() => {
@@ -105,6 +130,24 @@ onMounted(() => {
 		if (websocket.game.gameTurn == -1) {
 			router.replace({ name: "dashboard" })
 		}
+		if (websocketStore.game.type == "GROUP") {
+			var groups = [];
+			for (const [key, value] of Object.entries(websocket.game.groups)) {
+				var group: GameUser[] = [];
+				for (const user of value) {
+					var userObject = websocket.game.players.get(Number(user))
+					if (userObject !== undefined) {
+						group.push(userObject)
+					}
+				}
+				groups.push(group)
+			}
+			playerGroups.value = groups.sort((a, b) => b.length - a.length);
+			console.log("ALL THE GROUPS")
+			console.log(groups)
+			playerGroups.value = groups;
+		}
+
 	}, 2000);
 	window.addEventListener("keyup", handleKeyboardPress)
 })
@@ -144,6 +187,14 @@ const players = computed(() => {
 })
 
 
+onMounted(() => {
+	if (websocketStore.game.type == "GROUP") {
+		console.log("players")
+		console.log(websocketStore.game.players);
+	}
+})
+
+
 const alphabetArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 const selectBlank = ref(-1);
 
@@ -157,6 +208,36 @@ function selectedBlankTile(index: number) {
 		selectBlank.value = -1;
 	}
 }
+
+
+
+function handleCellClicked() {
+	if (websocketStore.game.type == "GROUP") {
+		websocketStore.send("DRAFT_PLACED", { placed: Object.fromEntries(placed.value) });
+	}
+	letterFocused.value = -1
+}
+
+const isLaptop = ref(false);
+
+onMounted(() => {
+	window.addEventListener("resize", () => {
+		if (window.innerWidth <= 1024) {
+			isLaptop.value = true;
+		} else {
+			isLaptop.value = false;
+		}
+	});
+	if (window.innerWidth <= 1024) {
+		isLaptop.value = true;
+	} else {
+		isLaptop.value = false;
+	}
+});
+
+onUnmounted(() => {
+	window.removeEventListener("resize", () => { });
+});
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -165,7 +246,6 @@ function selectedBlankTile(index: number) {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
-
 	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
 		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
 			@click="selectedBlankTile(Number(ind))">
@@ -176,13 +256,18 @@ function selectedBlankTile(index: number) {
 
 		<div class="wrapper__flex">
 			<div class="player__column left">
+				<GroupPlayer :users="group" :active-player="1"
+					v-for="group in (playerGroups.length > 0 ? playerGroups.slice(0, isLaptop ? 4 : 2) : [])"
+					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"
-					v-for="player in (players.length > 0 ? players[0] : [])" />
+					v-for="player in (players.length > 0 ? players[0] : [])" v-else />
 			</div>
 			<div class="center__wrapper">
 				<Grid :filler="DEFAULT_FILLER" :active-player="activePlayer" :grid="grid"
 					:order-placement="orderPlacement" :letter-focused="letterFocused" :letters="letters"
-					@cell-clicked="letterFocused = -1" :placed="placed" :blank-letter="blankLetter" />
+					@cell-clicked="handleCellClicked()"
+					:placed="!showPartners ? placed : (new Map(Object.entries(websocketStore.game.partnerPlaced).map(([k, v]) => [Number(k), v])))"
+					:blank-letter="blankLetter" :show-partners="showPartners" />
 
 				<div class="actions">
 					<button class="action"></button>
@@ -197,19 +282,25 @@ function selectedBlankTile(index: number) {
 							<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
 						</div>
 					</div>
-					<button @click="submitTurn" class="action" :disabled="activePlayer !== userStore.userData?.userID"
+					<button @click="submitTurn()" class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-check "></i></button>
 					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
-
-					<button class="action" @click="chatOpen = !chatOpen"><i class="pi pi-comments"></i></button>
+					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
+					<button class="action" @click="showPartners = !showPartners"><i class="pi"
+							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
+							v-if="websocketStore.game.type == 'GROUP'"></i></button>
 				</div>
 			</div>
 			<div class="player__column right">
+				<GroupPlayer :users="group" :active-player="1"
+					v-for="group in (playerGroups.length > 2 && !isLaptop ? playerGroups.slice(2, 4) : [])"
+					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"
-					v-for="player in (players.length > 1 ? players[1] : [])" />
+					v-for="player in (players.length > 1 ? players[1] : [])" v-else />
+
 			</div>
 			<div class="chat__panel" :class="{ open: chatOpen }">
 				<button class="panel__close" @click="chatOpen = false">✕</button>
@@ -251,6 +342,8 @@ function selectedBlankTile(index: number) {
 	justify-content: center;
 }
 
+
+
 .center__wrapper {
 	display: flex;
 	flex-direction: column;
@@ -261,6 +354,7 @@ function selectedBlankTile(index: number) {
 	height: 100%;
 	min-width: 0;
 }
+
 .center__wrapper :deep(.grid),
 .center__wrapper :deep(.board),
 .center__wrapper :deep(.scrabble-grid) {
@@ -308,7 +402,7 @@ function selectedBlankTile(index: number) {
 	font-weight: 800;
 	border-radius: 8px;
 	cursor: pointer;
-	box-shadow: 0 3px 6px rgba(0,0,0,.35);
+	box-shadow: 0 3px 6px rgba(0, 0, 0, .35);
 	transition: .18s ease;
 	position: relative;
 }
@@ -346,7 +440,7 @@ function selectedBlankTile(index: number) {
 	background: #f1bc4c;
 	cursor: pointer;
 	font-size: 1.25rem;
-	box-shadow: 0 4px 10px rgba(0,0,0,.35);
+	box-shadow: 0 4px 10px rgba(0, 0, 0, .35);
 	transition: .18s ease;
 }
 
@@ -376,10 +470,12 @@ function selectedBlankTile(index: number) {
 	padding: 1rem;
 	color: white;
 	z-index: 9999;
-	box-shadow: -5px 0 15px rgba(0,0,0,.4);
+	box-shadow: -5px 0 15px rgba(0, 0, 0, .4);
 }
 
-.chat__panel.open { right: 0; }
+.chat__panel.open {
+	right: 0;
+}
 
 .panel__close {
 	background: none;
@@ -456,9 +552,10 @@ function selectedBlankTile(index: number) {
 	transform: translate(-50%, -50%);
 	background: var(--scrabble-board);
 	border-radius: 10px;
-	z-index: 99999;
-	padding: 1rem;
-	gap: .75rem;
+	z-index: 9999;
+	max-width: 50vh;
+	width: auto;
+	gap: 1rem;
 	flex-wrap: wrap;
 	max-width: 520px;
 }
@@ -478,5 +575,15 @@ function selectedBlankTile(index: number) {
 	border: 1px solid white;
 	border-radius: 8px;
 	cursor: pointer;
+}
+
+@media (min-width: 900px) and (max-width: 1200px) {
+	.player__column {
+		flex-direction: row;
+	}
+
+	.left {
+		margin-top: 10rem;
+	}
 }
 </style>

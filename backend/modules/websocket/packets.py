@@ -118,6 +118,19 @@ class DuringPackets(Packets):
 	def __init__(self) -> None:
 		pass
 
+	def turn_request(self, data: dict):
+		return self.create_packet("TURN_REQUEST", data)
+
+	def turn_confirmation(self, data: dict):
+		return self.create_packet("TURN_CONFIRMATION", data)
+
+	def turn_decline(self, data: dict):
+		return self.create_packet("TURN_DECLINE", data)
+	
+	def draft_placed(self, data: dict):
+		# {'placed': {'113': [0, 'N', None], '114': [2, 'G', None]}}
+		return self.create_packet("DRAFT_PLACED", data)
+	
 	def game_update(self, gameinfo: dict):
 
 		return self.create_packet("GAME_UPDATE_ONGOING", gameinfo)

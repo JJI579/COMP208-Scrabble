@@ -22,6 +22,10 @@ const props = defineProps({
 	y: {
 		type: Number,
 		required: true
+	},
+	isPartners: {
+		type: Boolean,
+		required: true
 	}
 
 })
@@ -45,7 +49,8 @@ const bgColour = computed(() => {
 
 
 <template>
-	<div class="cell" :class="{ 'scrabble--placed': isPlaced, 'cell--draft': isDraft }"
+	<div class="cell"
+		:class="{ 'scrabble--placed': cellValue.length > 1, 'cell--draft': isDraft, 'cell--partners': props.isPartners }"
 		:style="{ backgroundColor: bgColour }">
 		<p class="cell__letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
 		<p class="cell__score" v-if="cellValue !== '|'">{{ score }}</p>
@@ -98,5 +103,10 @@ const bgColour = computed(() => {
 	right: 2.5px;
 	font-size: 7.5px;
 	margin: 0;
+}
+
+.cell--partners {
+	/* TODO: hari fix this */
+	background-color: orange;
 }
 </style>
