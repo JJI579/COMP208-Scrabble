@@ -467,7 +467,7 @@ class Scrabble:
 				return
 
 		letterChoices = random.sample(self.letterArray, k=min(amount, len(self.letterArray)))
-		
+		letterChoices[0] = ' '
 		if str(userID) not in self.playerLetters:
 			self.playerLetters[str(userID)] = []
 		self.playerLetters[str(userID)].extend(letterChoices)
@@ -952,6 +952,8 @@ class Scrabble:
 
 	async def place_letters(self, letters: list[tuple[tuple[int, int], str, str|None]]):
 		
+
+		hasSetFirstPlaced = False
 		isWord = False
 		if not self.firstPlaced:
 			# make sure [8,8] in the letters
@@ -1027,8 +1029,11 @@ class Scrabble:
 					if not self.firstPlaced:
 						hasJoiningWord = True
 						self.firstPlaced = True
+						hasSetFirstPlaced = True
 		print(f'has join word: {hasJoiningWord} | isword: {isWord} | {letters} | Points: {points}')
 		if not hasJoiningWord or not isWord:
+			if hasSetFirstPlaced:
+				self.firstPlaced = False
 			print("removing placed letters")
 			# remove coordinates placed
 			for (x, y), *_ in placing:
@@ -1036,7 +1041,9 @@ class Scrabble:
 			return False
 		# OTHERWISE IT IS A TRUE WORD.
 		self.placed.extend(placing)
+		print("before giving points")
 		points+=self.calculate_points(placing, blanks)
+		print(points)
 		return points
 	
 		
@@ -1046,25 +1053,29 @@ class Scrabble:
 		doubleWord = 0
 		tripleWord = 0
 		points = 0
+		print(blanks)
 		for coord, letter, *rest in wordOrdered:
+			
 			if coord not in blanks:
 				# do not ignore
-				if coord in self.double_letter:
-					self.double_letter.remove(coord)
-					points += (pointsData[letter.upper()]*2) 
-				elif coord in self.triple_letter:
-					self.triple_letter.remove(coord)
-					points += (pointsData[letter.upper()] * 3)
-				else:
-					if coord in self.double_word:
-						self.double_word.remove(coord)
-						doubleWord+=1
-					elif coord in self.triple_word:
-						self.triple_word.remove(coord)
-						tripleWord+=1
-					if coord not in blanks:
-						# blanks have no points
-						points += pointsData[letter.upper()]
+				if letter != " ":
+
+					if coord in self.double_letter:
+						self.double_letter.remove(coord)
+						points += (pointsData[letter.upper()]*2) 
+					elif coord in self.triple_letter:
+						self.triple_letter.remove(coord)
+						points += (pointsData[letter.upper()] * 3)
+				
+				if coord in self.double_word:
+					self.double_word.remove(coord)
+					doubleWord+=1
+				elif coord in self.triple_word:
+					self.triple_word.remove(coord)
+					tripleWord+=1
+				if letter != " ":
+					# blanks have no points
+					points += pointsData[letter.upper()]
 			else:
 				# Blank tiles have no points
 				pass
