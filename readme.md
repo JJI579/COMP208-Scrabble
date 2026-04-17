@@ -1,5 +1,12 @@
 # Scrabble
 
+# What is this?
+
+This is a University Group Project where we developed a live websocketed-solution of Scrabble with 3 different gamemodes.
+- Normal - Same as Normal Scrabble
+- Bot - A CPU to play against which has different levels of difficulty
+- Group - A new mode where you can play in pairs against other groups / individuals and work together
+
 # How to install
 
 ## Backend
