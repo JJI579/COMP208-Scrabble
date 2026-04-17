@@ -323,7 +323,8 @@ class GameHandler:
 					# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
 					"points": pointsAmount
 				})
-				await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+				
+				
 				
 				letterOwnerID = None
 				if game.type == "GROUP":
@@ -331,6 +332,20 @@ class GameHandler:
 					# get leader of the group
 					# if leader == partner and turn == partner
 					# turn = this user
+					turnPartnersID = game.get_partner(nextTurn)
+					if turnPartnersID != None:
+						originalTurn = game.mm_get_current_turn()
+						for player in game.players:
+							if player.userID == userID:
+								continue
+							# this is the packet that gets sent to everyone, but if the turn if of their leaders, the turn needs to change to them.
+							if player.userID == turnPartnersID:
+								gameUpdatePacket['d']['turn'] = player.userID
+							else:
+								gameUpdatePacket['d']['turn'] = originalTurn
+							await manager.send_direct_message(gameUpdatePacket, player.userID)
+							# await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+
 					leaderID = game.get_group_leader_id(userID) # type: ignore
 					if (leaderID == None):
 						print("Leader ID is none...")
@@ -366,6 +381,7 @@ class GameHandler:
 						"points": pointsAmount,
 						"letters": letters
 					})
+					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 					await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
 				
 
@@ -437,7 +453,7 @@ class GameHandler:
 		# }
 		gameResult = game.finish_game()
 		
-		gameFinishPacket = packets.end.game_end(gameResult)
+		
 	
 		async for session in get_session():
 			if game.type == "BOT" or game.type == "NORMAL":
@@ -461,9 +477,10 @@ class GameHandler:
 				await session.commit()
 			else:
 				# game type == "GROUP"
-				print(gameResult)
-				pass
-		# await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
+				gameResult['groups'] = game.groups
+				gameResult['partners'] = game.partners
+		gameFinishPacket = packets.end.game_end(gameResult)
+		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
 		
 	@staticmethod
 	async def chat_message(data: dict, websocket: WebSocket):

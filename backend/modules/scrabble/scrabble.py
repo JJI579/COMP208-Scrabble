@@ -1046,7 +1046,6 @@ class Scrabble:
 			return False
 		# OTHERWISE IT IS A TRUE WORD.
 		self.placed.extend(placing)
-		print("before giving points")
 		if points == 0:
 			points+=self.calculate_points(placing, blanks)
 		print(points)
