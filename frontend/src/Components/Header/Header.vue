@@ -78,7 +78,7 @@ function openExternal(url: string) {
 					<span>Close</span>
 				</button>
 
-				<button class="menu-item" :class="{ active: route.name === 'home' }" @click="goTo('home')">
+ 				<button class="menu-item" :class="{ active: route.name === 'dashboard' }" @click="goTo('home')">
 					<i class="pi pi-home"></i>
 					<span>Home</span>
 				</button>
@@ -274,7 +274,6 @@ function openExternal(url: string) {
 
 .menu--active {
 	transform: translateX(0);
-
 }
 
 .menu {
@@ -341,5 +340,6 @@ function openExternal(url: string) {
 
 .menu-item.active {
 	background: rgba(255, 255, 255, 0.616);
+	transform: translateX(15px);
 }
 </style>

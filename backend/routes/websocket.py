@@ -777,7 +777,6 @@ class GameHandler:
 async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	hasIdentified = False
 	sessionID = secrets.token_hex(20)
-	await asyncio.sleep(5)
 	await websocket.accept()
 	websocket.session_id = sessionID # type: ignore
 	while True:

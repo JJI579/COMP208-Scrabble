@@ -477,12 +477,13 @@ function switchTurn() {
 	top: 0;
 	width: min(380px, 92vw);
 	height: 100%;
-	background: #2c8595;
+	background: #23345a;
 	transition: .3s ease;
 	padding: 1rem;
 	color: white;
 	z-index: 9999;
 	box-shadow: -5px 0 15px rgba(0, 0, 0, .4);
+	padding-bottom: 3rem;
 }
 
 .chat__panel.open {
