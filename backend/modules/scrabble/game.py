@@ -224,6 +224,8 @@ class Game:
                 self.players.append(player)
                 hasGroup = False
                 for i, group in enumerate(self.groups):
+                    if player.userID in group:
+                        raise Exception("Player already in game")
                     if len(group) == 0:
                         self.groups[i].append(player.userID)
                         hasGroup = True

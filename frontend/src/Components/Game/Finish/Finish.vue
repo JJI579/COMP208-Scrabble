@@ -28,10 +28,10 @@ const leaderIDs = computed(() => {
 	return finalData.groups?.flatMap(group => group[0]);
 });
 
-function getPartner(leader: number) {
+function getPartner(leader: number | undefined) {
+	if (leader === undefined) return '';
 	if (!finalData.partners) return '';
-
-	const partner = playerMap.value.get(finalData.partners[leader.toString()]);
+	const partner = playerMap.value.get(finalData.partners[leader]);
 	if (!partner) return '';
 
 	return ` & ${partner.userName}`;
@@ -64,12 +64,8 @@ function getPartner(leader: number) {
 					<span>Score</span>
 				</div>
 				<div v-if="finalData.groups">
-					<div
-						v-for="(leader, ind) in leaderIDs"
-						:key="leader"
-						class="board-row"
-						:class="{ champion: leader === finalData.winner.userID }"
-					>
+					<div v-for="(leader, ind) in leaderIDs" :key="leader" class="board-row"
+						:class="{ champion: leader === finalData.winner.userID }">
 						<span class="rank">
 							<span v-if="ind === 0">🥇</span>
 							<span v-else-if="ind === 1">🥈</span>
@@ -85,12 +81,8 @@ function getPartner(leader: number) {
 					</div>
 				</div>
 				<div v-else>
-					<div
-						v-for="(player, ind) in finalData.players"
-						:key="player.userID"
-						class="board-row"
-						:class="{ champion: player.userID === finalData.winner.userID }"
-					>
+					<div v-for="(player, ind) in finalData.players" :key="player.userID" class="board-row"
+						:class="{ champion: player.userID === finalData.winner.userID }">
 						<span class="rank">
 							<span v-if="ind === 0">🥇</span>
 							<span v-else-if="ind === 1">🥈</span>
@@ -132,9 +124,9 @@ function getPartner(leader: number) {
 	position: absolute;
 	inset: 0;
 	background:
-		radial-gradient(circle at 20% 20%, rgba(77,148,255,.18), transparent 30%),
-		radial-gradient(circle at 80% 30%, rgba(140,80,255,.16), transparent 30%),
-		radial-gradient(circle at 40% 80%, rgba(0,255,180,.12), transparent 30%);
+		radial-gradient(circle at 20% 20%, rgba(77, 148, 255, .18), transparent 30%),
+		radial-gradient(circle at 80% 30%, rgba(140, 80, 255, .16), transparent 30%),
+		radial-gradient(circle at 40% 80%, rgba(0, 255, 180, .12), transparent 30%);
 }
 
 .bg-orb {
@@ -159,17 +151,19 @@ function getPartner(leader: number) {
 	bottom: 10%;
 	right: 10%;
 }
+
 .finish-card {
 	position: relative;
 	z-index: 2;
 	width: min(800px, 100%);
-	background: rgba(255,255,255,0.14);
+	background: rgba(255, 255, 255, 0.14);
 	backdrop-filter: blur(14px);
 	border-radius: 24px;
 	padding: 2rem;
-	box-shadow: 0 20px 40px rgba(0,0,0,.35);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, .35);
 	color: white;
 }
+
 .winner-box {
 	text-align: center;
 	margin-bottom: 2rem;
@@ -185,7 +179,7 @@ function getPartner(leader: number) {
 	margin: 0;
 	font-size: 2.2rem;
 	color: #4d94ff;
-	text-shadow: 0 0 14px rgba(77,148,255,.45);
+	text-shadow: 0 0 14px rgba(77, 148, 255, .45);
 }
 
 .winner-name {
@@ -196,12 +190,17 @@ function getPartner(leader: number) {
 }
 
 @keyframes bounce {
-	from { transform: translateY(0); }
-	to { transform: translateY(-6px); }
+	from {
+		transform: translateY(0);
+	}
+
+	to {
+		transform: translateY(-6px);
+	}
 }
 
 .leaderboard {
-	background: rgba(255,255,255,.08);
+	background: rgba(255, 255, 255, .08);
 	border-radius: 18px;
 	padding: 1.25rem;
 }
@@ -226,11 +225,11 @@ function getPartner(leader: number) {
 .board-header {
 	font-weight: 700;
 	color: #aecdff;
-	border-bottom: 1px solid rgba(255,255,255,.15);
+	border-bottom: 1px solid rgba(255, 255, 255, .15);
 }
 
 .board-row {
-	border-bottom: 1px solid rgba(255,255,255,.08);
+	border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
 .board-row:last-child {
@@ -243,14 +242,13 @@ function getPartner(leader: number) {
 }
 
 .champion {
-	background: linear-gradient(
-		90deg,
-		rgba(255,215,0,.18),
-		rgba(255,215,0,.05)
-	);
+	background: linear-gradient(90deg,
+			rgba(255, 215, 0, .18),
+			rgba(255, 215, 0, .05));
 	border-left: 4px solid gold;
 	border-radius: 10px;
 }
+
 .home-link {
 	text-decoration: none;
 }
@@ -275,7 +273,7 @@ function getPartner(leader: number) {
 
 .home-btn:hover {
 	transform: translateY(-3px) scale(1.02);
-	box-shadow: 0 0 20px rgba(77,148,255,.45);
+	box-shadow: 0 0 20px rgba(77, 148, 255, .45);
 }
 
 /* MOBILE */

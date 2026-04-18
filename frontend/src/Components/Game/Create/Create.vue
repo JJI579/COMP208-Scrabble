@@ -52,8 +52,12 @@ function goToJoin() {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
+		websocket.game.reset()
 	}
-	router.push({ name: "join" });
+	setTimeout(() => {
+		router.push({ name: "join" });
+	}, 500);
+
 }
 
 async function createGame() {
