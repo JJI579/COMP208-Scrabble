@@ -184,14 +184,9 @@ class GameHandler:
 				packets.error("It is not your turn currently!"),
 				userID
 			)
-		game.game.print_board()
 		nextTurn = game.mm_next_turn()
-		print("_------------------")
-		game.game.print_board()
-		newGrid = game.game.export_grid()
 
 		skipPacket = packets.during.game_update({
-			"grid": newGrid,
 			"turn": nextTurn,
 			"skipped": True
 		})
@@ -201,11 +196,14 @@ class GameHandler:
 			[x.userID for x in game.players]
 		)
 
-		if game.type == "GROUP":
+		""" if game.type == "GROUP":
 			for player in game.players:
-				await manager.send_direct_message(skipPacket, player.userID)
-		elif game.type == 'BOT':
-			if nextTurn == -2:
+				await manager.send_direct_message(skipPacket, player.userID) """
+		
+		if game.type == 'BOT' and nextTurn == -2:
+				print("next turn after skip:", nextTurn)
+				print("game type:", game.type)
+				await manager.broadcast_specific(skipPacket, [x.userID for x in game.players])
 				return await GameHandler.bot_turn_handler(game, websocket)
 			
 		if game.game.finished:
@@ -213,7 +211,77 @@ class GameHandler:
 
 	@staticmethod
 	async def switch_turn(data: dict, websocket: WebSocket):
-		pass	
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			errorPacket = packets.error("You are not authenticated.")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+
+		if userConnection['game'] == None:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+		
+		game = manager.fetch_game(userConnection['game'])
+		if type(game) == bool:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+
+		userID = userConnection['info'].userID
+		currentTurn = game.mm_get_current_turn()
+		groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID
+		if userID != currentTurn and groupLeaderID != currentTurn:
+			return await manager.send_direct_message(
+				packets.error("It is not your turn currently!"),
+				userID
+			)
+
+		letterOwnerID = groupLeaderID if game.type == "GROUP" else userID
+		newLetters = game.game.switch_player_letters(letterOwnerID)
+		if type(newLetters) == bool:
+			return await manager.send_direct_message(
+				packets.error("Unable to swap tiles right now."),
+				userID
+			)
+
+		nextTurn = game.mm_next_turn()
+
+		if game.type == "GROUP":
+			partnerID = game.get_partner(userID)
+			updateCurrentUser = packets.during.game_update({
+				"turn": nextTurn,
+				"letters": newLetters,
+				"partner": partnerID
+			})
+			await manager.send_direct_message(updateCurrentUser, userID)
+			if type(partnerID) != bool:
+				updatePartner = packets.during.game_update({
+					"turn": nextTurn,
+					"letters": newLetters,
+					"partner": userID
+				})
+				await manager.send_direct_message(updatePartner, partnerID)
+				otherUsers = [x.userID for x in game.players if x.userID not in [userID, partnerID]]
+			else:
+				otherUsers = [x.userID for x in game.players if x.userID != userID]
+			await manager.broadcast_specific(packets.during.game_update({
+				"turn": nextTurn
+			}), otherUsers)
+		else:
+			await manager.broadcast_specific(
+				packets.during.game_update({
+					"turn": nextTurn
+				}),
+				[x.userID for x in game.players if x.userID != websocket.user_id] # type: ignore
+			)
+			await manager.send_direct_message(packets.during.game_update({
+				"turn": nextTurn,
+				"letters": newLetters
+			}), websocket.user_id) # type: ignore
+
+		if game.type == 'BOT' and nextTurn == -2:
+			return await GameHandler.bot_turn_handler(game, websocket)
+		
+		if game.game.finished:
+			return await GameHandler.finish_game(websocket)	
 
 
 	@staticmethod

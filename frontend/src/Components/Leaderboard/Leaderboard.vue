@@ -77,7 +77,7 @@ watch(searchUser, () => {
 						<span v-if="i === 0" class="medal gold">🥇</span>
 						<span v-else-if="i === 1" class="medal silver">🥈</span>
 						<span v-else-if="i === 2" class="medal bronze">🥉</span>
-						<span v-else>{{ i + 1 }}</span>
+						<span v-else>{{ Number(i) + 1 }}</span>
 
 					</td>
 

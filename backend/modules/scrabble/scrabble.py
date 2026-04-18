@@ -337,10 +337,10 @@ class Scrabble:
 		# even though start and finish is in separate places, i am not arsed to fix this.
 		self.finished = False
 
-		self.double_letter = [ [3,0],[11,0], [6,2],[8,2], [0,3],[7,3],[14,3], [2,6],[6,6],[8,6],[12,6], [3,7],[11,7], [2,8],[6,8],[8,8],[12,8], [0,11],[7,11],[14,11], [6,12],[8,12], [3,14],[11,14] ]
-		self.triple_letter = [ [5,1],[9,1], [1,5],[5,5],[9,5],[13,5], [1,9],[5,9],[9,9],[13,9], [5,13],[9,13] ]
-		self.double_word = [ [1,1],[2,2],[3,3],[4,4], [7,7], [10,10],[11,11],[12,12],[13,13], [13,1],[12,2],[11,3],[10,4], [4,10],[3,11],[2,12],[1,13] ]
-		self.triple_word = [ [0,0],[7,0],[14,0], [0,7],[14,7], [0,14],[7,14],[14,14] ]
+		self.double_letter = { (3,0),(11,0), (6,2),(8,2), (0,3),(7,3),(14,3), (2,6),(6,6),(8,6),(12,6), (3,7),(11,7), (2,8),(6,8),(8,8),(12,8), (0,11),(7,11),(14,11), (6,12),(8,12), (3,14),(11,14) }
+		self.triple_letter = { (5,1),(9,1), (1,5),(5,5),(9,5),(13,5), (1,9),(5,9),(9,9),(13,9), (5,13),(9,13) }
+		self.double_word = { (1,1),(2,2),(3,3),(4,4), (7,7), (10,10),(11,11),(12,12),(13,13), (13,1),(12,2),(11,3),(10,4), (4,10),(3,11),(2,12),(1,13) }
+		self.triple_word = { (0,0),(7,0),(14,0), (0,7),(14,7), (0,14),(7,14),(14,14) }
 
 	def export_grid(self):
 		toSend = {}
@@ -493,6 +493,22 @@ class Scrabble:
 		if len(letters) < 7: # make it give the rest of the letters.
 			self.give_player_letters(userID, 7 - len(letters))
 
+	def switch_player_letters(self, userID: int):
+		"""
+		Return the player's current rack to the tile bag and draw a fresh rack.
+		This consumes no board state and is intended for a turn-swap action.
+		"""
+		key = str(userID)
+		if key not in self.playerLetters:
+			return False
+
+		current_letters = copy.deepcopy(self.playerLetters[key])
+		self.letterArray.extend(current_letters)
+		random.shuffle(self.letterArray)
+		self.playerLetters[key] = []
+		self.give_player_letters(userID, min(7, len(self.letterArray)))
+		return self.playerLetters[key]
+
 	def export_data(self):
 		""" 
 		Returns a dictionary containing the game state.
@@ -543,12 +559,20 @@ class Scrabble:
 		snapshot = copy.deepcopy(self.game)
 		snapshot_placed = copy.deepcopy(self.placed)
 		snapshot_firstPlaced = self.firstPlaced
+		snapshot_double_letter = self.double_letter.copy()
+		snapshot_triple_letter = self.triple_letter.copy()
+		snapshot_double_word = self.double_word.copy()
+		snapshot_triple_word = self.triple_word.copy()
 
 		result = await self._place_word(word, position, direction, blanks)
 
 		self.game = snapshot
 		self.placed = snapshot_placed
 		self.firstPlaced = snapshot_firstPlaced
+		self.double_letter = snapshot_double_letter
+		self.triple_letter = snapshot_triple_letter
+		self.double_word = snapshot_double_word
+		self.triple_word = snapshot_triple_word
 
 		return result if isinstance(result, int) else None
 
@@ -811,8 +835,6 @@ class Scrabble:
 		tempPlaced = []
 		direction = direction.lower().strip()
 		for i in range(len(word)):
-			if (x,y) not in preExisting:
-				wordCoordinates.append((x, y))
 			cellContents = self.get_cell(x, y)
 			if cellContents != defaultFiller:
 				if cellContents != word[i]:
@@ -821,6 +843,7 @@ class Scrabble:
 					return False
 			else:
 				if (x, y) not in preExisting:
+					wordCoordinates.append((x, y))
 					self.game[y][x] = word[i]
 					tempPlaced.append(((x, y), word[i]))
 				else:
@@ -859,6 +882,7 @@ class Scrabble:
 		isWord = await self.check_word(word)
 		forceBreak = False
 		points = 0
+		haveTested = set()
 		for currentPosition in wordCoordinates:
 			if forceBreak:
 				break
@@ -876,6 +900,9 @@ class Scrabble:
 						potentialWord.sort(key=lambda x: x[0] )
 					wordOrdered = [[x, self.get_cell(x[0], x[1])] for x in potentialWord]
 					wordString = ''.join([x[1] for x in wordOrdered])
+					word_key = tuple(tuple(coord) for coord, _ in wordOrdered)
+					if word_key in haveTested:
+						continue
 					
 					# Validate cross-word is at least 2 characters
 					if len(wordString) < 2:
@@ -907,6 +934,7 @@ class Scrabble:
 						
 						# Add points for newly placed tiles (with modifiers)
 						points += self.calculate_points(newly_placed_in_cross, blanks)
+						haveTested.add(word_key)
 						
 						hasJoiningWord = True
 						isWord = True
@@ -915,9 +943,10 @@ class Scrabble:
 						hasJoiningWord = True
 						self.firstPlaced = True
 		
-		if len(word) == 7 and len(preExisting) == 0:
-			points+=50 
-		points+=self.calculate_points(tempPlaced, blanks)
+		if len(tempPlaced) == 7:
+			points += 50
+		if points == 0:
+			points += self.calculate_points(tempPlaced, blanks)
 		
 		# STRICT VALIDATION: Always check that main word is valid
 		if not isWord:
@@ -1026,7 +1055,12 @@ class Scrabble:
 							print("Already tested this word, skipping.")
 						else:
 							print(f"{wordString} is a word.")
-							points+=self.calculate_points(wordOrdered, blanks)
+							newly_placed_in_word = [tile for tile in wordOrdered if tuple(tile[0]) in [tuple(pos) for pos in letterPositions]]
+							existing_in_word = [tile for tile in wordOrdered if tuple(tile[0]) not in [tuple(pos) for pos in letterPositions]]
+							for coord, letter in existing_in_word:
+								if coord not in blanks:
+									points += pointsData[letter.upper()]
+							points += self.calculate_points(newly_placed_in_word, blanks)
 							hasJoiningWord = True
 							isWord = True
 							haveTested.append(wordOrdered)
@@ -1047,48 +1081,48 @@ class Scrabble:
 		# OTHERWISE IT IS A TRUE WORD.
 		self.placed.extend(placing)
 		if points == 0:
-			points+=self.calculate_points(placing, blanks)
+			points += self.calculate_points(placing, blanks)
+		if len(placing) == 7:
+			points += 50
 		print(points)
 		return points
 	
 		
 
 	def calculate_points(self, wordOrdered: list[list], blanks: list[tuple[int, int]]):
-		# This function should ONLY be called with newly placed tiles
+		# This function should ONLY be called with newly placed tiles.
 		doubleWord = 0
 		tripleWord = 0
 		points = 0
+		blank_positions = {tuple(coord) for coord in blanks}
 		print(blanks)
 		for coord, letter, *rest in wordOrdered:
-			
-			if coord not in blanks:
-				# do not ignore
-				if letter != " ":
+			coord = tuple(coord)
+			if coord in blank_positions or letter == " ":
+				continue
 
-					if coord in self.double_letter:
-						self.double_letter.remove(coord)
-						points += (pointsData[letter.upper()]*2) 
-					elif coord in self.triple_letter:
-						self.triple_letter.remove(coord)
-						points += (pointsData[letter.upper()] * 3)
-				
-				if coord in self.double_word:
-					self.double_word.remove(coord)
-					doubleWord+=1
-				elif coord in self.triple_word:
-					self.triple_word.remove(coord)
-					tripleWord+=1
-				if letter != " ":
-					# blanks have no points
-					points += pointsData[letter.upper()]
-			else:
-				# Blank tiles have no points
-				pass
+			letter_points = pointsData[letter.upper()]
+
+			if coord in self.double_letter:
+				self.double_letter.discard(coord)
+				letter_points *= 2
+			elif coord in self.triple_letter:
+				self.triple_letter.discard(coord)
+				letter_points *= 3
+
+			if coord in self.double_word:
+				self.double_word.discard(coord)
+				doubleWord += 1
+			elif coord in self.triple_word:
+				self.triple_word.discard(coord)
+				tripleWord += 1
+
+			points += letter_points
 
 		for _ in range(doubleWord):
-			points*=2
+			points *= 2
 		for _ in range(tripleWord):
-			points*=3
+			points *= 3
 		return points
 
 	def print_board(self):

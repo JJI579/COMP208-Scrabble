@@ -10,7 +10,6 @@ import useUserStore from '@/Components/Stores/user';
 import type { GameUser } from '@/game_types';
 import useAlertStore from '@/Components/Stores/alert';
 import GroupPlayer from './GroupPlayer.vue';
-import { skip } from 'node:test';
 
 // Stores
 const websocketStore = useWebsocketStore();
@@ -18,10 +17,19 @@ const userStore = useUserStore();
 
 const letterFocused = ref<number>(-1);
 
-watch(() => websocketStore.game.letters, () => {
-	letters.value = websocketStore.game.letters;
-	// if letters change that mean they have been handed a new deck.
-	placed.value = new Map();
+watch(() => websocketStore.game.letters, (newLetters, oldLetters) => {
+	letters.value = [...newLetters];
+
+	const previousLetters = oldLetters ?? [];
+	const rackChanged =
+		newLetters.length !== previousLetters.length ||
+		newLetters.some((letter, index) => letter !== previousLetters[index]);
+
+	if (rackChanged) {
+		// Only clear drafted placements when the rack genuinely changes.
+		placed.value = new Map();
+		orderPlacement.value = [];
+	}
 })
 
 watch(() => websocketStore.game.grid, () => {
@@ -246,12 +254,7 @@ function skipTurn() {
 
 }
 function switchTurn() {
-	// TODO: look at how i done skip turn, you add the name of the packet to PacketType in types.ts, then send it like above, then go to backend ->  websocket.py
-	// look at big switch case, then add the packet type to PacketType in types.py i think
-	// Then make a static method in gamehandler
-	// then do all your working in that
-	// copy paste that boiler plate in all other static methods to make sure user in game and etc etc 
-	// HARI
+	websocketStore.send("SWITCH_TURN", {});
 }
 </script>
 
@@ -284,13 +287,13 @@ function switchTurn() {
 					:blank-letter="blankLetter" :show-partners="showPartners" />
 
 				<div class="actions">
-					<button class="action" @click="showPartners = !showPartners"><i class="pi"
+					<button class="action tooltip-btn" @click="showPartners = !showPartners" data-tooltip="Toggle Partners"><i class="pi"
 							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
-							v-if="websocketStore.game.type == 'GROUP'"></i></button>
-					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
-					<button class="action" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
-							class="pi pi-arrow-right-arrow-left"></i></button>
+							></i></button>
+					<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
+					<button class="action tooltip-btn" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Skip Turn"><i
+							class="pi pi-angle-double-right"></i></button>
 					<div class="rack">
 						<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
 							:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
@@ -298,14 +301,12 @@ function switchTurn() {
 							<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
 						</div>
 					</div>
-					<button @click="submitTurn()" class="action" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
-							class="pi pi-check "></i></button>
-					<button class="action" :disabled="activePlayer !== userStore.userData?.userID" @click="endGame"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
-							class="pi pi-flag"></i></button>
-					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
-					<button class="action" @click="switchTurn"><i class="pi pi-comments">switch</i></button>
+					<button @click="submitTurn()" class="action tooltip-btn" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Submit Turn">
+							<i class="pi pi-check "></i></button>
+					<button class="action tooltip-btn" @click="() => chatOpen = true" data-tooltip="Chat"><i class="pi pi-comments"></i></button>
+					<button class="action tooltip-btn" @click="switchTurn" :disabled="activePlayer !== userStore.userData?.userID"
+						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
 
 				</div>
 			</div>
@@ -375,6 +376,51 @@ function switchTurn() {
 	aspect-ratio: 1 / 1;
 
 	display: grid;
+}
+
+.tooltip-btn {
+	position: relative;
+	overflow: visible;
+}
+.tooltip-btn::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	bottom: calc(100% + 10px);
+	left: 50%;
+	transform: translateX(-50%) translateY(6px);
+	background: rgba(20, 20, 20, 0.95);
+	color: white;
+	padding: 7px 10px;
+	border-radius: 10px;
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	transition: all 0.18s ease;
+	box-shadow: 0 8px 18px rgba(0,0,0,.35);
+	z-index: 9999;
+	letter-spacing: .2px;
+}
+
+.tooltip-btn::before {
+	content: "";
+	position: absolute;
+	bottom: calc(100% + 4px);
+	left: 50%;
+	transform: translateX(-50%);
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-top: 6px solid rgba(20,20,20,.95);
+	opacity: 0;
+	transition: all 0.18s ease;
+	z-index: 9999;
+}
+
+.tooltip-btn:hover::after,
+.tooltip-btn:hover::before {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
 }
 
 /* PERFECTLY CENTERED CONTROLS */

@@ -50,8 +50,9 @@ type ongoingData = {
 	players?: [],
 	grid?: Map<string, string>,
 	turn: number,
-	partner: number,
-	points?: number
+	partner?: number,
+	points?: number,
+	skipped?: boolean
 }
 
 
@@ -159,8 +160,10 @@ class Game implements GAME {
 	}
 
 	updateOngoing(allData: ongoingData) {
-		this.isSuggesting = false;
-		this.partnerPlaced = new Map();
+		if (!allData.skipped) {
+			this.isSuggesting = false;
+			this.partnerPlaced = new Map();
+		}
 
 		if (allData.letters !== undefined) {
 			this.letters = allData.letters;
@@ -183,7 +186,7 @@ class Game implements GAME {
 		console.log("checking here...")
 		console.log(allData.partner);
 		console.log(allData);
-		if (allData.partner == userStore.userData?.userID) {
+		if (allData.partner !== undefined && allData.partner == userStore.userData?.userID) {
 			this.gameTurn = allData.partner;
 		} else {
 			console.log("Turn has been changed");
