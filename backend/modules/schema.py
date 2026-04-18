@@ -39,6 +39,12 @@ GAME_TYPE = Literal[
 	"BOT"
 ]
 
+BOT_DIFFICULTY = Literal[
+	"easy",
+	"medium",
+	"hard"
+]
+
 # Users
 class UserFetch(BaseModel):
 	userID: int
@@ -121,6 +127,7 @@ class GameOptions(BaseModel):
     group_size: Optional[int] = None
     time_limit: int | str
     dictionary: bool
+    bot_difficulty: Optional[BOT_DIFFICULTY] = "hard"
 
 class PersonalItemReturn(BaseModel):
 	itemID: int

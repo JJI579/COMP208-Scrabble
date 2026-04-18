@@ -1,67 +1,77 @@
 <script lang="ts" setup>
 import useWebsocketStore from '@/Components/Stores/websocket';
 import Preset from './Preset.vue';
-import { ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import Message from './Message.vue';
-import { type MessageType } from '@/types';
 
 const option = ref("all");
-
 const websocketStore = useWebsocketStore();
-
-function sendMessage() {
-	var message = messageModel.value
-	websocketStore.send("CHAT_MESSAGE", {
-		message: message,
-		partner: option.value == 'group'
-	});
-}
+const messageModel = ref("");
+const messagesContainer = ref<HTMLElement | null>(null);
 
 const sampleSends = [
 	'Crushing it!',
-	'On a roll!',
 	'Great job!',
 	'Keep going!',
 	'Not much time left!',
-	'Youre doing fantastic!',
 	'Youre a Scrabble mastermind!',
-	'Wow, not many points...'
+	'Wow, not many points...',
+	'On a roll!',
+	'You\'re doing fantastic',
 ]
+
+const messages = computed(() => {
+	if (option.value == "all") {
+		return websocketStore.messages.filter((message) => !message.partner);
+	}
+	return websocketStore.messages.filter((message) => message.partner);
+});
+
+function scrollToBottom(behavior: ScrollBehavior = "smooth") {
+	nextTick(() => {
+		const container = messagesContainer.value;
+		if (container) {
+			container.scrollTo({ top: container.scrollHeight, behavior });
+		}
+	});
+}
+
+function sendMessage() {
+	const message = messageModel.value.trim();
+	if (!message) {
+		return;
+	}
+	websocketStore.send("CHAT_MESSAGE", {
+		message,
+		partner: option.value == 'group'
+	});
+	messageModel.value = "";
+	scrollToBottom();
+}
 
 function sampleClick(sample: String) {
 	messageModel.value = sample.toString();
 }
-const messageModel = ref("");
-
-
-
-var messages = ref<MessageType[]>([]);
-watch(websocketStore.messages, () => {
-	if (option.value == "all") {
-		messages.value = websocketStore.messages.filter((message) => !message.partner);
-	} else {
-		messages.value = websocketStore.messages.filter((message) => message.partner);
-	}
-})
 
 function changeOption(opt: string) {
-	if (opt == 'all') {
-		messages.value = websocketStore.messages.filter((message) => !message.partner);
-	} else {
-		messages.value = websocketStore.messages.filter((message) => message.partner);
-	}
 	option.value = opt
+	scrollToBottom("auto");
 }
 
+watch(() => messages.value.length, () => {
+	scrollToBottom();
+});
 
-
+onMounted(() => {
+	scrollToBottom("auto");
+});
 </script>
 
 
 <template>
 
 	<div class="sample">
-		<div class="sample__message" v-for="message in sampleSends">
+		<div class="sample__message" v-for="message in sampleSends" :key="message">
 			<Preset :message="message" @click="sampleClick" />
 		</div>
 	</div>
@@ -71,11 +81,11 @@ function changeOption(opt: string) {
 			<div class="option" @click="changeOption('group')" :class="{ 'option--active': option == 'group' }">Group
 			</div>
 		</div>
-		<div class="messages">
-			<Message v-for="message in messages" :message="message" />
+		<div class="messages" ref="messagesContainer">
+			<Message v-for="message in messages" :key="message.id" :message="message" />
 		</div>
 		<div class="send">
-			<input type="text" v-model="messageModel" class="send__input">
+			<input type="text" v-model="messageModel" class="send__input" @keydown.enter.prevent="sendMessage">
 			<button class="send__submit" @click="sendMessage"><i class="pi pi-upload"></i></button>
 		</div>
 	</div>
@@ -104,14 +114,15 @@ function changeOption(opt: string) {
 }
 
 .sample {
-	margin-bottom: 0.5rem;
+	margin-bottom: 0.75rem;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.25rem;
 	justify-content: center;
-	max-height: 120px;
+	max-height: 140px;
 	overflow-y: auto;
-	padding: 0.25rem;
+	padding: 0.35rem 0.25rem;
+	flex-shrink: 0;
 }
 
 .sample__message {
@@ -121,8 +132,8 @@ function changeOption(opt: string) {
 .flex-box {
 	display: flex;
 	flex-direction: column;
-	height: calc(100% - 120px);
-	min-height: 200px;
+	height: calc(100% - 165px);
+	min-height: 180px;
 	gap: 0.5rem;
 }
 

@@ -111,7 +111,8 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 				case "PLAYER_DISCONNECT":
 					break
 				case "CHAT_MESSAGE":
-					messages.value.push(data.d as MessageType);
+					messages.value = [...messages.value, data.d as MessageType];
+					break
 				case "GROUP_JOIN":
 					if (!game) {
 						// we should have a game by now.

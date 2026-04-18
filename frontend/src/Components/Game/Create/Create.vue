@@ -24,9 +24,13 @@ const timeLimitOptions: Option[] = [["none", "None"], ["45", "45 Minutes"], ["1"
 const groupSizeRef = ref("4");
 const groupSizeOptions: Option[] = [["2", "2"], ["3", "3"], ["4", "4"]]
 
+const botDifficultyRef = ref("hard");
+const botDifficultyOptions: Option[] = [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"]]
+
 const gtModel = ref(false);
 const tlModel = ref(false);
 const ngModel = ref(false);
+const bdModel = ref(false);
 
 
 const router = useRouter();
@@ -78,7 +82,8 @@ async function createGame() {
 		game_type: gameTypeRef.value,
 		group_size: Number(groupSizeRef.value),
 		time_limit: timeLimitRef.value,
-		dictionary: false
+		dictionary: false,
+		bot_difficulty: gameTypeRef.value === "BOT" ? botDifficultyRef.value : undefined
 		// dictionary: useDictionaryRef.value === "true"
 	})
 	router.push({ name: "join", query: { code: resp.data.code } })
@@ -86,19 +91,20 @@ async function createGame() {
 
 function closeOthers(whichMenu: string) {
 	console.log(whichMenu)
+	gtModel.value = false;
+	tlModel.value = false;
+	ngModel.value = false;
+	bdModel.value = false;
+
 	if (whichMenu === "Game Type") {
 		gtModel.value = true;
-		tlModel.value = false;
-		ngModel.value = false;
 	} else if (whichMenu == "Time Limit") {
 		console.log("time limit")
 		tlModel.value = true;
-		gtModel.value = false;
-		ngModel.value = false;
+	} else if (whichMenu === "Bot Difficulty") {
+		bdModel.value = true;
 	} else {
 		ngModel.value = true;
-		gtModel.value = false;
-		tlModel.value = false;
 	}
 }
 function closeMenu(whichMenu: String) {
@@ -106,6 +112,8 @@ function closeMenu(whichMenu: String) {
 		gtModel.value = false;
 	} else if (whichMenu === "Time Limit") {
 		tlModel.value = false;
+	} else if (whichMenu === "Bot Difficulty") {
+		bdModel.value = false;
 	} else {
 		ngModel.value = false;
 	}
@@ -140,8 +148,10 @@ function closeMenu(whichMenu: String) {
 					@close="closeMenu" @open="closeOthers" v-model:isopen="tlModel" />
 				<!-- <CustomSelect :options="dictionaryOptions" label="Dictionary Allowed"
 					v-model:selected="useDictionaryRef" /> -->
-				<CustomSelect :options="groupSizeOptions" label="Number of Groups" v-model:selected="groupSizeRef"
+				<CustomSelect v-if="gameTypeRef === 'GROUP'" :options="groupSizeOptions" label="Number of Groups" v-model:selected="groupSizeRef"
 					@close="closeMenu" @open="closeOthers" v-model:isopen="ngModel" />
+				<CustomSelect v-if="gameTypeRef === 'BOT'" :options="botDifficultyOptions" label="Bot Difficulty" v-model:selected="botDifficultyRef"
+					@close="closeMenu" @open="closeOthers" v-model:isopen="bdModel" />
 			</div>
 			<button class="create__btn glow-hover" @click="createGame">
 				Create Game

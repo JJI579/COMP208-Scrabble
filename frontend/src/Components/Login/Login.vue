@@ -121,7 +121,7 @@ function toggleMode() {
 	<!-- Login / register page! -->
 
 	<div class="content">
-		<div class="form">
+		<form class="form" @submit.prevent="handleSubmit">
 			<div class="title__container">
 				<div class="title__options">
 					<h2 class="title">Let's get you Playing!</h2>
@@ -139,11 +139,11 @@ function toggleMode() {
 				<input type="checkbox" v-model="rememberMe" />
 				Remember me
 			</label>
-			<div class="submit" @click="handleSubmit">
+			<button type="submit" class="submit">
 				<div class="submit__text">
 					{{ currentSelection == 'login' ? 'Login' : 'Register' }}
 				</div>
-			</div>
+			</button>
 			<div class="no__lose">
 				<p v-if="currentSelection === 'login'">
 					Don't lose your progress!
@@ -157,7 +157,7 @@ function toggleMode() {
 					{{ currentSelection === 'login' ? 'Create an Account' : 'Sign in' }}
 				</p>
 			</div>
-		</div>
+		</form>
 	</div>
 </template>
 
@@ -215,6 +215,7 @@ input {
 	padding: 0.75em;
 	transition: 0.2s ease all;
 	text-align: center;
+	border: none;
 }
 
 

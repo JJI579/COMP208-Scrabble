@@ -9,7 +9,8 @@ class Game:
         self.id = gameID
         self.leader = leaderID
         self.options = options.model_dump(mode="json")
-        self.game = Scrabble(copy.deepcopy(arr))
+        self.bot_difficulty = options.bot_difficulty if options.bot_difficulty else "hard"
+        self.game = Scrabble(copy.deepcopy(arr), bot_difficulty=self.bot_difficulty)
         self.type: GAME_TYPE = options.game_type
         self.players: list[GamePlayer | BotPlayer] = []
         self.hasStarted = False

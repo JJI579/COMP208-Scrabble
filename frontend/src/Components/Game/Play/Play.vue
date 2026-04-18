@@ -87,7 +87,24 @@ const activePlayer = computed(() => {
 })
 
 const chatOpen = ref(false);
+const unreadChatCount = ref(0);
 
+watch(() => websocketStore.messages.length, (newLength, oldLength = 0) => {
+	if (newLength <= oldLength) {
+		return;
+	}
+	const latestMessage = websocketStore.messages[newLength - 1];
+	if (!chatOpen.value && latestMessage?.author?.id !== userStore.userData?.userID) {
+		unreadChatCount.value += newLength - oldLength;
+	}
+});
+
+function toggleChat() {
+	chatOpen.value = !chatOpen.value;
+	if (chatOpen.value) {
+		unreadChatCount.value = 0;
+	}
+}
 
 function undo() {
 	const last = orderPlacement.value.pop();
@@ -304,7 +321,9 @@ function switchTurn() {
 					<button @click="submitTurn()" class="action tooltip-btn" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Submit Turn">
 							<i class="pi pi-check "></i></button>
-					<button class="action tooltip-btn" @click="() => chatOpen = true" data-tooltip="Chat"><i class="pi pi-comments"></i></button>
+					<button class="action tooltip-btn chat-toggle" @click="toggleChat" data-tooltip="Chat"><i class="pi pi-comments"></i>
+						<span v-if="unreadChatCount > 0" class="chat__badge">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
+					</button>
 					<button class="action tooltip-btn" @click="switchTurn" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
 
@@ -517,19 +536,46 @@ function switchTurn() {
 	pointer-events: none;
 }
 
+.chat-toggle {
+	position: relative;
+	z-index: 10001;
+}
+
+.chat__badge {
+	position: absolute;
+	top: -6px;
+	right: -6px;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	border-radius: 999px;
+	background: #ff3b30;
+	color: white;
+	font-size: 11px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+
 .chat__panel {
 	position: fixed;
 	right: -420px;
 	top: 0;
 	width: min(380px, 92vw);
 	height: 100%;
-	background: #23345a;
+	background: rgba(35, 52, 90, 0.96);
 	transition: .3s ease;
 	padding: 1rem;
 	color: white;
 	z-index: 9999;
 	box-shadow: -5px 0 15px rgba(0, 0, 0, .4);
 	padding-bottom: 3rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	backdrop-filter: blur(10px);
 }
 
 .chat__panel.open {
@@ -542,6 +588,7 @@ function switchTurn() {
 	color: white;
 	font-size: 20px;
 	cursor: pointer;
+	align-self: flex-end;
 }
 
 /* laptops */

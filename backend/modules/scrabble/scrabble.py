@@ -316,8 +316,9 @@ class Bot(Player):
 
 class Scrabble:
 
-	def __init__(self, arr) -> None:
+	def __init__(self, arr, bot_difficulty: str = "hard") -> None:
 		self.players: list[int] = []
+		self.bot_difficulty = bot_difficulty
 		
 		self.playerLetters = {
 			"player_id": ["letters"]
@@ -390,7 +391,7 @@ class Scrabble:
 			if userID == -2:
 				# they are a bot
 				# initialise the bot?
-				self.bot = Bot(word_set=wordSet, name="Bot", difficulty="hard")
+				self.bot = Bot(word_set=wordSet, name="Bot", difficulty=self.bot_difficulty)
 				self.players.append(-2)
 			else:
 				self.players.append(userID)

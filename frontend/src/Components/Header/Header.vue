@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
-import HeaderLink from './HeaderLink.vue';
 import router from '@/router';
 import { useRoute } from 'vue-router';
 
@@ -15,6 +14,17 @@ function toggleMenu() {
 	menuOpen.value = !menuOpen.value;
 }
 
+function closeMenuOverlay() {
+	menuOpen.value = false;
+}
+
+watch(menuOpen, (isOpen) => {
+	document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+
+onUnmounted(() => {
+	document.body.style.overflow = '';
+});
 
 function profileClicked() {
 	console.log("pfp button clicked")
@@ -70,10 +80,10 @@ function openExternal(url: string) {
 			</div>
 		</div>
 	</div>
-	<div class="menu-backdrop">
+	<div class="menu-backdrop" :class="{ 'menu-backdrop--active': menuOpen }" @click="closeMenuOverlay">
 		<div class="menu__container" :class="{ 'menu--active': menuOpen }" @click.stop>
 			<div class="menu">
-				<button class="menu-item" @click="toggleMenu">
+				<button class="menu-item" @click="closeMenuOverlay">
 					<i class="pi pi-times out__icon"></i>
 					<span>Close</span>
 				</button>
@@ -241,20 +251,27 @@ function openExternal(url: string) {
 	transform: translateX(-100%);
 	width: 280px;
 	height: 100%;
-	/* -webkit-backdrop-filter: blur(16px); */
-	/* backdrop-filter: blur(10px); */
 	transition: all 0.25s ease;
 	z-index: 2000;
-
 	box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
-	background-color: rgba(20, 20, 20, 0.8);
+	background: linear-gradient(180deg, rgba(20, 20, 20, 0.88), rgba(28, 38, 58, 0.92));
+	backdrop-filter: blur(16px);
 }
 
 .menu-backdrop {
 	position: fixed;
-	top: 0;
-	left: 0;
+	inset: 0;
 	z-index: 1500;
+	background: rgba(12, 18, 30, 0.22);
+	backdrop-filter: blur(10px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s ease;
+}
+
+.menu-backdrop--active {
+	opacity: 1;
+	pointer-events: auto;
 }
 
 @keyframes fadeIn {
