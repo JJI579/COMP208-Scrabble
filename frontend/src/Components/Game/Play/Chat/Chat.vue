@@ -66,7 +66,7 @@ function changeOption(opt: string) {
 		</div>
 	</div>
 	<div class="flex-box">
-		<div class="options">
+		<div class="options" v-if="websocketStore.game.type == 'GROUP'">
 			<div class="option" @click="changeOption('all')" :class="{ 'option--active': option == 'all' }">All</div>
 			<div class="option" @click="changeOption('group')" :class="{ 'option--active': option == 'group' }">Group
 			</div>
