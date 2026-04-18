@@ -9,6 +9,8 @@ from modules.websocket.WebsocketManager import manager
 from sqlmodel import select
 import asyncio, secrets, json
 from modules.websocket.packets import packets
+from modules.scrabble.game import Game
+
 import copy
 
 import re
@@ -182,9 +184,14 @@ class GameHandler:
 				packets.error("It is not your turn currently!"),
 				userID
 			)
+		game.game.print_board()
 		nextTurn = game.mm_next_turn()
-
+		print("_------------------")
+		game.game.print_board()
 		newGrid = game.game.export_grid()
+		
+		
+
 
 		skipPacket = packets.during.game_update({
 			"grid": newGrid,
@@ -192,17 +199,25 @@ class GameHandler:
 			"skipped": True
 		})
 
+		await manager.broadcast_specific(
+			skipPacket,
+			[x.userID for x in game.players]
+		)
+		
 		if game.type == "GROUP":
 			for player in game.players:
 				await manager.send_direct_message(skipPacket, player.userID)
-		else:
-			await manager.broadcast_specific(
-				skipPacket,
-				[x.userID for x in game.players]
-			)
+		elif game.type == 'BOT':
+			if nextTurn == -2:
+				return await GameHandler.bot_turn_handler(game, websocket)
+			
+		if game.game.finished:
+			return await GameHandler.finish_game(websocket)
+		
+		
 
-		for player in game.players:
-			await GameHandler.game_update(game.id, player.userID)
+		# for player in game.players:
+		# 	await GameHandler.game_update(game.id, player.userID)
 
 
 
@@ -342,6 +357,33 @@ class GameHandler:
 			print(e)
 
 	@staticmethod
+	async def bot_turn_handler(game: Game, websocket: WebSocket):
+		await asyncio.sleep(1)
+		botPoints = await game.bot_turn()
+		newGrid = game.game.export_grid()
+		nextTurn = game.mm_next_turn()
+		# Update the board for other players,
+		gameUpdatePacket = packets.during.game_update({
+			"grid": newGrid,
+			"turn": nextTurn,
+		})
+		await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+		# Update the board for the user who just played.
+		updateCurrentUser = packets.during.game_update({
+			"grid": newGrid,
+			"turn": nextTurn,
+			"points": botPoints,
+			"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
+		})	
+		await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
+		# check if the bot is next then make the bot play.
+		print("NEXT TURN")
+		print(nextTurn)
+		if game.game.finished:
+			return await GameHandler.finish_game(websocket)
+		await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
+
+	@staticmethod
 	async def game_turn(data: dict, websocket: WebSocket):
 		"""
 			Handles the game turn packet.
@@ -457,46 +499,9 @@ class GameHandler:
 					})
 					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 					await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
-				
-
-				
-
-
-
-				# await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
-				# if type(partnerID) == int:
-				# 	print(f"Sending partner {partnerID} game_update with {userID}")
-				# 	print(userID)
-				# 	updateCurrentUser['d']['partner'] = userID
-				# 	del updateCurrentUser['d']['points']
-				# 	print("Sending partner game_update with their letters")
-				# 	await manager.send_direct_message(updateCurrentUser, partnerID)
-				# check if the bot is next then make the bot play.
-				if nextTurn == -2: 
-					await asyncio.sleep(1)
-					botPoints = await game.bot_turn()
-					newGrid = game.game.export_grid()
-					nextTurn = game.mm_next_turn()
-					# Update the board for other players,
-					gameUpdatePacket = packets.during.game_update({
-						"grid": newGrid,
-						"turn": nextTurn,
-					})
-					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
-					# Update the board for the user who just played.
-					updateCurrentUser = packets.during.game_update({
-						"grid": newGrid,
-						"turn": nextTurn,
-						"points": botPoints,
-						"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
-					})	
-					await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
-					# check if the bot is next then make the bot play.
-					print("NEXT TURN")
-					print(nextTurn)
-					if game.game.finished:
-						return await GameHandler.finish_game(websocket)
-					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players])
+			
+				if nextTurn == -2:
+					await GameHandler.bot_turn_handler(game, websocket)
 				if game.game.finished:
 					return await GameHandler.finish_game(websocket)
 			else:
