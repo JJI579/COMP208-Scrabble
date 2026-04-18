@@ -20,6 +20,8 @@ const userStore = useUserStore();
 const letterFocused = ref<number>(-1);
 
 watch(() => websocketStore.game.letters, () => {
+	console.log("LETTERS CHANGED")
+	console.log(websocketStore.game.letters)
 	letters.value = websocketStore.game.letters;
 	// if letters change that mean they have been handed a new deck.
 	placed.value = new Map();
@@ -143,8 +145,7 @@ onMounted(() => {
 				groups.push(group)
 			}
 			playerGroups.value = groups.sort((a, b) => b.length - a.length);
-			console.log("ALL THE GROUPS")
-			console.log(groups)
+
 			playerGroups.value = groups;
 		}
 

@@ -211,7 +211,16 @@ class Game implements GAME {
 		this.id = gameID;
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;
-		this.letters = [];
+
+		console.log(allData)
+		console.log(allData.letters)
+		if (allData.letters) {
+			this.letters = allData.letters;
+		} else {
+			this.letters = [];
+		}
+
+
 		this.finishesAt = dictionary.finishes;
 		console.log(`Finish time: ${this.finishesAt}`)
 		this.players.clear();
@@ -223,11 +232,6 @@ class Game implements GAME {
 		}
 		if (dictionary.groups) {
 			this.groups = dictionary.groups;
-		}
-		if (dictionary.letters) {
-			this.letters = dictionary.letters
-		} else {
-			this.letters = []
 		}
 		this.hasStarted = dictionary.has_started;
 		this.dictionaryAllowed = dictionary.options.dictionary;

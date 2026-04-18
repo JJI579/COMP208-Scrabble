@@ -110,7 +110,8 @@ const DEFAULT_FILLER = "|";
 type MessageType = {
 	id: number,
 	text: string
-	created_at: Date
+	created_at: Date,
+	partner: boolean,
 	author: {
 		id: number,
 		name: string

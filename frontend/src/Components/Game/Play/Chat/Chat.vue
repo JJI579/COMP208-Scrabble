@@ -1,17 +1,19 @@
 <script lang="ts" setup>
 import useWebsocketStore from '@/Components/Stores/websocket';
 import Preset from './Preset.vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Message from './Message.vue';
+import { type MessageType } from '@/types';
 
-
+const option = ref("all");
 
 const websocketStore = useWebsocketStore();
 
 function sendMessage() {
 	var message = messageModel.value
 	websocketStore.send("CHAT_MESSAGE", {
-		message: message
+		message: message,
+		partner: option.value == 'group'
 	});
 }
 
@@ -31,7 +33,28 @@ function sampleClick(sample: String) {
 }
 const messageModel = ref("");
 
-const messages = websocketStore.messages;
+
+
+var messages = ref<MessageType[]>([]);
+watch(websocketStore.messages, () => {
+	if (option.value == "all") {
+		messages.value = websocketStore.messages.filter((message) => !message.partner);
+	} else {
+		messages.value = websocketStore.messages.filter((message) => message.partner);
+	}
+})
+
+function changeOption(opt: string) {
+	if (opt == 'all') {
+		messages.value = websocketStore.messages.filter((message) => !message.partner);
+	} else {
+		messages.value = websocketStore.messages.filter((message) => message.partner);
+	}
+	option.value = opt
+}
+
+
+
 </script>
 
 
@@ -39,13 +62,17 @@ const messages = websocketStore.messages;
 
 	<div class="sample">
 		<div class="sample__message" v-for="message in sampleSends">
-			<Preset :message="message" @click="sampleClick"  />
+			<Preset :message="message" @click="sampleClick" />
 		</div>
 	</div>
 	<div class="flex-box">
-		
+		<div class="options">
+			<div class="option" @click="changeOption('all')" :class="{ 'option--active': option == 'all' }">All</div>
+			<div class="option" @click="changeOption('group')" :class="{ 'option--active': option == 'group' }">Group
+			</div>
+		</div>
 		<div class="messages">
-			<Message v-for="message in messages" :message="message"/>
+			<Message v-for="message in messages" :message="message" />
 		</div>
 		<div class="send">
 			<input type="text" v-model="messageModel" class="send__input">
@@ -56,6 +83,26 @@ const messages = websocketStore.messages;
 
 
 <style lang="css" scoped>
+/* Option Buttons */
+.options {
+	display: flex;
+	gap: .5rem;
+}
+
+.option {
+	height: 2rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--clr-info-a0);
+	padding-inline: .5rem;
+	border-radius: 10px;
+}
+
+.option--active {
+	background-color: var(--clr-info-a10);
+}
+
 .sample {
 	margin-bottom: 0.5rem;
 	display: flex;

@@ -135,28 +135,19 @@ class DuringPackets(Packets):
 
 		return self.create_packet("GAME_UPDATE_ONGOING", gameinfo)
 	
-	def chat_message(self, message: str, author: UserFetch):
-
-		# type Message = {
-		# 	id: number,
-		# 	text: string
-		# 	created_at: Date
-		# 	author: {
-		# 		id: number,
-		# 		name: string
-		# 	}
-		# }
-
+	def chat_message(self, message: str, author: UserFetch, partner: bool = False):
 		messageObject = {
 			"id": random.randint(0,10000),
 			"text": message, 
 			"created_at": datetime.datetime.now().isoformat(),
+			"partner": partner,
 			"author": {
 				"id": author.userID,
 				"name": author.userName
 			}
 		}
 		return self.create_packet("CHAT_MESSAGE", messageObject)
+	
 	
 class AuthenticationPackets(Packets):
 	

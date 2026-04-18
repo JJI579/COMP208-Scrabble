@@ -11,6 +11,25 @@ import asyncio, secrets, json
 from modules.websocket.packets import packets
 import copy
 
+import re
+
+# Word filter
+def censor_word(word):
+    if len(word) <= 2:
+        return word
+    return word[0] + "*" * (len(word) - 2) + word[-1]
+
+def profanity_filter(message):
+    bad_words = [
+        "fuck", "shit", "bitch", "asshole", "bastard", "dick", "piss", "crap"
+    ]
+    
+    def replace(match):
+        return censor_word(match.group())
+    
+    pattern = re.compile(r'\b(' + '|'.join(bad_words) + r')\b', re.IGNORECASE)
+    return pattern.sub(replace, message)
+
 
 router = APIRouter(
 	prefix="",
@@ -549,13 +568,25 @@ class GameHandler:
 			return False
 		
 		message = data['d']['message']
-		# TODO: filter: pass
+		print(data['d'])
+		toPartner = data['d'].get("partner", False)
+		message = profanity_filter(message)
+		if toPartner:
+			partnerID = game.get_partner(userID)
+			if type(partnerID) == int:
+				sendPacket = packets.during.chat_message(message, fetchModel, True)
+				await manager.broadcast_specific(sendPacket, [partnerID, userID])
+			else:
+				print("Partner does not exist for the user")
+		else:
+			sendPacket = packets.during.chat_message(message, fetchModel)
+			await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
 		
-		sendPacket = packets.during.chat_message(message, fetchModel)
-		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
 
+		
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
+		
 		
 		game = manager.fetch_game(data['d']['code'])
 		if type(game) == bool:
