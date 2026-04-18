@@ -60,7 +60,8 @@ async def get_friends(current_user: Annotated[User, Depends(get_current_user)], 
         )
         .where(
             Friend.status == "accepted",
-            User.userID != current_user.userID
+            User.userID != current_user.userID,
+            User.deactivated == False # type: ignore
         ).limit(limit)
     )
     
@@ -115,7 +116,7 @@ async def decline_friend_request(data: FriendRequest, current_user: Annotated[Us
 async def get_friend_requests(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
     search = await session.execute(select(Friend.senderID).where(and_(Friend.receiverID == current_user.userID, Friend.status == "pending")))
     search = search.scalars().all()
-    res = await session.execute(select(User).where(User.userID.in_(search)))
+    res = await session.execute(select(User).where(User.userID.in_(search), User.deactivated == False)) #type: ignore
     requests = res.scalars().all()
     return requests
 

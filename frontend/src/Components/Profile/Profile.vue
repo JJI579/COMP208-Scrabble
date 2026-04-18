@@ -75,12 +75,20 @@ const calculateAverageScore = computed(() => {
 	return averageScore.toFixed(2);
 })
 
+function settingsPage() {
+	router.push({ name: "settings" });
+}
+
 </script>
 
 
 <template>
 
 	<div class="profile" v-if="user">
+
+		<div class="menuButton" @click="settingsPage()">
+			<i class="pi pi-cog"></i>
+		</div>
 
 		<div class="userName-row">
 			<div class="userName">
@@ -157,11 +165,7 @@ const calculateAverageScore = computed(() => {
 			</div>
 		</RouterLink>
 
-		<div class="logoutSection">
-			<button class="logoutButton" @click="logout()">Logout</button>
-		</div>
-
-		<h2>Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
+		<h2 class="memberSince">Member Since: {{ new Date(user.userCreatedAt).toLocaleDateString() }}</h2>
 
 	</div>
 
@@ -187,6 +191,7 @@ const calculateAverageScore = computed(() => {
 }
 
 
+
 .profile {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
@@ -197,6 +202,37 @@ const calculateAverageScore = computed(() => {
 	margin-left: auto;
 	margin-right: auto;
 	height: 100%;
+}
+
+.menuButton {
+	position: absolute;
+	top: 100px;
+	right: 20px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 50px;
+	height: 50px;
+
+	border-radius: 50%;
+	cursor: pointer;
+
+	background: linear-gradient(135deg, #2a4d8f, #4169a9);
+	box-shadow:
+		0 8px 20px rgba(0, 0, 0, 0.3),
+		0 0 15px rgba(77, 148, 255, 0.2);
+
+	color: white;
+	font-size: 1.4rem;
+	transition: 0.25s ease;
+	z-index: 100;
+}
+
+.menuButton:hover {
+	transform: translateY(-2px);
+	background: linear-gradient(135deg, #315aa3, #4a79c2);
 }
 
 .userName-row {
@@ -294,6 +330,7 @@ const calculateAverageScore = computed(() => {
 	border: 2px solid rgb(140, 0, 0);
 	color: white;
 	padding: 0.5rem 3rem;
+	width: 200px;
 	border-radius: 10px;
 	cursor: pointer;
 }
@@ -380,5 +417,12 @@ const calculateAverageScore = computed(() => {
 .friendName {
 	color: white;
 	font-weight: 500;
+}
+
+.memberSince {
+	grid-column: 1 / -1;
+	text-align: center;
+	justify-content: center;
+	padding-bottom: 2rem;
 }
 </style>
