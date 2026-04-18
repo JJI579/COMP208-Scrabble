@@ -33,6 +33,8 @@ type UnlockedItemType = Item & {
 
 type SelfReturn = UserReturn & {
 	friends: UserReturn[];
+	// itemID, selfconfig
+	config: Record<number, boolean>
 }
 
 type InitType = "IDENTIFY" | "DISCONNECT"

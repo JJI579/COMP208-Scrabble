@@ -2,37 +2,31 @@
 	{
 		"name": "Gradient Name",
 		"description": "Your name gains a rainbow accent!",
-		"xpRequired": 300,
-		"unlocked": false
+		"xpRequired": 300
 	},
 	{
 		"name": "Bronze Border",
 		"description": "Your profile picture gains a bronze border!",
-		"xpRequired": 600,
-		"unlocked": false
+		"xpRequired": 600
 	},
 	{
 		"name": "Silver Border",
 		"description": "Your profile picture gains a silver border!",
-		"xpRequired": 900,
-		"unlocked": false
+		"xpRequired": 900
 	},
 	{
 		"name": "Gold Border",
 		"description": "Your profile picture gains a golden border!",
-		"xpRequired": 1200,
-		"unlocked": false
+		"xpRequired": 1200
 	},
 	{
 		"name": "Gold Name",
 		"description": "The Ultimate Flex - Your name becomes Golden!",
-		"xpRequired": 1500,
-		"unlocked": false
+		"xpRequired": 1500
 	},
 	{
 		"name": "How?!",
 		"description": "If you've made it this far... go outside",
-		"xpRequired": 1800,
-		"unlocked": false
+		"xpRequired": 1800
 	}
 ]

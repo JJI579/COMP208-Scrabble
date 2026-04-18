@@ -50,10 +50,10 @@ async function unequip() {
 function toggleEquip() {
 	if (item.equipped) {
 		unequip()
-		
+
 	} else {
 		equip()
-		
+
 	}
 
 
@@ -66,8 +66,11 @@ function toggleEquip() {
 
 	<div class="item">
 		<div class="item__name">
-			{{ item.name }} - <span v-if="item.equipped" class="item--unequip">[UNEQUIP]</span> <span
-				class="item--equip" v-else>[EQUIP]</span>
+			{{ item.name }} -
+
+			<span @click="toggleEquip" :class="{ 'item--equip': item.equipped, 'item--unequip': !item.equipped }">[{{
+				item.equipped ? 'UN' : '' }}EQUIP]</span>
+
 		</div>
 		<div class="item__description">
 			{{ item.description }}

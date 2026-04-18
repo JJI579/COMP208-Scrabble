@@ -1,16 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from modules.Authentication import Authentication
+from fastapi import APIRouter, Depends, Request
 from modules.logger import APILogger
-from modules.schema import refreshForm, loginForm, registerForm
 from sqlmodel import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from modules.database.database import get_session
-from modules.database.models import User, Token, Word
-import os, datetime, secrets, hashlib
+from modules.database.models import User, UserConfig
 from modules.functions import get_current_user
 from typing import Annotated
 apiLog = APILogger()
-from modules.schema import UserFetch 
+from modules.schema import UserFetch, SelfFetch
 
 from sqlalchemy import insert
 
@@ -20,15 +17,19 @@ router = APIRouter(
 )
 
 @router.get('/@me')
-async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)) -> UserFetch:
+async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)) -> SelfFetch:
 	result = await session.execute(select(User).order_by(User.totalScore.desc()))
 	users = result.scalars().all()
 	
 	rank = next((i + 1 for i, user in enumerate(users) if (user.userID == current_user.userID)), None) # type: ignore
 	
-	fetchModel = UserFetch.model_validate(current_user)
-	fetchModel.rank = rank
-	return fetchModel
+	SelfFetchModel = SelfFetch.model_validate(current_user)
+	SelfFetchModel.rank = rank
+
+	resp = await session.execute(select(UserConfig).where(UserConfig.userID == current_user.userID))
+	SelfFetchModel.config = {x.itemID:x.active for x in resp.scalars().all()}
+	
+	return SelfFetchModel
 	
 # @router.get('/friends', response_model=UserFetch)
 # async def get_friends(session: AsyncSession = Depends(get_session)):

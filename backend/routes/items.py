@@ -8,11 +8,12 @@ from modules.functions import get_current_user
 from sqlmodel import select, case
 from modules.schema import PersonalItemReturn
 from sqlalchemy import and_
+import json
 apiLog = APILogger()
 
 router = APIRouter(
-	prefix="/auth",
-	tags=["auth"],
+	prefix="/items",
+	tags=["items"],
 )
 
 
@@ -22,20 +23,19 @@ async def fetch_items(current_user: Annotated[User, Depends(get_current_user)], 
     stmt = select(
         Item,
         case(
-            (current_user.xpGained >= Item.xpRequired, True),
+            (current_user.totalScore >= Item.xpRequired, True),
             else_=False
         ).label("unlocked")
     ).order_by(Item.xpRequired)
     resp = await session.execute(stmt)
     items = []
-    for item, unlocked in resp.scalars().all():
+    
+    for item, unlocked in resp.all():
+        item: Item
         newItem = PersonalItemReturn.model_validate(item)
         newItem.unlocked = unlocked
         items.append(newItem)
     return items
-
-
-
 
 @router.post('/{item_id}/equip')
 async def equip_item(item_id: int, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
@@ -56,7 +56,6 @@ async def equip_item(item_id: int, current_user: Annotated[User, Depends(get_cur
     else:
         config.active = 1 # type: ignore
     await session.commit()
-
 
 @router.post('/{item_id}/unequip')
 async def unequip_item(item_id: int, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):

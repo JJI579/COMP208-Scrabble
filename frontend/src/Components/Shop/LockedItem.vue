@@ -24,21 +24,25 @@ const item = props.item;
 	<div class="item">
 		<div class="item__name">{{ item.name }} - <span class="item__score">
 				{{ props.currentScore }}/{{ item.xpRequired }}
-			</span></div>
+			</span>
+		</div>
+		<div class="item__description">
+			<i>{{ props.item.description }}</i>
+		</div>
 	</div>
 
 </template>
 
 
 <style lang="css" scoped>
-
 .item {
-
+	display: flex;
+	flex-direction: column;
+	gap: .25rem;
+	justify-content: left;
 }
-.item__name {
 
-}
-.item__score {
-
+.item__description {
+	font-size: small;
 }
 </style>

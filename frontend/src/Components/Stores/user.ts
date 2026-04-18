@@ -13,19 +13,29 @@ const useUserStore = defineStore("user", () => {
 	// Will reference a type
 	const userData = ref<SelfReturn | null>(null);
 
-	async function login() {
+	async function fetch() {
 		try {
 			userLogger.info("Fetching User Data");
 			const resp = await api.get("/users/@me");
 			userData.value = resp.data;
+			return true;
+		} catch (error) {
+			userLogger.error("Erroring fetching User Data: " + error);
+			return false
+		}
+	}
+	async function login() {
+		try {
+			const hasFetched = await fetch();
+			if (!hasFetched) return
+			// turn true since credentials worked.
 			isLoggedIn.value = true
 		} catch (error) {
 			userLogger.error("Erroring fetching User Data: " + error);
-
 		}
 	}
 
-	return { isLoggedIn, login, userData };
+	return { isLoggedIn, login, fetch, userData };
 })
 
 export default useUserStore;

@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import LockedItem from './LockedItem.vue';
 import UnlockedItem from './UnlockedItem.vue';
 import api from '@/api';
+import useUserStore from '../Stores/user';
 
 const score = ref(0);
 const displayScore = ref(score.value);
@@ -12,50 +13,8 @@ const unlockFlash = ref(false);
 const displayProgress = ref(0);
 let progressInterval: ReturnType<typeof setInterval> | null = null;
 
-const items = ref<Item[]>([
-	{
-		itemID: 1,
-		name: "Gradient Name",
-		description: "Your name gains a rainbow accent!",
-		xpRequired: 300,
-		unlocked: false,
-	},
-	{
-		itemID: 2,
-		name: "Bronze Border",
-		description: "Your profile picture gains a bronze border!",
-		xpRequired: 600,
-		unlocked: false,
-	},
-	{
-		itemID: 3,
-		name: "Silver Border",
-		description: "Your profile picture gains a silver border!",
-		xpRequired: 900,
-		unlocked: false,
-	},
-	{
-		itemID: 4,
-		name: "Gold Border",
-		description: "Your profile picture gains a golden border!",
-		xpRequired: 1200,
-		unlocked: false,
-	},
-	{
-		itemID: 5,
-		name: "Gold Name",
-		description: "The Ultimate Flex - Your name becomes Golden!",
-		xpRequired: 1500,
-		unlocked: false,
-	},
-	{
-		itemID: 6,
-		name: "How?!",
-		description: "If you've made it this far... go outside",
-		xpRequired: 1800,
-		unlocked: false,
-	}
-])
+const items = ref<Item[]>([]);
+
 
 
 const locked = computed(() =>
@@ -87,7 +46,6 @@ function unequipItem(id: number) {
 	console.log("Unequip item:", id);
 }
 
-
 function animate(from: number, to: number) {
 	if (interval) clearInterval(interval);
 
@@ -108,7 +66,6 @@ function animate(from: number, to: number) {
 		}
 	}, 20);
 }
-
 
 watch(score, (newVal, oldVal) => {
 	animate(oldVal ?? displayScore.value, newVal);
@@ -155,10 +112,14 @@ watch(progress, (newVal) => {
  */
 
 onMounted(async () => {
-	const { data } = await api.get("/users/@me")
+	const userStore = useUserStore()
+	
+	const { data } = await api.get("/users/@me");
 
-	console.log("API RESPONSE:", data)
 	score.value = data.totalScore
+
+	const resp = await api.get('/items/fetch');
+	items.value = resp.data;
 })
 
 </script>

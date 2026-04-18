@@ -52,6 +52,7 @@ class UserFetch(BaseModel):
 	class Config:
 		from_attributes = True
 
+
 class Tile(BaseModel):
 	letter: str
 	points: int
@@ -93,7 +94,8 @@ class BotPlayer(BaseModel):
 	
 
 class SelfFetch(UserFetch):
-	friends: list[UserFetch]
+	friends: list[UserFetch] = []
+	config: dict = {}
 
 # Login
 class loginForm(BaseModel):
@@ -124,5 +126,8 @@ class PersonalItemReturn(BaseModel):
 	name: str
 	description: str
 	xpRequired: int 
-	unlocked: Optional[bool]
+	unlocked: Optional[bool] = None
 	
+
+	class Config:
+		from_attributes = True

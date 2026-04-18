@@ -7,11 +7,15 @@ from pathlib import Path
 
 # For fetching initial words, if not then providing the words to be used.
 from modules.database.database import get_session
-from modules.database.models import Word
+from modules.database.models import Word, Item
 from sqlmodel import select, insert
+
+import json
 
 currentPath = Path.cwd()
 
+itemsJSONPath = currentPath / "items.json"
+itemJSON = json.load(open(itemsJSONPath))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,8 +29,16 @@ async def lifespan(app: FastAPI):
 			print("Providing the words from sowpods.txt")
 			_words = [{'word': x.strip()} for x in open(currentPath / "sowpods.txt", 'r').read().split('\n')]
 			await session.execute(insert(Word), _words)
-			await session.commit()
+			
 		
+		for item in itemJSON:
+			resp = await session.execute(select(Item).where(Item.name == item['name']))
+			if resp.scalar_one_or_none() == None:
+				itemObj =Item(name=item['name'], description=item['description'], xpRequired=item['xpRequired']) 
+				session.add(itemObj)
+		
+		await session.commit()
+
 	yield
 	await close_db()
 
@@ -53,7 +65,7 @@ def serve_vue():
     return {"text": "hello world"}
 
 
-from routes import auth, users, friends, websocket
+from routes import auth, users, friends, websocket, items
 from fastapi import APIRouter
 
 router = APIRouter(
@@ -67,6 +79,7 @@ app.include_router(users.router)
 app.include_router(friends.router)
 app.include_router(websocket.router)
 app.include_router(websocket.gameRouter)
+app.include_router(items.router)
 
 
 

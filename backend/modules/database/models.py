@@ -73,3 +73,12 @@ class Item(Base):
 	name = Column(String, nullable=False)
 	description = Column(String, nullable=False)
 	xpRequired = Column(Integer, nullable=False, default=0)
+
+	def to_dict(self):
+		return {
+			"itemID": self.itemID,
+			"name": self.name,
+			"description": self.description,
+			"xpRequired": self.xpRequired,
+		}
+	
