@@ -68,6 +68,7 @@ function cellClicked(index: number) {
 }
 
 const websocket = useWebsocketStore()
+const recentIndexes = computed(() => websocket.game.latestPlaced || []);
 // minutes/seconds
 const timeLeft = ref("00:00");
 let timerObject: number | null = null;
@@ -115,7 +116,7 @@ onUnmounted(() => {
 				<ModifierCell :modifier="(value as modifiers)" v-if="OPTIONS.includes(value) && !placed.get(i)" />
 				<GridCell :cell-value="placed.get(i)?.[2] || placed.get(i)?.[1] || value" :score="''"
 					:is-draft="placed.get(i) !== undefined" :x="i % 15" :y="Math.floor(i / 15)"
-					:is-partners="showPartners" v-else />
+					:is-partners="showPartners" :is-recent="recentIndexes.includes(i)" v-else />
 			</div>
 		</div>
 	</div>

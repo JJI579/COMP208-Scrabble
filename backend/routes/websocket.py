@@ -428,12 +428,14 @@ class GameHandler:
 		# Update the board for other players,
 		gameUpdatePacket = packets.during.game_update({
 			"grid": newGrid,
+			"latestPlaced": game.game.export_latest_placed(),
 			"turn": nextTurn,
 		})
 		await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 		# Update the board for the user who just played.
 		updateCurrentUser = packets.during.game_update({
 			"grid": newGrid,
+			"latestPlaced": game.game.export_latest_placed(),
 			"turn": nextTurn,
 			"points": botPoints,
 			"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
@@ -498,6 +500,7 @@ class GameHandler:
 				# Update the board for other players,
 				gameUpdatePacket = packets.during.game_update({
 					"grid": newGrid,
+					"latestPlaced": game.game.export_latest_placed(),
 					"turn": nextTurn,
 					# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
 					"points": pointsAmount
@@ -528,6 +531,7 @@ class GameHandler:
 					partnerID = game.get_partner(userID)
 					gameUpdatePacket = packets.during.game_update({
 						"grid": newGrid,
+						"latestPlaced": game.game.export_latest_placed(),
 						"turn": nextTurn,
 						"points": pointsAmount,
 						"partner": partnerID,
@@ -556,6 +560,7 @@ class GameHandler:
 					letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
 					updateCurrentUser = packets.during.game_update({
 						"grid": newGrid,
+						"latestPlaced": game.game.export_latest_placed(),
 						"turn": nextTurn,
 						"points": pointsAmount,
 						"letters": letters

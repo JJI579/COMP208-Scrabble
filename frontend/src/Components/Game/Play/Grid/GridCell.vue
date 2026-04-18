@@ -26,6 +26,10 @@ const props = defineProps({
 	isPartners: {
 		type: Boolean,
 		required: true
+	},
+	isRecent: {
+		type: Boolean,
+		required: true
 	}
 
 })
@@ -47,7 +51,7 @@ const isPlaced = computed(() => {
 
 <template>
 	<div class="cell"
-		:class="{ 'scrabble--placed': isPlaced && !props.isDraft, 'cell--draft': isDraft && !props.isPartners, 'cell--partners': props.isPartners && isDraft }">
+		:class="{ 'scrabble--placed': isPlaced && !props.isDraft, 'cell--draft': isDraft && !props.isPartners, 'cell--partners': props.isPartners && isDraft, 'cell--recent': props.isRecent && isPlaced && !props.isDraft }">
 
 		<p class="cell__letter">{{ cellValue !== '|' ? cellValue.toUpperCase() : '' }}</p>
 		<p class="cell__score" v-if="cellValue !== '|'">{{ score }}</p>
@@ -85,6 +89,17 @@ const isPlaced = computed(() => {
 	background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
+.cell--recent {
+	background: linear-gradient(145deg, #f7ebad, #f0cf63) !important;
+	border: 2px solid #ffd24d;
+	box-shadow:
+		0 0 0 2px rgba(255, 210, 77, 0.35),
+		0 0 16px rgba(255, 210, 77, 0.7),
+		inset 0 1px 2px rgba(255, 255, 255, 0.4);
+	animation: recent-place-pulse 1.2s ease-in-out infinite alternate;
+	z-index: 1;
+}
+
 .cell__letter {
 	margin: 0;
 	max-height: 90%;
@@ -109,5 +124,20 @@ const isPlaced = computed(() => {
 .cell--partners {
 	/* TODO: hari fix this */
 	background-color: orange;
+}
+
+@keyframes recent-place-pulse {
+	from {
+		box-shadow:
+			0 0 0 2px rgba(255, 210, 77, 0.35),
+			0 0 10px rgba(255, 210, 77, 0.45),
+			inset 0 1px 2px rgba(255, 255, 255, 0.35);
+	}
+	to {
+		box-shadow:
+			0 0 0 2px rgba(255, 210, 77, 0.5),
+			0 0 18px rgba(255, 210, 77, 0.85),
+			inset 0 1px 2px rgba(255, 255, 255, 0.5);
+	}
 }
 </style>

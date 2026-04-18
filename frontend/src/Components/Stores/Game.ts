@@ -49,6 +49,7 @@ type ongoingData = {
 	letters?: [],
 	players?: [],
 	grid?: Map<string, string>,
+	latestPlaced?: number[],
 	turn: number,
 	partner?: number,
 	points?: number,
@@ -65,6 +66,7 @@ const tripleLetter = [20, 24, 76, 80, 84, 88, 136, 140, 144, 148, 200, 204];
 class Game implements GAME {
 	// Map<number, [number, string, string?]>
 	partnerPlaced: Map<String, [number, string, string?]> = new Map();
+	latestPlaced: number[] = [];
 	isSuggesting = false;
 
 	gameTurn: number = -1;
@@ -124,6 +126,7 @@ class Game implements GAME {
 		this.groups = [];
 		this.letters = [];
 		this.grid = [];
+		this.latestPlaced = [];
 
 		// flags
 		this.hasStarted = false;
@@ -169,6 +172,10 @@ class Game implements GAME {
 			this.letters = allData.letters;
 		}
 		if (allData.grid) {
+			const updatedIndexes = Object.entries(allData.grid)
+				.filter(([index, value]) => this.grid[Number(index)] !== value)
+				.map(([index]) => Number(index));
+			this.latestPlaced = allData.latestPlaced ?? updatedIndexes;
 			Object.entries(allData.grid).forEach((item) => {
 				var ind = Number(item[0]);
 				this.grid[ind] = item[1];
@@ -215,6 +222,7 @@ class Game implements GAME {
 		this.type = dictionary.game_type;
 		this.leader = dictionary.leader;
 
+		this.latestPlaced = [];
 		console.log(allData)
 		console.log(allData.letters)
 		if (allData.letters) {

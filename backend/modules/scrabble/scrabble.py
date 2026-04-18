@@ -331,6 +331,7 @@ class Scrabble:
 		self.game = copy.deepcopy(arr)
 		# [[x, y], "letter", "blank replacement"]
 		self.placed = []  # [(x, y), letter, "blank replacement"]
+		self.lastPlaced = []
 		self.firstPlaced = False
 		# make sure it isnt a reference array
 		self.letterArray: list[str] = copy.deepcopy(distributionArray)
@@ -348,6 +349,9 @@ class Scrabble:
 		for (x,y), letter, blankSubstitute in self.placed:
 			toSend[str((y*15)+x)] = letter if blankSubstitute == None else blankSubstitute
 		return toSend
+	
+	def export_latest_placed(self):
+		return [self.convert_coordinate_to_id(coord) for coord in self.lastPlaced]
 	
 	def fetch_player_letters(self, userID: int):
 		# IF GROUP IS TRUE, FETCH LETTERS OF THE PARTNER'S DECK
@@ -653,149 +657,117 @@ class Scrabble:
 		y = coordinate[1]
 		return (y * 15) + x
 
-	def expand_vertically(self, position):
-		"""
-			Expands vertically from the given position in the game state.
+	def _collect_contiguous_word(self, position: tuple[int, int], direction: str):
+		"""Return the full contiguous word coordinates passing through a board position."""
+		x, y = position
+		direction = direction.lower().strip()
+		dx, dy = (1, 0) if direction == "right" else (0, 1)
 
-			Returns a list of coordinates (x, y) that the bot can potentially place a word on.
+		while 0 <= x - dx < 15 and 0 <= y - dy < 15 and self.get_cell(x - dx, y - dy) != defaultFiller:
+			x -= dx
+			y -= dy
 
-			The expansion starts from the given position and moves upwards until it encounters a cell with the defaultFiller character or the top of the board is reached.
-
-			It then moves downwards until it encounters a cell with the defaultFiller character or the bottom of the board is reached.
-
-			The list of coordinates is returned in the order that they were traversed.
-
-			Parameters:
-					position (tuple[int, int]): The position to expand from.
-
-				Returns:
-					list[tuple[int, int]]: A list of coordinates (x, y) that the bot can potentially place a word on.
-		"""
-		x = position[0]
-		y = position[1]
 		coordinates = []
-		traversedBack = False
-		while True:
-			if y > 0 and y < 15:
-				# perform
-				if self.game[y][x] != defaultFiller:
-					if (x, y) not in coordinates:
-						coordinates.append((x, y))
-					if traversedBack:
-						y+=1
-					else:
-						y-=1
-				else:
-					# now go forwards
-					if not traversedBack:
-						traversedBack = True
-						y+=1
-					
-					else:
-						# this shouldve traversed backwards, and now finished going forwards
-						break
-			else:
-				break
+		while 0 <= x < 15 and 0 <= y < 15 and self.get_cell(x, y) != defaultFiller:
+			coordinates.append((x, y))
+			x += dx
+			y += dy
 
 		return coordinates
+
+	def expand_vertically(self, position):
+		return self._collect_contiguous_word(position, "down")
 	
 	def expand_horizontally(self, position):
-		""" 
-			Expands horizontally from the given position in the game state.
+		return self._collect_contiguous_word(position, "right")
 
-			Returns a list of coordinates (x, y) that the bot can potentially place a word on.
+	def _reconstruct_word_from_letters(self, letters: list[tuple[tuple[int, int], str, str|None]], direction: str):
+		"""Build the full played word by merging new tiles with any existing intersections."""
+		direction = direction.lower().strip()
+		if direction not in ["right", "down"]:
+			return None
 
-			The expansion starts from the given position and moves leftwards until it encounters a cell with the defaultFiller character or the left of the board is reached.
+		normalized_letters = []
+		blanks = []
+		for coordinate, letter, blank_substitute in letters:
+			x, y = int(coordinate[0]), int(coordinate[1])
+			resolved_letter = (letter if blank_substitute is None else blank_substitute).upper()
+			normalized_letters.append(((x, y), resolved_letter, blank_substitute))
+			if letter == " ":
+				blanks.append((x, y))
 
-			It then moves rightwards until it encounters a cell with the defaultfiller character or the right of the board is reached.
+		if len(normalized_letters) == 0:
+			return None
 
-			The list of coordinates is returned in the order that they were traversed.
+		coord_to_letter = {coord: resolved for coord, resolved, _ in normalized_letters}
 
-			Parameters:
-				position (tuple[int, int]): The position to expand from.
+		if direction == "right":
+			rows = {coord[1] for coord in coord_to_letter}
+			if len(rows) != 1:
+				return None
+			y = next(iter(rows))
+			x_positions = sorted(coord[0] for coord in coord_to_letter)
+			start_x = x_positions[0]
+			end_x = x_positions[-1]
 
-			Returns:
-				list[tuple[int, int]]: A list of coordinates (x, y) that the bot can potentially place a word on.
-		"""
-		x = position[0]
-		y = position[1]
-		coordinates = []
-		traversedBack = False
-		while True:
-			if x > 0 and x < 15:
-				# perform
-				if self.game[y][x] != defaultFiller:
-					if (x, y) not in coordinates:
-						coordinates.append((x, y))
-					if traversedBack:
-						x+=1
-					else:
-						x-=1
+			while start_x > 0 and self.get_cell(start_x - 1, y) != defaultFiller:
+				start_x -= 1
+			while end_x < 14 and self.get_cell(end_x + 1, y) != defaultFiller:
+				end_x += 1
+
+			word = []
+			for x in range(start_x, end_x + 1):
+				coord = (x, y)
+				if coord in coord_to_letter:
+					word.append(coord_to_letter[coord])
 				else:
-					# now go forwards
-					if not traversedBack:
-						traversedBack = True
-						x+=1
-					
-					else:
-						# this shouldve traversed backwards, and now finished going forwards
-						break
-			else:
-				break
+					cell = self.get_cell(x, y)
+					if cell == defaultFiller:
+						return None
+					word.append(cell)
+			return ''.join(word), (start_x, y), blanks
 
-		return coordinates
+		columns = {coord[0] for coord in coord_to_letter}
+		if len(columns) != 1:
+			return None
+		x = next(iter(columns))
+		y_positions = sorted(coord[1] for coord in coord_to_letter)
+		start_y = y_positions[0]
+		end_y = y_positions[-1]
+
+		while start_y > 0 and self.get_cell(x, start_y - 1) != defaultFiller:
+			start_y -= 1
+		while end_y < 14 and self.get_cell(x, end_y + 1) != defaultFiller:
+			end_y += 1
+
+		word = []
+		for y in range(start_y, end_y + 1):
+			coord = (x, y)
+			if coord in coord_to_letter:
+				word.append(coord_to_letter[coord])
+			else:
+				cell = self.get_cell(x, y)
+				if cell == defaultFiller:
+					return None
+				word.append(cell)
+		return ''.join(word), (x, start_y), blanks
 
 	async def place_word(self, letters, direction: str):
-		"""
-		Places a word on the game board based on the given letters and direction.
-
-		The function takes in a list of coordinates and letters, and a direction string (either "right" or "down").
-
-		It then calculates the coordinates of the word as if it were placed on the board, and calls the _place_word helper function with the calculated coordinates, direction, and blanks.
-
-		Parameters:
-			letters (list[tuple[int, int], str]): A list of coordinates and letters, where each coordinate is a tuple of (x, y) and each letter is a string.
-
-			direction (str): A string indicating the direction of the word placement, either "right" or "down".
-
-			blanks (list[tuple[int, int]]): A list of coordinates of blanks on the board.
-
-		Returns:
-			int | Literal[False]: The result of the _place_word helper function.
-
-		"""
-		print("OUR HELPER FUNCTION --- START --- ")		
-
-		def check_coordinate(coordinate):
-			coordinate = [x for x in coordinate]
-			for x in self.placed:	
-				if x[0] == coordinate:
-					return True
+		"""Validate a human move by rebuilding the full word including intersecting tiles."""
+		direction = direction.lower().strip()
+		if len(letters) == 0:
 			return False
 
-		coords = [x[0] for x in letters]
-		for i in range(1, len(coords)):
-			x1, y1 = coords[i - 1]
-			x2, y2 = coords[i]
+		if len(letters) == 1:
+			return await self.place_letters(letters)
 
-			if direction == "right":
-				expected = (x1 + 1, y1)
-				# Same row, x should increase by exactly 1
-				if y1 == y2 and x2 != x1 + 1  and not check_coordinate(expected):
-					print(f'right: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
-					
-					return False
-			elif direction == "down":
-				expected = (x1, y1 + 1)
-				
-				# Same column, y should increase by exactly 1
-				if x1 == x2 and y2 != y1 + 1 and not check_coordinate(expected):
-					print(f'down: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2} | False | expected: {expected}')
-					return False
+		reconstructed = self._reconstruct_word_from_letters(letters, direction)
+		if reconstructed is None:
+			return False
 
-				
-		print("OUR HELPER FUNCTION --- END --- ")
-		return await self.place_letters(letters)
+		word, start_position, blanks = reconstructed
+		pre_existing = [tuple(tile[0]) for tile in self.placed]
+		return await self._place_word(word, start_position, direction, blanks, pre_existing)
 
 	async def _place_word(self, word: str, position: tuple[int, int], direction: str, blanks: list[tuple[int, int]] = [], preExisting: list[tuple[int, int]] = []) -> int | Literal[False]:
 		"""
@@ -974,6 +946,7 @@ class Scrabble:
 			else:
 				pass
 		
+		self.lastPlaced = [coord for coord, _ in tempPlaced]
 		for x in tempPlaced:
 			coord, letter = x
 			self.placed.append([coord, letter, None])
@@ -1080,6 +1053,7 @@ class Scrabble:
 				self.game[y][x] = defaultFiller
 			return False
 		# OTHERWISE IT IS A TRUE WORD.
+		self.lastPlaced = [tuple(position) for position, *_ in placing]
 		self.placed.extend(placing)
 		if points == 0:
 			points += self.calculate_points(placing, blanks)
