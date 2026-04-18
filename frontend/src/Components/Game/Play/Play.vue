@@ -15,13 +15,9 @@ import GroupPlayer from './GroupPlayer.vue';
 const websocketStore = useWebsocketStore();
 const userStore = useUserStore();
 
-
-
 const letterFocused = ref<number>(-1);
 
 watch(() => websocketStore.game.letters, () => {
-	console.log("LETTERS CHANGED")
-	console.log(websocketStore.game.letters)
 	letters.value = websocketStore.game.letters;
 	// if letters change that mean they have been handed a new deck.
 	placed.value = new Map();
@@ -243,6 +239,19 @@ onUnmounted(() => {
 function endGame() {
 	websocketStore.send("GAME_END", {});
 }
+
+function skipTurn() {
+	websocketStore.send("SKIP_TURN", {});
+
+}
+function switchTurn() {
+	// TODO: look at how i done skip turn, you add the name of the packet to PacketType in types.ts, then send it like above, then go to backend ->  websocket.py
+	// look at big switch case, then add the packet type to PacketType in types.py i think
+	// Then make a static method in gamehandler
+	// then do all your working in that
+	// copy paste that boiler plate in all other static methods to make sure user in game and etc etc 
+	// HARI
+}
 </script>
 
 <!--<div v-if="players.length > 0" class="player-card"></div>
@@ -295,6 +304,8 @@ function endGame() {
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
 					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
+					<button class="action" @click="skipTurn"><i class="pi pi-comments">skip</i></button>
+					<button class="action" @click="switchTurn"><i class="pi pi-comments">switch</i></button>
 
 				</div>
 			</div>

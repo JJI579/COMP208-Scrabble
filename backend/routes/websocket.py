@@ -158,6 +158,42 @@ class GameHandler:
 			await manager.send_direct_message(ongoing_game_update, x.userID)
 	
 	@staticmethod
+	async def skip_turn(data: dict, websocket: WebSocket):
+		# move turn to the next person
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			errorPacket = packets.error("You are not authenticated.")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+
+		if userConnection['game'] == None:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+		
+		game = manager.fetch_game(userConnection['game'])
+		if type(game) == bool:
+			errorPacket = packets.error("You are not in a game")
+			return await manager.send_message(websocket, json.dumps(errorPacket))
+		
+		# Below here is when you program it
+
+		# use these functions below to do what you need
+		# you can send specific data and itll be received from the above parameter, data
+		# then send game update.
+		# game.mm_get_current_turn
+		# game.mm_give_points
+		# game.mm_next_turn
+		# CONFIRM IT IS THEIR TURN ALSO, IF YOU CHECK game_turn function itll show you how to do that!
+		
+		# need to confirm but *pretty* sure this does the turn spectrum part of it right also
+		for player in game.players:
+			await GameHandler.game_update(game.id, player.userID)
+
+
+
+		
+
+
+	@staticmethod
 	async def draft_placed(data: dict, websocket: WebSocket):
 		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
 		if type(userConnection) == bool:
@@ -826,6 +862,9 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 						continue
 					case "GAME_END":
 						await GameHandler.finish_game(websocket)
+						continue
+					case "SKIP_TURN":
+						await GameHandler.skip_turn(data, websocket)
 						continue
 			else:	
 				return

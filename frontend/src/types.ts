@@ -63,6 +63,7 @@ type PacketType =
 	| "TURN_CONFIRMATION"
 	| "TURN_DECLINE"
 	| "TURN_REQUEST"
+	| "SKIP_TURN"
 
 type WebsocketPacket = {
 	t: PacketType | InitType

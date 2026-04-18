@@ -28,7 +28,8 @@ PacketType = Literal[
 	"DRAFT_REMOVED",
 	"TURN_CONFIRMATION",
 	"TURN_DECLINE",
-	"TURN_REQUEST"
+	"TURN_REQUEST",
+	"SKIP_TURN"
 ]
 
 GAME_TYPE = Literal[
