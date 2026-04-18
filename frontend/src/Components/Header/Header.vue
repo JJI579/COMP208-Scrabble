@@ -83,11 +83,6 @@ function openExternal(url: string) {
 					<span>Home</span>
 				</button>
 
-				<button class="menu-item" @click="openExternal('https://www.scrabble-solver.com/')">
-					<i class="pi pi-search"></i>
-					<span>Word Finder</span>
-				</button>
-
 				<button class="menu-item" @click="openExternal('https://scrabblewordfinder.org/dictionary-checker')">
 					<i class="pi pi-book"></i>
 					<span>Dictionary</span>
