@@ -189,9 +189,6 @@ class GameHandler:
 		print("_------------------")
 		game.game.print_board()
 		newGrid = game.game.export_grid()
-		
-		
-
 
 		skipPacket = packets.during.game_update({
 			"grid": newGrid,
@@ -203,7 +200,7 @@ class GameHandler:
 			skipPacket,
 			[x.userID for x in game.players]
 		)
-		
+
 		if game.type == "GROUP":
 			for player in game.players:
 				await manager.send_direct_message(skipPacket, player.userID)
@@ -213,14 +210,6 @@ class GameHandler:
 			
 		if game.game.finished:
 			return await GameHandler.finish_game(websocket)
-		
-		
-
-		# for player in game.players:
-		# 	await GameHandler.game_update(game.id, player.userID)
-
-
-
 
 	@staticmethod
 	async def switch_turn(data: dict, websocket: WebSocket):
