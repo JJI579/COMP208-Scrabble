@@ -31,10 +31,16 @@ const ngModel = ref(false);
 
 const router = useRouter();
 
+const websocket = useWebsocketStore()
+const waitingForWebsocket = ref(false);
+watch(() => websocket.readyToSend, () => {
+	waitingForWebsocket.value = websocket.readyToSend;
+})
+
 onMounted(() => {
 	const type = route.query.type as string;
 	const groupSize = route.query.groupSize as string;
-
+	waitingForWebsocket.value = websocket.readyToSend;
 	if (type) {
 		gameTypeRef.value = type;
 	}
@@ -44,8 +50,7 @@ onMounted(() => {
 	}
 });
 
-const websocket = useWebsocketStore()
-const waitingForWebsocket = ref(false);
+
 
 function goToJoin() {
 	if (websocket.game) {
@@ -111,7 +116,7 @@ function closeMenu(whichMenu: String) {
 
 
 <template>
-	<div class="create" v-if="!waitingForWebsocket">
+	<div class="create" v-if="waitingForWebsocket">
 
 		<div class="join__card card-glass">
 			<div class="join__text">
@@ -143,12 +148,59 @@ function closeMenu(whichMenu: String) {
 			</button>
 		</div>
 	</div>
-	<div v-else>
-		<p>Loading...</p>
+	<div v-else class="middle">
+		<div class="loading">
+			<div class="loading__spinner"></div>
+			<p class="loading__title">Connecting...</p>
+		</div>
 	</div>
 </template>
 
 <style scoped>
+.middle {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 85vh;
+}
+
+.loading {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	gap: 1rem;
+}
+
+/* Loading Page */
+.loading__spinner {
+	width: 60px;
+	height: 60px;
+	border: 6px solid #334155;
+	border-top: 6px solid #38bdf8;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+.loading__title {
+	font-size: large;
+	color: white;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+
+
+
 .create {
 	min-height: 100vh;
 	padding: 2rem;

@@ -788,6 +788,7 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 		packetType: PacketType = data.get('t', '')
 		if packetType == "IDENTIFY" and not hasIdentified:
 			identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID)
+			
 			if not identifyResponse:
 				wsLogger.error("Not found, closing websocket.")
 				return await websocket.close()
