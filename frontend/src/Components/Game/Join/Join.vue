@@ -73,43 +73,37 @@ function startGame() {
 </script>
 
 <template>
+
 	<!-- JOIN PAGE -->
+
 	<div class="join" v-if="!inGame">
 		<div class="join__card">
 			<h2>Join Game</h2>
 			<p class="join__subtitle">Enter the 4-letter game code to join your friends.</p>
-
 			<input type="text" v-model="codeModel" placeholder="ABCD" maxlength="4" class="join__input" :class="{
 				'input--spacing': codeModel.length > 0,
 				'input--error': triedInput
 			}" />
-
 			<button @click="joinGame" class="join__button">
 				Join
 			</button>
 		</div>
 	</div>
-
 	<!-- LOBBY PAGE -->
 	<div class="ingame" v-else :key="websocket.game.id">
-
 		<!-- separate code box -->
 		<div class="ingame__code">
 			{{ websocket.game.id }}
 		</div>
-
 		<!-- player panel -->
 		<div class="ingame__players">
-
 			<h2 class="players__title">
 				Players ({{ websocket.game.players.size }})
 			</h2>
-
 			<!-- NORMAL -->
 			<div v-if="websocket.game.type === 'NORMAL' || websocket.game.type === 'BOT'" class="player-list">
 				<div v-for="player in websocket.game.players.values()" :key="player.userID" class="player">
 					<span>{{ player.userName }}</span>
-
 					<div class="player__icon">
 						<span v-if="player.userID === websocket.game.leader">
 							👑
@@ -117,7 +111,6 @@ function startGame() {
 					</div>
 				</div>
 			</div>
-
 			<!-- GROUP -->
 			<div v-else-if="websocket.game.type === 'GROUP'">
 				<h2 class="players__title">
@@ -128,20 +121,18 @@ function startGame() {
 						:max-size="4" />
 				</div>
 			</div>
-
 			<!-- buttons -->
 			<div class="ingame__actions">
 				<button @click="leaveGame">
 					Leave
 				</button>
-
 				<button v-if="isLeader && websocket.game.type !== 'BOT'" class="start-btn" @click="startGame">
 					Start Game
 				</button>
 			</div>
-
 		</div>
 	</div>
+
 </template>
 
 <style scoped>

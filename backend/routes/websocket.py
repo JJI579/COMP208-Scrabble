@@ -777,6 +777,7 @@ class GameHandler:
 async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
 	hasIdentified = False
 	sessionID = secrets.token_hex(20)
+	await asyncio.sleep(5)
 	await websocket.accept()
 	websocket.session_id = sessionID # type: ignore
 	while True:
@@ -788,6 +789,7 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 		packetType: PacketType = data.get('t', '')
 		if packetType == "IDENTIFY" and not hasIdentified:
 			identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID)
+			
 			if not identifyResponse:
 				wsLogger.error("Not found, closing websocket.")
 				return await websocket.close()
