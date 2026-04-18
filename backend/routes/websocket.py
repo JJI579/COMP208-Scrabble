@@ -158,6 +158,9 @@ class GameHandler:
 					ongoing_game_update['d']['turn'] = x.userID
 					print("set currentl turn to that users!")
 			await manager.send_direct_message(ongoing_game_update, x.userID)
+
+		if game.game.finished:
+			return await GameHandler.finish_game(game=game)
 	
 	@staticmethod
 	async def skip_turn(data: dict, websocket: WebSocket):
@@ -184,6 +187,7 @@ class GameHandler:
 				packets.error("It is not your turn currently!"),
 				userID
 			)
+		game.register_skip(userID)
 		nextTurn = game.mm_next_turn()
 
 		skipPacket = packets.during.game_update({
@@ -200,14 +204,14 @@ class GameHandler:
 			for player in game.players:
 				await manager.send_direct_message(skipPacket, player.userID) """
 		
+		if game.game.finished:
+			return await GameHandler.finish_game(websocket)
+
 		if game.type == 'BOT' and nextTurn == -2:
 				print("next turn after skip:", nextTurn)
 				print("game type:", game.type)
 				await manager.broadcast_specific(skipPacket, [x.userID for x in game.players])
 				return await GameHandler.bot_turn_handler(game, websocket)
-			
-		if game.game.finished:
-			return await GameHandler.finish_game(websocket)
 
 	@staticmethod
 	async def switch_turn(data: dict, websocket: WebSocket):
@@ -418,6 +422,8 @@ class GameHandler:
 		await asyncio.sleep(1)
 		botPoints = await game.bot_turn()
 		newGrid = game.game.export_grid()
+		if game.game.finished:
+			return await GameHandler.finish_game(websocket)
 		nextTurn = game.mm_next_turn()
 		# Update the board for other players,
 		gameUpdatePacket = packets.during.game_update({
@@ -569,18 +575,21 @@ class GameHandler:
 			print(e)
 
 	@staticmethod
-	async def finish_game(websocket: WebSocket):
-		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-		if type(userConnection) == bool:
-			return
+	async def finish_game(websocket: WebSocket | None = None, game: Game | None = None):
+		if game is None:
+			if websocket is None:
+				return
+			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+			if type(userConnection) == bool:
+				return
 
-		if userConnection['game'] == None:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-		
-		game = manager.fetch_game(userConnection['game'])
-		if type(game) == bool:
-			return
+			if userConnection['game'] == None:
+				errorPacket = packets.error("You are not in a game")
+				return await manager.send_message(websocket, json.dumps(errorPacket))
+			
+			game = manager.fetch_game(userConnection['game'])
+			if type(game) == bool:
+				return
 		
 		# {
 		# 	"grid": grid,
@@ -657,6 +666,11 @@ class GameHandler:
 				await session.commit()
 		gameFinishPacket = packets.end.game_end(gameResult)
 		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
+		for player in game.players:
+			if player.userID in manager.connections:
+				manager.connections[player.userID]['game'] = None
+		if game.id in manager.games:
+			del manager.games[game.id]
 		
 	@staticmethod
 	async def chat_message(data: dict, websocket: WebSocket):
@@ -765,6 +779,9 @@ class GameHandler:
 		if type(game) == bool:
 			print("the game doesnt exist...")
 			return 
+
+		if game.type == "BOT" and game.hasStarted:
+			return await GameHandler.finish_game(game=game)
 		
 		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
@@ -777,6 +794,14 @@ class GameHandler:
 		
 		# remove it from the user's dictionary
 		manager.connections[userID]['game'] = None
+
+		if len(game.players) == 0:
+			if game.id in manager.games:
+				del manager.games[game.id]
+			return
+
+		if game.hasStarted and game.game.finished:
+			return await GameHandler.finish_game(game=game)
 		
 		# perform game update to show player left.
 		for player in game.players:

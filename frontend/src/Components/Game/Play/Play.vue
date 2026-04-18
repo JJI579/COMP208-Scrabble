@@ -262,8 +262,8 @@ onUnmounted(() => {
 	window.removeEventListener("resize", () => { });
 });
 
-function endGame() {
-	websocketStore.send("GAME_END", {});
+function leaveGame() {
+	websocketStore.send("PLAYER_LEAVE", {});
 }
 
 function skipTurn() {
@@ -281,10 +281,17 @@ function switchTurn() {
 <template>
 
 	<!-- This is the page where you play the game, this will need to be live with the websocket we plan to use.  -->
+	<div v-if="selectBlank !== -1" class="letter-selection-overlay" @click="selectBlank = -1"></div>
 	<div class="letter-selection" :class="{ 'letter-selection--visible': selectBlank !== -1 }">
-		<div class="letter-selection__letter" v-for="letter, ind in alphabetArray"
-			@click="selectedBlankTile(Number(ind))">
-			{{ letter }}
+		<div class="letter-selection__header">
+			<h3>Choose a letter</h3>
+			<p>Your blank tile will act as this letter.</p>
+		</div>
+		<div class="letter-selection__grid">
+			<button class="letter-selection__letter" v-for="letter, ind in alphabetArray" :key="letter"
+				@click="selectedBlankTile(Number(ind))">
+				<span>{{ letter }}</span>
+			</button>
 		</div>
 	</div>
 	<div class="wrapper">
@@ -303,30 +310,32 @@ function switchTurn() {
 					:placed="!showPartners ? placed : (new Map(Object.entries(websocketStore.game.partnerPlaced).map(([k, v]) => [Number(k), v])))"
 					:blank-letter="blankLetter" :show-partners="showPartners" />
 
-				<div class="actions">
-					<button class="action tooltip-btn" @click="showPartners = !showPartners" data-tooltip="Toggle Partners"><i class="pi"
-							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
-							></i></button>
-					<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
-					<button class="action tooltip-btn" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Skip Turn"><i
-							class="pi pi-angle-double-right"></i></button>
-					<div class="rack">
-						<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
-							:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
-							<span class="tile__letter">{{ letter.toUpperCase() }}</span>
-							<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
+				<div class="actions-wrap">
+					<div class="actions">
+						<button class="action tooltip-btn" @click="showPartners = !showPartners" data-tooltip="Toggle Partners"><i class="pi"
+								:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
+								></i></button>
+						<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
+						<button class="action tooltip-btn" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
+							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Skip Turn"><i
+								class="pi pi-angle-double-right"></i></button>
+						<div class="rack">
+							<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
+								:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
+								<span class="tile__letter">{{ letter.toUpperCase() }}</span>
+								<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
+							</div>
 						</div>
+						<button @click="submitTurn()" class="action tooltip-btn" :disabled="activePlayer !== userStore.userData?.userID"
+							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Submit Turn">
+								<i class="pi pi-check "></i></button>
+						<button class="action tooltip-btn chat-toggle" @click="toggleChat" data-tooltip="Chat"><i class="pi pi-comments"></i>
+							<span v-if="unreadChatCount > 0" class="chat__badge">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
+						</button>
+						<button class="action tooltip-btn" @click="switchTurn" :disabled="activePlayer !== userStore.userData?.userID"
+							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
 					</div>
-					<button @click="submitTurn()" class="action tooltip-btn" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Submit Turn">
-							<i class="pi pi-check "></i></button>
-					<button class="action tooltip-btn chat-toggle" @click="toggleChat" data-tooltip="Chat"><i class="pi pi-comments"></i>
-						<span v-if="unreadChatCount > 0" class="chat__badge">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
-					</button>
-					<button class="action tooltip-btn" @click="switchTurn" :disabled="activePlayer !== userStore.userData?.userID"
-						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
-
+					<button class="leave-game-btn" @click="leaveGame">Leave Game</button>
 				</div>
 			</div>
 			<div class="player__column right">
@@ -443,6 +452,14 @@ function switchTurn() {
 }
 
 /* PERFECTLY CENTERED CONTROLS */
+.actions-wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.85rem;
+	width: 100%;
+}
+
 .actions {
 	display: grid;
 	grid-template-columns: 56px 56px 56px auto 56px 56px 56px;
@@ -451,6 +468,23 @@ function switchTurn() {
 	justify-content: center;
 	width: fit-content;
 	max-width: 100%;
+}
+
+.leave-game-btn {
+	border: none;
+	border-radius: 12px;
+	padding: 0.8rem 1.2rem;
+	background: linear-gradient(135deg, #8f2a2a, #c94a4a);
+	color: white;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+	transition: .18s ease;
+}
+
+.leave-game-btn:hover {
+	transform: translateY(-2px);
+	filter: brightness(1.05);
 }
 
 /* rack now hugs tiles properly */
@@ -649,6 +683,14 @@ function switchTurn() {
 	}
 }
 
+.letter-selection-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(7, 16, 30, 0.6);
+	backdrop-filter: blur(5px);
+	z-index: 9998;
+}
+
 .letter-selection {
 	display: none;
 	visibility: hidden;
@@ -656,14 +698,15 @@ function switchTurn() {
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
-	background: var(--scrabble-board);
-	border-radius: 10px;
+	background: linear-gradient(180deg, rgba(20, 35, 58, 0.98), rgba(14, 24, 40, 0.98));
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+	border-radius: 20px;
 	z-index: 9999;
-	max-width: 50vh;
-	width: auto;
+	width: min(92vw, 560px);
+	padding: 1.2rem;
+	flex-direction: column;
 	gap: 1rem;
-	flex-wrap: wrap;
-	max-width: 520px;
 }
 
 .letter-selection--visible {
@@ -671,16 +714,51 @@ function switchTurn() {
 	visibility: visible;
 }
 
+.letter-selection__header {
+	text-align: center;
+	color: white;
+}
+
+.letter-selection__header h3 {
+	margin: 0;
+	font-size: 1.35rem;
+	color: #ffd86a;
+}
+
+.letter-selection__header p {
+	margin: 0.35rem 0 0;
+	font-size: 0.95rem;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.letter-selection__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+	gap: 0.7rem;
+}
+
 .letter-selection__letter {
-	height: 46px;
-	width: 46px;
+	height: 52px;
+	width: 100%;
 	color: white;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 1px solid white;
-	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	background: linear-gradient(145deg, #d9a955, #f1bc4c);
+	border-radius: 12px;
 	cursor: pointer;
+	font-size: 1.1rem;
+	font-weight: 800;
+	color: #1a1a1a;
+	transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.letter-selection__letter:hover {
+	transform: translateY(-2px) scale(1.03);
+	filter: brightness(1.04);
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 900px) and (max-width: 1200px) {

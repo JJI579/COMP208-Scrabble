@@ -124,6 +124,7 @@ export const useWebsocketStore = defineStore('websocket-2', () => {
 					break;
 				case "CONFIRM_LEAVE":
 					game.reset();
+					router.replace({ name: "dashboard" })
 					break
 				case "GAME_START":
 					// move user to game page

@@ -33,6 +33,7 @@ class Game:
         self.groupPlayers = []
         self.finishesAt = 0
         self.partners = {}
+        self.skip_counts: dict[int, int] = {}
     
     def mm_give_points(self, points: int):
         """ 
@@ -91,13 +92,10 @@ class Game:
     async def bot_turn(self):
         resp = await self.game.bot_turn()
         if type(resp) == bool:
-            if resp:
+            self.register_skip(-2)
+            if resp and not self.game.finished:
                 self.game.next_turn()
                 # bot has skipped
-            else:
-                
-                pass
-                # TODO: finish the game as bot has had too many passes
             return False
         self.mm_give_points(resp)
         return resp
@@ -108,6 +106,51 @@ class Game:
                 return group[0]
         # This shouldnt return false
 
+    def _get_skip_owner(self, userID: int) -> int:
+        if self.type == "GROUP":
+            leaderID = self.get_group_leader_id(userID)
+            if leaderID is not None:
+                return leaderID
+        return userID
+
+    def reset_skip_counts(self):
+        if self.type == "GROUP":
+            tracked_players = self.groupPlayers.copy()
+        else:
+            tracked_players = [int(player.userID) for player in self.players]
+        self.skip_counts = {int(player_id): 0 for player_id in tracked_players}
+
+    def active_competitor_count(self) -> int:
+        if self.type == "GROUP":
+            return len([group for group in self.groups if len(group) > 0])
+        return len(self.players)
+
+    def _rack_owners(self) -> list[int]:
+        if self.type == "GROUP":
+            return [int(group[0]) for group in self.groups if len(group) > 0]
+        return [int(player.userID) for player in self.players]
+
+    def check_end_conditions(self) -> bool:
+        if self.hasStarted and self.active_competitor_count() <= 1:
+            self.game.finished = True
+            return True
+
+        if len(self.game.letterArray) == 0:
+            for player_id in self._rack_owners():
+                if len(self.game.playerLetters.get(str(player_id), [])) == 0:
+                    self.game.finished = True
+                    return True
+
+        return self.game.finished
+
+    def register_skip(self, userID: int) -> bool:
+        skip_owner = int(self._get_skip_owner(userID))
+        if skip_owner not in self.skip_counts:
+            self.skip_counts[skip_owner] = 0
+        self.skip_counts[skip_owner] += 1
+        if len(self.skip_counts) > 0 and all(count >= 2 for count in self.skip_counts.values()):
+            self.game.finished = True
+        return self.check_end_conditions()
 
     async def game_turn(self, letters):
         """
@@ -161,6 +204,7 @@ class Game:
         self.game.set_player_letters(self.mm_get_current_turn(), playerLetters)
         
         self.mm_give_points(result)
+        self.check_end_conditions()
         
         print(f"result: {result}")
         
@@ -260,30 +304,72 @@ class Game:
             Raises:
                 ValueError: If the player is not in the player list.
         """
-        if type(player) == int:
-            for i, p in enumerate(self.players):
-                if p.userID == player:
-                    # TODO: pretty sure this errors since modifying a list whilst iterating through it - confirm this
-                    self.players.pop(i)
+        player_id = player.userID if isinstance(player, UserFetch) else player
+        removed_player = None
+
+        for i, existing_player in enumerate(self.players):
+            if existing_player.userID == player_id:
+                removed_player = self.players.pop(i)
+                break
+
+        if removed_player is None:
+            raise Exception("Player not in player list")
+
+        promoted_leader = None
+        removed_skip_count = self.skip_counts.pop(int(player_id), 0)
+
+        if removed_player.userID == self.leader and len(self.players) > 0:
+            self.leader = self.players[0].userID
+
+        if self.type == "GROUP":
+            for i, group in enumerate(self.groups):
+                if player_id in group:
+                    removed_was_leader = len(group) > 0 and group[0] == player_id
+                    self.groups[i].remove(player_id)
+                    if removed_was_leader and len(self.groups[i]) > 0:
+                        promoted_leader = self.groups[i][0]
                     break
-            if self.type == "GROUP":
-                for i, group in enumerate(self.groups):
-                    if player in group:
-                        self.groups[i].remove(player)
-                        # only one player per group so can break.
-                        break
-        elif isinstance(player, UserFetch):
-            player = self._toGamePlayer(player)
-            try:
-                self.players.remove(player)
-                if self.type == "GROUP":
-                    for i, group in enumerate(self.groups):
-                        if player.userID in group:
-                            self.groups[i].remove(player.userID)
-                            # only one player per group so can break.
-                            break
-            except ValueError:
-                raise Exception("Player not in player list")
+
+        if self.hasStarted:
+            if str(player_id) in self.game.playerLetters:
+                if promoted_leader is not None:
+                    self.game.playerLetters[str(promoted_leader)] = self.game.playerLetters.pop(str(player_id))
+                else:
+                    del self.game.playerLetters[str(player_id)]
+
+            if int(player_id) in self.game.players:
+                removed_index = self.game.players.index(int(player_id))
+                if promoted_leader is not None:
+                    self.game.players[removed_index] = int(promoted_leader)
+                else:
+                    self.game.players.pop(removed_index)
+                    if removed_index < self.game.gameTurn:
+                        self.game.gameTurn -= 1
+                    if len(self.game.players) == 0:
+                        self.game.gameTurn = 0
+                    elif self.game.gameTurn >= len(self.game.players):
+                        self.game.gameTurn = 0
+
+        if self.type == "GROUP":
+            if promoted_leader is not None:
+                promoted_player = next((x for x in self.players if x.userID == promoted_leader), None)
+                if promoted_player is not None:
+                    promoted_player.points = max(promoted_player.points, removed_player.points)
+                self.skip_counts[int(promoted_leader)] = max(self.skip_counts.get(int(promoted_leader), 0), removed_skip_count)
+
+            self.groupPlayers = [group[0] for group in self.groups if len(group) > 0]
+            if len(self.groupPlayers) == 0:
+                self.groupTurn = 0
+            elif self.groupTurn >= len(self.groupPlayers):
+                self.groupTurn = 0
+
+            self.partners = {}
+            for group in self.groups:
+                if len(group) == 2:
+                    self.partners[group[0]] = group[1]
+                    self.partners[group[1]] = group[0]
+
+        self.check_end_conditions()
         return True
     
     def in_group(self, player: UserFetch, groupIndex: int):
@@ -382,6 +468,8 @@ class Game:
             self.groupTurn = 0
         else:
             currentTurn = self.game.init_game(self.players)
+        self.reset_skip_counts()
+        self.check_end_conditions()
         currentTurn = self.mm_get_current_turn()
         return currentTurn
     
