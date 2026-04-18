@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from modules.database.database import get_session
 from modules.database.models import User, Token
 import os, datetime, secrets, hashlib
+from modules.functions import get_current_user
 
 apiLog = APILogger()
 
@@ -67,7 +68,7 @@ async def login(loginData: loginForm, session: AsyncSession = Depends(get_sessio
 		Raises:
 		- `HTTPException`: If the password or username is invalid, a 401 status code is returned with the detail 'Incorrect password or username invalid'.
 	"""
-	resp = await session.execute(select(User).where(User.userName == loginData.username)) 
+	resp = await session.execute(select(User).where(User.userName == loginData.username, User.deactivated == False)) # type: ignore 
 	user: User = resp.scalars().first() 
 	if not user:
 		apiLog.warning(f"/login | User not found | {loginData.username}")
@@ -133,3 +134,33 @@ async def register(registerData: registerForm, session: AsyncSession = Depends(g
 	await session.commit()
 	apiLog.warning(f"/login | Created user and committed. | {registerData.username}")
 	return {"message": "User created successfully"}
+
+
+@router.post('/verifyPassword/@me')
+async def verify_password(password: str, current_user: User = Depends(get_current_user)):
+    mysalt = os.getenv('SALT')
+    saltedPassword = f'{mysalt}:{password}'
+    hashedPassword = hashlib.sha256(saltedPassword.encode('utf-8')).hexdigest()
+    return hashedPassword == current_user.userPassword
+
+
+@router.post('/changePassword/@me')
+async def change_password(new_password: str, current_user: User = Depends(get_current_user), session: AsyncSession=Depends(get_session)): 
+    
+    print("Preparing to change password for userID:", current_user.userName)
+    
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    
+
+    mysalt = os.getenv('SALT')
+    saltedPassword = f'{mysalt}:{new_password}'
+    hashedPassword = hashlib.sha256(saltedPassword.encode('utf-8')).hexdigest()
+    
+    if new_password == current_user.userPassword:
+        raise HTTPException(status_code=400, detail="New password cannot be the same as the current password.")
+    
+    current_user.userPassword = hashedPassword # type: ignore
+    session.add(current_user)
+    await session.commit()
+    return {"detail": "Password changed successfully."}

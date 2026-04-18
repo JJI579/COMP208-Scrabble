@@ -48,26 +48,40 @@ async function login() {
 		password: passwordModel.value
 	}
 
-	const resp = await api.post('/auth/login', data);
-	loginLogger.info("Login successful")
-	const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
-	localStorage.setItem("refresh_token", refresh_token)
-	localStorage.setItem("token", token)
-	// Remember me logic
-	if (rememberMe.value) {
-		localStorage.setItem("token", token)
+	try {
+		const resp = await api.post('/auth/login', data);
+		loginLogger.info("Login successful")
+		const { id, token, refresh_token, expires_at }: LoginReturn = resp.data;
 		localStorage.setItem("refresh_token", refresh_token)
-	} else {
-		sessionStorage.setItem("token", token)
-		sessionStorage.setItem("refresh_token", refresh_token)
+		localStorage.setItem("token", token)
+		// Remember me logic
+		if (rememberMe.value) {
+			localStorage.setItem("token", token)
+			localStorage.setItem("refresh_token", refresh_token)
+		} else {
+			sessionStorage.setItem("token", token)
+			sessionStorage.setItem("refresh_token", refresh_token)
 
+		}
+		router.push({ name: "dashboard" })
+		loginLogger.info("Taken to dashboard")
+		// This should work as all tokens have been pushed etc
+		setTimeout(() => {
+			userStore.login()
+		}, 500);
+	} catch (error: any) {
+		const errorData = error.response?.data;
+		if (errorData) {
+			const errorDetail = errorData.detail;
+			if (errorDetail) {
+				errorMessage.value = errorDetail
+				loginLogger.error("Error: " + errorMessage.value)
+			}
+		} else {
+			loginLogger.error("Error: " + error)
+		}
 	}
-	router.push({ name: "dashboard" })
-	loginLogger.info("Taken to dashboard")
-	// This should work as all tokens have been pushed etc
-	setTimeout(() => {
-		userStore.login()
-	}, 500);
+
 }
 
 

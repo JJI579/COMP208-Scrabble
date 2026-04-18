@@ -10,6 +10,9 @@ import Leaderboard from '@/Components/Leaderboard/Leaderboard.vue'
 import Login from '@/Components/Login/LoginView.vue'
 import Profile from '@/Components/Profile/Profile.vue'
 import Shop from '@/Components/Shop/Shop.vue'
+import Settings from '@/Components/Settings/Settings.vue'
+import ChangeUsername from '@/Components/Settings/ChangeUsername.vue'
+import ChangePassword from '@/Components/Settings/ChangePassword.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -67,6 +70,18 @@ const router = createRouter({
 			path: '/friends',
 			name: 'friends',
 			component: Friends
+		}, {
+			path: '/settings',
+			name: 'settings',
+			component: Settings
+		}, {
+			path: '/changeUsername',
+			name: 'changeUsername',
+			component: ChangeUsername
+		}, {
+			path: '/changePassword',
+			name: 'changePassword',
+			component: ChangePassword
 		}
 	],
 })

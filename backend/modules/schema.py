@@ -98,6 +98,7 @@ class SelfFetch(UserFetch):
 class loginForm(BaseModel):
 	username: str
 	password: str
+	# deactivated: bool
 
 class registerForm(BaseModel):
 	username: str

@@ -30,16 +30,13 @@ async def fetch_self(current_user: Annotated[User, Depends(get_current_user)], s
 	fetchModel.rank = rank
 	return fetchModel
 	
-# @router.get('/friends', response_model=UserFetch)
-# async def get_friends(session: AsyncSession = Depends(get_session)):
-#     pass
 
 @router.get('/players', response_model = list[UserFetch])
 async def get_users(search: str = '', session: AsyncSession = Depends(get_session)):
 	if (search == ''):
 		return []
 	query = user_search(select(User), search)
-	results = await session.execute(query.order_by(User.userName.asc()))
+	results = await session.execute(query.order_by(User.userName.asc().where(User.deactivated == False))) # type: ignore
 	users = results.scalars().all()
 	return users
 
@@ -54,7 +51,7 @@ async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: 
 	else:
 		order_by = User.bestScore
 		
-	query = user_search(select(User), search)
+	query = user_search(select(User), search).where(User.deactivated == False) # type: ignore
 	query = query.order_by(order_by.desc()).limit(limit)
 	
 	results = await session.execute(query)
@@ -66,6 +63,36 @@ async def get_leaderboard(sort_by: str = "totalScore", search: str = '', limit: 
 async def get_user(request: Request, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
 	userID = request.path_params.get('user_id')
 	print(userID)
+ 
+
+@router.post('/changeUsername/@me')
+async def change_username(new_username: str, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession=Depends(get_session)):
+    
+    print("changing the name")
+    print(new_username)
+    
+    resp = await session.execute(select(User).where(User.userName == new_username))
+    our_user: User = resp.scalars().first()
+    if our_user:
+        raise HTTPException(status_code=400, detail="Username already taken.")
+    
+    if new_username == current_user.userName:
+        raise HTTPException(status_code=400, detail="New username cannot be the same as the current username.")
+    
+    print("Changing username for userID:", current_user.userID, "to new username:", new_username)
+    
+    current_user.userName = new_username # type: ignore
+    session.add(current_user)
+    await session.commit()
+    return {"detail": "Username changed successfully."}
+ 
+
+@router.delete('/delete/@me')
+async def delete_self(current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession=Depends(get_session)):
+    setattr(current_user, 'deactivated', True)
+    session.add(current_user)
+    await session.commit()
+    return {"detail": "Account deactivated successfully."}
  
  
 
