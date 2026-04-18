@@ -66,6 +66,7 @@ type PacketType =
 	| "TURN_DECLINE"
 	| "TURN_REQUEST"
 	| "SKIP_TURN"
+	| "SWITCH_TURN"
 
 type WebsocketPacket = {
 	t: PacketType | InitType

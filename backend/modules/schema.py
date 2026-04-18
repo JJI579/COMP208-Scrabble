@@ -30,6 +30,7 @@ PacketType = Literal[
 	"TURN_DECLINE",
 	"TURN_REQUEST",
 	"SKIP_TURN"
+	"SWITCH_TURN"
 ]
 
 GAME_TYPE = Literal[

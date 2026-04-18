@@ -10,6 +10,7 @@ import useUserStore from '@/Components/Stores/user';
 import type { GameUser } from '@/game_types';
 import useAlertStore from '@/Components/Stores/alert';
 import GroupPlayer from './GroupPlayer.vue';
+import { skip } from 'node:test';
 
 // Stores
 const websocketStore = useWebsocketStore();
@@ -287,7 +288,7 @@ function switchTurn() {
 							:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
 							v-if="websocketStore.game.type == 'GROUP'"></i></button>
 					<button class="action" @click="undo()"><i class="pi pi-undo"></i></button>
-					<button class="action" :disabled="activePlayer !== userStore.userData?.userID"
+					<button class="action" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-arrow-right-arrow-left"></i></button>
 					<div class="rack">
@@ -304,7 +305,6 @@ function switchTurn() {
 						:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }"><i
 							class="pi pi-flag"></i></button>
 					<button class="action" @click="() => chatOpen = true"><i class="pi pi-comments"></i></button>
-					<button class="action" @click="skipTurn"><i class="pi pi-comments">skip</i></button>
 					<button class="action" @click="switchTurn"><i class="pi pi-comments">switch</i></button>
 
 				</div>

@@ -174,23 +174,42 @@ class GameHandler:
 			errorPacket = packets.error("You are not in a game")
 			return await manager.send_message(websocket, json.dumps(errorPacket))
 		
-		# Below here is when you program it
+		userID = userConnection['info'].userID
+		currentTurn = game.mm_get_current_turn()
+		groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID
+		if userID != currentTurn and groupLeaderID != currentTurn:
+			return await manager.send_direct_message(
+				packets.error("It is not your turn currently!"),
+				userID
+			)
+		nextTurn = game.mm_next_turn()
 
-		# use these functions below to do what you need
-		# you can send specific data and itll be received from the above parameter, data
-		# then send game update.
-		# game.mm_get_current_turn
-		# game.mm_give_points
-		# game.mm_next_turn
-		# CONFIRM IT IS THEIR TURN ALSO, IF YOU CHECK game_turn function itll show you how to do that!
-		
-		# need to confirm but *pretty* sure this does the turn spectrum part of it right also
+		newGrid = game.game.export_grid()
+
+		skipPacket = packets.during.game_update({
+			"grid": newGrid,
+			"turn": nextTurn,
+			"skipped": True
+		})
+
+		if game.type == "GROUP":
+			for player in game.players:
+				await manager.send_direct_message(skipPacket, player.userID)
+		else:
+			await manager.broadcast_specific(
+				skipPacket,
+				[x.userID for x in game.players]
+			)
+
 		for player in game.players:
 			await GameHandler.game_update(game.id, player.userID)
 
 
 
-		
+
+	@staticmethod
+	async def switch_turn(data: dict, websocket: WebSocket):
+		pass	
 
 
 	@staticmethod
@@ -866,6 +885,9 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 						continue
 					case "SKIP_TURN":
 						await GameHandler.skip_turn(data, websocket)
+						continue
+					case "SWITCH_TURN":
+						await GameHandler.switch_turn(data, websocket)
 						continue
 			else:	
 				return
