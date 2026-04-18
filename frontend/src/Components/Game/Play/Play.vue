@@ -315,10 +315,13 @@ function switchTurn() {
 						<button class="action tooltip-btn" @click="showPartners = !showPartners" data-tooltip="Toggle Partners"><i class="pi"
 								:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
 								></i></button>
-						<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
+						
 						<button class="action tooltip-btn" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
 							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Skip Turn"><i
 								class="pi pi-angle-double-right"></i></button>
+
+						<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
+
 						<div class="rack">
 							<div class="rack__tile" v-for="(letter, ind) in letters" @click="handleTileClick(ind)"
 								:class="{ 'tile--selected': letterFocused == ind, 'tile--used': placedIndexes.includes(ind) }">
