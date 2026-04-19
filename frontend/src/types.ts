@@ -24,7 +24,10 @@ type Item = {
 	name: string,
 	description: string,
 	xpRequired: number,
-	unlocked: boolean
+	category: string,
+	effect: string,
+	unlocked: boolean,
+	equipped: boolean
 }
 
 type UnlockedItemType = Item & {

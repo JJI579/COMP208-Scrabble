@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import LockedItem from './LockedItem.vue';
 import UnlockedItem from './UnlockedItem.vue';
 import api from '@/api';
-import useUserStore from '../Stores/user';
+import { useShopStore } from '../Shop/shop';
 
 const score = ref(0);
 const displayScore = ref(score.value);
@@ -14,16 +14,17 @@ const displayProgress = ref(0);
 let progressInterval: ReturnType<typeof setInterval> | null = null;
 
 const items = ref<Item[]>([]);
-
+const shopStore = useShopStore()
 
 
 const locked = computed(() =>
-	items.value.filter(i => score.value < i.xpRequired)
+	shopStore.items.filter(item => !item.unlocked)
 );
 
 const unlocked = computed(() =>
-	items.value.filter(i => score.value >= i.xpRequired).map(i => ({ ...i, equipped: false }))
+	shopStore.items.filter(item => item.unlocked)
 );
+
 
 const nextUnlock = computed(() => {
 	return locked.value.sort((a, b) => a.xpRequired - b.xpRequired)[0];
@@ -38,13 +39,6 @@ const progress = computed(() => {
 	);
 });
 
-function equipItem(id: number) {
-	console.log("Equip item:", id);
-}
-
-function unequipItem(id: number) {
-	console.log("Unequip item:", id);
-}
 
 function animate(from: number, to: number) {
 	if (interval) clearInterval(interval);
@@ -71,8 +65,18 @@ watch(score, (newVal, oldVal) => {
 	animate(oldVal ?? displayScore.value, newVal);
 });
 
-onMounted(() => {
-	animate(0, score.value);
+onMounted(async() => {
+	const { data} = await api.get("/users/@me");
+	score.value = data.totalScore
+
+	const resp = await api.get('/items/fetch');
+	items.value = resp.data;
+	console.log("Items fetched:", items.value);
+
+	shopStore.setItems(items.value);
+
+	displayScore.value = score.value;
+	animateProgress(progress.value);
 });
 
 
@@ -98,10 +102,6 @@ function animateProgress(to: number) {
 	}, 20);
 }
 
-onMounted(() => {
-	displayScore.value = score.value;
-	animateProgress(progress.value);
-});
 
 watch(progress, (newVal) => {
 	animateProgress(newVal);
@@ -111,16 +111,6 @@ watch(progress, (newVal) => {
  * comment this out when u want to test the equip and unequip
  */
 
-onMounted(async () => {
-	const userStore = useUserStore()
-	
-	const { data } = await api.get("/users/@me");
-
-	score.value = data.totalScore
-
-	const resp = await api.get('/items/fetch');
-	items.value = resp.data;
-})
 
 </script>
 
@@ -158,8 +148,7 @@ onMounted(async () => {
 		<section class="section">
 			<h2 class="section-title">🔓 Unlocked Items</h2>
 			<div class="grid">
-				<UnlockedItem v-for="item in unlocked" :key="item.itemID" :item="item" @equip="equipItem"
-					@unequip="unequipItem" />
+				<UnlockedItem v-for="item in unlocked" :key="item.itemID" :item="item"/>
 			</div>
 		</section>
 	</div>

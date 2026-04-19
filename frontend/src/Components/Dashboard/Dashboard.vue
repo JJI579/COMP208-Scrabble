@@ -3,6 +3,9 @@ import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import router from '@/router';
 import type { Item, UserReturn } from '@/types';
+import { useShopStore} from '../Shop/shop';
+
+const shopStore = useShopStore();
 
 const streak = ref(1);
 
@@ -36,21 +39,30 @@ const shopPreview = ref<Item[]>([
 		name: "Gradient Name",
 		xpRequired: 300,
 		description: '',
-		unlocked: false
+		unlocked: false,
+		category: "",
+		effect: "",
+		equipped: false
 	},
 	{
 		itemID: 2,
 		name: "Bronze Border",
 		xpRequired: 600,
 		description: '',
-		unlocked: false
+		unlocked: false,
+		category: "",
+		effect: "",
+		equipped: false
 	},
 	{
 		itemID: 3,
 		name: "Silver Border",
 		xpRequired: 900,
 		description: '',
-		unlocked: false
+		unlocked: false,
+		category: "",
+		effect: "",
+		equipped: false
 	}
 ]);
 
@@ -60,9 +72,12 @@ async function getLeaderboard() {
 	users.value = res.data;
 }
 
-onMounted(() => {
+onMounted(async () => {
 	getLeaderboard();
 	getCurrentUser();
+
+	const res = await api.get('/items/fetch');
+	shopStore.setItems(res.data);
 })
 
 
@@ -90,7 +105,7 @@ onMounted(async () => {
 
 <template>
 
-	<div class="dashboard">
+	<div class="dashboard" :class="shopStore.badge">
 
 		<div class="bg-aurora"></div>
 		<div class="bg-orb orb1"></div>
@@ -213,6 +228,33 @@ onMounted(async () => {
 	min-height: 100vh;
 	width: 100vw;
 	overflow-x: hidden;
+}
+
+.dashboard.rainbow {
+	background: linear-gradient(
+		270deg,
+		#ff004c,
+		#ff7a00,
+		#ffe600,
+		#2bff00,
+		#00d4ff,
+		#7a00ff,
+		#ff004c
+	);
+	background-size: 1400% 1400%;
+	animation: rainbowBG 10s ease infinite;
+}
+
+@keyframes rainbowBG {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
 }
 
 .main {

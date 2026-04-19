@@ -2,31 +2,43 @@
 	{
 		"name": "Gradient Name",
 		"description": "Your name gains a rainbow accent!",
-		"xpRequired": 300
+		"xpRequired": 300,
+		"category": "name_style",
+		"effect": "gradient-rainbow"
 	},
 	{
 		"name": "Bronze Border",
 		"description": "Your profile picture gains a bronze border!",
-		"xpRequired": 600
+		"xpRequired": 600,
+		"category": "profile_border",
+		"effect": "bronze"
 	},
 	{
 		"name": "Silver Border",
 		"description": "Your profile picture gains a silver border!",
-		"xpRequired": 900
+		"xpRequired": 900,
+		"category": "profile_border",
+		"effect": "silver"
 	},
 	{
 		"name": "Gold Border",
 		"description": "Your profile picture gains a golden border!",
-		"xpRequired": 1200
+		"xpRequired": 1200,
+		"category": "profile_border",
+		"effect": "gold"
 	},
 	{
 		"name": "Gold Name",
 		"description": "The Ultimate Flex - Your name becomes Golden!",
-		"xpRequired": 1500
+		"xpRequired": 1500,
+		"category": "name_style",
+		"effect": "gold"
 	},
 	{
 		"name": "How?!",
 		"description": "If you've made it this far... go outside",
-		"xpRequired": 1800
+		"xpRequired": 1800,
+		"category": "badge",
+		"effect": "rainbow"
 	}
 ]

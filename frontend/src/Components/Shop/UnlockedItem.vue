@@ -3,6 +3,7 @@ import api from '@/api';
 import type { UnlockedItemType } from '@/types';
 import type { PropType } from 'vue';
 import useAlertStore from '../Stores/alert';
+import { useShopStore } from './shop';
 
 
 
@@ -10,9 +11,10 @@ const props = defineProps({
 	item: {
 		type: Object as PropType<UnlockedItemType>,
 		required: true,
+		equipped: Boolean
 	}
 });
-const emit = defineEmits(['equip', "unequip"])
+
 const item = props.item;
 
 // TODO: implement a store that contains all user config and then apply it when it matters across the website.
@@ -20,12 +22,12 @@ const item = props.item;
 async function equip() {
 	try {
 		const resp = await api.post(`/items/${props.item.itemID}/equip`)
-		emit("equip", props.item.itemID)
+		useShopStore().equipItem(props.item.itemID)
 		item.equipped = true;
 	} catch (error: any) {
 		useAlertStore().alert({
 			// TODO: set right text...
-			text: "",
+			text: "Failed to equip an item",
 			type: "error"
 		})
 	}
@@ -35,13 +37,12 @@ async function equip() {
 async function unequip() {
 	try {
 		const resp = await api.post(`/items/${props.item.itemID}/unequip`)
-		emit("unequip", props.item.itemID)
+		useShopStore().unequipItem(props.item.itemID)
 		item.equipped = false;
-
 	} catch (error: any) {
 		useAlertStore().alert({
 			// TODO: set right text...
-			text: "",
+			text: "Failed to unequip an item",
 			type: "error"
 		})
 	}

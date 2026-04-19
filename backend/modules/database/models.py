@@ -73,6 +73,8 @@ class Item(Base):
 	name = Column(String, nullable=False)
 	description = Column(String, nullable=False)
 	xpRequired = Column(Integer, nullable=False, default=0)
+	category = Column(String, nullable=False)
+	effect = Column(String, nullable=False)
 
 	def to_dict(self):
 		return {
@@ -80,5 +82,7 @@ class Item(Base):
 			"name": self.name,
 			"description": self.description,
 			"xpRequired": self.xpRequired,
+			"category": self.category,
+			"effect": self.effect
 		}
 	
