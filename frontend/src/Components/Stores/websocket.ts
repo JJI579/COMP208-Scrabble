@@ -1,4 +1,4 @@
-import { BASE_HOST, SECURE_URL, type InitType, type MessageType, type PacketType, type WebsocketPacket } from "@/types";
+import { WS_URL, type InitType, type MessageType, type PacketType, type WebsocketPacket } from "@/types";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import router from "@/router";
@@ -7,7 +7,7 @@ import useAlertStore from "./alert";
 
 
 export const useWebsocketStore = defineStore('websocket-2', () => {
-	const websocketURL = `ws${SECURE_URL ? 's' : ''}://${BASE_HOST}/ws`
+	const websocketURL = WS_URL;
 	console.log(websocketURL);
 	const websocket = ref<WebSocket | null>(null);
 	const game = reactive<Game>(new Game(0, {}));

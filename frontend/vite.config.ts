@@ -8,9 +8,35 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
 	server: {
-		allowedHosts: [
-			"w11-desktop.tail57640.ts.net"
-		]
+		host: '0.0.0.0',
+		allowedHosts: true,
+		proxy: {
+			'/auth': {
+				target: 'http://127.0.0.1:8000',
+				changeOrigin: true,
+			},
+			'/users': {
+				target: 'http://127.0.0.1:8000',
+				changeOrigin: true,
+			},
+			'/friends': {
+				target: 'http://127.0.0.1:8000',
+				changeOrigin: true,
+			},
+			'/items': {
+				target: 'http://127.0.0.1:8000',
+				changeOrigin: true,
+			},
+			'/game': {
+				target: 'http://127.0.0.1:8000',
+				changeOrigin: true,
+			},
+			'/ws': {
+				target: 'ws://127.0.0.1:8000',
+				ws: true,
+				changeOrigin: true,
+			},
+		},
 	},
 	plugins: [
 		vue(),

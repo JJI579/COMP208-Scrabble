@@ -15,7 +15,7 @@ import json
 currentPath = Path(__file__).resolve().parent
 
 itemsJSONPath = currentPath / "items.json"
-itemJSON = json.load(open(itemsJSONPath))
+itemJSON = json.load(open(itemsJSONPath, encoding="utf-8"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,12 +49,13 @@ origins = [
 	"http://127.0.0.1",
 	"http://localhost:5173",
 	"http://localhost:8000",
-	"https://w11-desktop.tail57640.ts.net"
+	"https://w11-desktop.tail57640.ts.net",
 ]
 
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=origins,
+	allow_origin_regex=r"https://.*\.(ngrok-free\.app|ngrok\.io|ngrok-free\.dev)",
 	allow_credentials=True,
 	allow_methods=["*"],
 	allow_headers=["*"],

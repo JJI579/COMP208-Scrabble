@@ -54,7 +54,7 @@ function joinGame() {
 }
 
 function leaveGame() {
-	if (websocket.game) {
+	if (websocket.game.id !== 0) {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
@@ -64,7 +64,7 @@ function leaveGame() {
 }
 
 function startGame() {
-	if (websocket.game) {
+	if (websocket.game.id !== 0) {
 		websocket.send('GAME_START', {
 			code: websocket.game.id
 		})
