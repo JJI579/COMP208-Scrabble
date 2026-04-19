@@ -254,36 +254,38 @@ class Game:
         if self.hasStarted:
             raise Exception("Game has already started")
         player = self._toGamePlayer(player)
-        if player in self.players:
+
+        # Compare by userID, not full model equality, so reconnects/rejoins never duplicate a user.
+        if any(existing_player.userID == player.userID for existing_player in self.players):
             raise Exception("Player already in game")
-        else:
-            # Handle checking
-            if self.type == "NORMAL":
-                if len(self.players) == 4:
-                    raise Exception("Max amount of players in game")
+
+        # Handle checking
+        if self.type == "NORMAL":
+            if len(self.players) == 4:
+                raise Exception("Max amount of players in game")
+            self.players.append(player)
+        elif self.type == "GROUP":
+            maxPlayers = len(self.groups) * 2
+            if len(self.players) == maxPlayers:
+                raise Exception("Max amount of players in game")
+            self.players.append(player)
+            hasGroup = False
+            for i, group in enumerate(self.groups):
+                if player.userID in group:
+                    raise Exception("Player already in game")
+                if len(group) == 0:
+                    self.groups[i].append(player.userID)
+                    hasGroup = True
+                    break
+            if not hasGroup:
+                print("All groups are full...")
+                # Should remove player?
+                raise Exception("All groups are full")
+        else:  # bot
+            if len(self.players) == 0:
                 self.players.append(player)
-            elif self.type == "GROUP":
-                maxPlayers = len(self.groups)*2
-                if len(self.players) == maxPlayers:
-                    raise Exception("Max amount of players in game")
-                self.players.append(player)
-                hasGroup = False
-                for i, group in enumerate(self.groups):
-                    if player.userID in group:
-                        raise Exception("Player already in game")
-                    if len(group) == 0:
-                        self.groups[i].append(player.userID)
-                        hasGroup = True
-                        break
-                if not hasGroup:
-                    print("All groups are full...")
-                    # Should remove player?
-                    raise Exception("All groups are full")
-            else: # bot
-                if len(self.players) == 0:
-                    self.players.append(player)
-                else:
-                    raise Exception("Only one player when Bot Game")
+            else:
+                raise Exception("Only one player when Bot Game")
     
     def add_bot(self):
         if len(self.players) == 0:

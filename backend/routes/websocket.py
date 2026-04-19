@@ -740,6 +740,13 @@ class GameHandler:
 		userID = websocket.user_id # type: ignore
 		userData = manager.connections[userID]['info']
 		fetchModel = UserFetch.model_validate(userData)
+
+		if any(player.userID == userID for player in game.players):
+			manager.set_game(userID, game.id)
+			await GameHandler.game_update(game.id, websocket)
+			if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted: # type: ignore
+				await GameHandler.game_start({"d": {"code": game.id}}, websocket)
+			return True
 		try:
 			game.add_player(fetchModel)
 			manager.set_game(userID, game.id)
