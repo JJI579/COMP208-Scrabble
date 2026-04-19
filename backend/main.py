@@ -1,21 +1,20 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from modules.database.database import init_db, close_db, init_db_sync
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
-
-
-# For fetching initial words, if not then providing the words to be used.
-from modules.database.database import get_session
-from modules.database.models import Word, Item
 from sqlmodel import select, insert
-
 import json
+import sys
 
-currentPath = Path.cwd()
+currentPath = Path(__file__).resolve().parent
+if str(currentPath) not in sys.path:
+	sys.path.insert(0, str(currentPath))
+
+from modules.database.database import init_db, close_db, init_db_sync, get_session
+from modules.database.models import Word, Item
 
 itemsJSONPath = currentPath / "items.json"
-itemJSON = json.load(open(itemsJSONPath))
+itemJSON = json.load(open(itemsJSONPath, encoding="utf-8"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,12 +48,13 @@ origins = [
 	"http://127.0.0.1",
 	"http://localhost:5173",
 	"http://localhost:8000",
-	"https://w11-desktop.tail57640.ts.net"
+	"https://w11-desktop.tail57640.ts.net",
 ]
 
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=origins,
+	allow_origin_regex=r"https://.*\.(ngrok-free\.app|ngrok\.io|ngrok-free\.dev)",
 	allow_credentials=True,
 	allow_methods=["*"],
 	allow_headers=["*"],

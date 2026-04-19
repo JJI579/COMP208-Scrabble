@@ -57,7 +57,7 @@ onMounted(() => {
 
 
 function goToJoin() {
-	if (websocket.game) {
+	if (websocket.game.id !== 0) {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})
@@ -71,7 +71,7 @@ function goToJoin() {
 
 async function createGame() {
 
-	if (websocket.game) {
+	if (websocket.game.id !== 0) {
 		websocket.send('PLAYER_LEAVE', {
 			code: websocket.game.id
 		})

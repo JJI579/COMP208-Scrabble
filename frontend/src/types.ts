@@ -122,15 +122,13 @@ type MessageType = {
 	}
 }
 
-// const BASE_HOST = 'w11-desktop.tail57640.ts.net';
-const BASE_HOST = 'localhost:8000';
-var SECURE_URL = false;
-var BASE_URL = `http://${BASE_HOST}`
-if (BASE_HOST.includes('w11-desktop')) {
-	SECURE_URL = true;
-	var BASE_URL = `${SECURE_URL ? 'https' : 'http'}://${BASE_HOST}/api`
-}
-
+const browserOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+const configuredApiUrl = (import.meta.env.VITE_API_URL || browserOrigin).trim().replace(/\/$/, '');
+const parsedApiUrl = new URL(configuredApiUrl);
+const BASE_HOST = parsedApiUrl.host;
+const SECURE_URL = parsedApiUrl.protocol === 'https:';
+const BASE_URL = parsedApiUrl.origin;
+const WS_URL = `${SECURE_URL ? 'wss' : 'ws'}://${BASE_HOST}/ws`;
 
 export type { LoginReturn, UserReturn, SelfReturn, WebsocketPacket, PacketType, InitType, modifiers, Item, UnlockedItemType, MessageType };
-export { debug, pointsMap, DEFAULT_FILLER, BASE_URL, BASE_HOST, SECURE_URL };
+export { debug, pointsMap, DEFAULT_FILLER, BASE_URL, BASE_HOST, SECURE_URL, WS_URL };
