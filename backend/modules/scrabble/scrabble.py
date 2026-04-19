@@ -1,23 +1,20 @@
 from pathlib import Path
 import json
-from modules.database.database import get_session
-from sqlalchemy import text
 import copy
 from typing import Literal
 from modules.schema import GamePlayer, BotPlayer
 import random
 
-currentPath = Path.cwd()
+currentPath = Path(__file__).resolve().parents[2]
 pointsPath = currentPath / "scrabble_points.json"
-pointsData = json.load(open(pointsPath))
+pointsData = json.load(open(pointsPath, encoding="utf-8"))
 
 letterDistribution = currentPath / "letter_distribution.json"
-distributionArray = json.load(open(letterDistribution))
+distributionArray = json.load(open(letterDistribution, encoding="utf-8"))
 
 wordsPath = currentPath / "sowpods.txt"
 with open(wordsPath, "r", encoding="utf-8") as f:
-	wordSet = set(line.strip().upper() for line in f if line.strip())
-
+	wordSet = set(line.strip().upper() for line in f if line.strip()) 
 defaultFiller = '|'
 arr = [[defaultFiller for _ in range(15)] for _ in range(15)]
 
@@ -389,7 +386,13 @@ class Scrabble:
 			userID of the current turn.
 		"""
 
-		
+		# Reset runtime state so a repeated start request cannot duplicate racks or turn order.
+		self.players = []
+		self.playerLetters = {
+			"player_id": ["letters"]
+		}
+		self.gameTurn = 0
+
 		for player in players:
 			userID = int(player.userID)
 			if userID == -2:

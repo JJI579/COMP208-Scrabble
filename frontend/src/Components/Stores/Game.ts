@@ -53,6 +53,7 @@ type ongoingData = {
 	turn: number,
 	partner?: number,
 	points?: number,
+	pointsUser?: number,
 	skipped?: boolean
 }
 
@@ -184,8 +185,9 @@ class Game implements GAME {
 		// update player points before updating gameturn
 
 		if (allData.points !== undefined) {
-			if (this.players.has(this.gameTurn) === true) {
-				this.players.get(this.gameTurn)!.points += allData.points;
+			const scoringPlayer = allData.pointsUser ?? this.gameTurn;
+			if (this.players.has(scoringPlayer) === true) {
+				this.players.get(scoringPlayer)!.points += allData.points;
 			}
 		}
 		// Check if it equals the user's turn, if it does then set gameturn to them else set it to alldata.turn

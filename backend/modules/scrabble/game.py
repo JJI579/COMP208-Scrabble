@@ -444,6 +444,9 @@ class Game:
             Returns:
                 int: The current turn
         """
+        if self.hasStarted:
+            return self.mm_get_current_turn()
+
         if self.type == "BOT":
             self.add_bot()
         elif self.type == "GROUP":
@@ -495,13 +498,51 @@ class Game:
 
         """
 
-        # {'grid': {'112': 'J', '113': 'A', '114': 'W'}, 'players': [{'userID': 1, 'userName': 'jason12', 'userCreatedAt': '2026-04-13T19:46:36.996330', 'placed': [], 'points': 26}, {'userID': 2, 'userName': '123', 'userCreatedAt': '2026-04-13T19:48:11.519338', 'placed': [], 'points': 0}], 'winner': {'userID': 1, 'userName': 'jason12', 'userCreatedAt': '2026-04-13T19:46:36.996330', 'placed': [], 'points': 26}}
-        print(self.groupPlayers)
         grid = self.game.export_grid()
+
+        if self.type == "GROUP":
+            grouped_players = []
+            for group in self.groups:
+                if len(group) == 0:
+                    continue
+
+                members = [player.dump_json() for player in self.players if player.userID in group]
+                if len(members) == 0:
+                    continue
+
+                grouped_players.append({
+                    "userID": group[0],
+                    "userName": " & ".join(member["userName"] for member in members),
+                    "placed": [],
+                    "points": sum(member["points"] for member in members),
+                    "members": members,
+                })
+
+            grouped_players.sort(key=lambda x: x['points'], reverse=True)
+            winner = grouped_players[0] if len(grouped_players) > 0 else {
+                "userID": -1,
+                "userName": "",
+                "placed": [],
+                "points": 0,
+                "members": [],
+            }
+
+            return {
+                "grid": grid,
+                "players": grouped_players,
+                "winner": winner,
+                "groups": self.groups,
+                "partners": self.partners,
+            }
+
         players = [x.dump_json() for x in self.players]
-        # players sorted in order of 1st,2nd,3rd etc.
         players.sort(key=lambda x: x['points'], reverse=True)
-        winner = max(self.players, key=lambda x: x.points).dump_json()
+        winner = players[0] if len(players) > 0 else {
+            "userID": -1,
+            "userName": "",
+            "placed": [],
+            "points": 0,
+        }
 
         return {
             "grid": grid,

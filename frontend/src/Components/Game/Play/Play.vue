@@ -86,6 +86,21 @@ const activePlayer = computed(() => {
 	return websocketStore.game.gameTurn
 })
 
+const isMyTurn = computed(() => {
+	const userID = userStore.userData?.userID;
+	if (userID === undefined) {
+		return false;
+	}
+
+	if (websocketStore.game.type === "GROUP") {
+		return websocketStore.game.groups.some(group =>
+			group.includes(userID) && group.includes(activePlayer.value)
+		);
+	}
+
+	return activePlayer.value === userID;
+})
+
 const chatOpen = ref(false);
 const unreadChatCount = ref(0);
 
@@ -297,7 +312,7 @@ function switchTurn() {
 	<div class="wrapper">
 		<div class="wrapper__flex">
 			<div class="player__column left">
-				<GroupPlayer :users="group" :active-player="1"
+				<GroupPlayer :users="group" :active-player="activePlayer"
 					v-for="group in (playerGroups.length > 0 ? playerGroups.slice(0, isLaptop ? 4 : 2) : [])"
 					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"
@@ -316,8 +331,8 @@ function switchTurn() {
 								:class="{ 'pi-eye': showPartners, 'pi-eye-slash': !showPartners }"
 								></i></button>
 						
-						<button class="action tooltip-btn" @click="skipTurn()" :disabled="activePlayer !== userStore.userData?.userID"
-							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Skip Turn"><i
+						<button class="action tooltip-btn" @click="skipTurn()" :disabled="!isMyTurn"
+							:class="{ 'action--disabled': !isMyTurn }" data-tooltip="Skip Turn"><i
 								class="pi pi-angle-double-right"></i></button>
 
 						<button class="action tooltip-btn" @click="undo()" data-tooltip="Undo Last Move"><i class="pi pi-undo"></i></button>
@@ -329,20 +344,20 @@ function switchTurn() {
 								<span class="tile__score">{{ pointsMap[letter.toUpperCase()] || ' ' }}</span>
 							</div>
 						</div>
-						<button @click="submitTurn()" class="action tooltip-btn" :disabled="activePlayer !== userStore.userData?.userID"
-							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Submit Turn">
+						<button @click="submitTurn()" class="action tooltip-btn" :disabled="!isMyTurn"
+							:class="{ 'action--disabled': !isMyTurn }" data-tooltip="Submit Turn">
 								<i class="pi pi-check "></i></button>
 						<button class="action tooltip-btn chat-toggle" @click="toggleChat" data-tooltip="Chat"><i class="pi pi-comments"></i>
 							<span v-if="unreadChatCount > 0" class="chat__badge">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
 						</button>
-						<button class="action tooltip-btn" @click="switchTurn" :disabled="activePlayer !== userStore.userData?.userID"
-							:class="{ 'action--disabled': activePlayer !== userStore.userData?.userID }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
+						<button class="action tooltip-btn" @click="switchTurn" :disabled="!isMyTurn"
+							:class="{ 'action--disabled': !isMyTurn }" data-tooltip="Swap Tiles"><i class="pi pi-arrow-right-arrow-left"></i></button>
 					</div>
 					<button class="leave-game-btn" @click="leaveGame">Leave Game</button>
 				</div>
 			</div>
 			<div class="player__column right">
-				<GroupPlayer :users="group" :active-player="1"
+				<GroupPlayer :users="group" :active-player="activePlayer"
 					v-for="group in (playerGroups.length > 2 && !isLaptop ? playerGroups.slice(2, 4) : [])"
 					v-if="websocketStore.game.type == 'GROUP'" />
 				<Player :active-player="activePlayer" :user-game-data="player"

@@ -430,6 +430,7 @@ class GameHandler:
 			"grid": newGrid,
 			"latestPlaced": game.game.export_latest_placed(),
 			"turn": nextTurn,
+			"pointsUser": -2,
 		})
 		await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
 		# Update the board for the user who just played.
@@ -438,6 +439,7 @@ class GameHandler:
 			"latestPlaced": game.game.export_latest_placed(),
 			"turn": nextTurn,
 			"points": botPoints,
+			"pointsUser": -2,
 			"letters": game.game.fetch_player_letters(websocket.user_id) # type: ignore
 		})	
 		await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
@@ -487,6 +489,7 @@ class GameHandler:
 			groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID 
 			currentTurn = game.mm_get_current_turn()
 			if userID == currentTurn or groupLeaderID == currentTurn:
+				scoringPlayer = groupLeaderID if game.type == "GROUP" else userID
 				pointsAmount = await game.game_turn(data['d']['letters'])
 				
 				if type(pointsAmount) == bool:
@@ -503,7 +506,8 @@ class GameHandler:
 					"latestPlaced": game.game.export_latest_placed(),
 					"turn": nextTurn,
 					# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
-					"points": pointsAmount
+					"points": pointsAmount,
+					"pointsUser": scoringPlayer
 				})
 				
 				letterOwnerID = None
@@ -534,6 +538,7 @@ class GameHandler:
 						"latestPlaced": game.game.export_latest_placed(),
 						"turn": nextTurn,
 						"points": pointsAmount,
+						"pointsUser": scoringPlayer,
 						"partner": partnerID,
 						"letters": letters
 					})
@@ -563,6 +568,7 @@ class GameHandler:
 						"latestPlaced": game.game.export_latest_placed(),
 						"turn": nextTurn,
 						"points": pointsAmount,
+						"pointsUser": scoringPlayer,
 						"letters": letters
 					})
 					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
@@ -580,7 +586,7 @@ class GameHandler:
 			print(e)
 
 	@staticmethod
-	async def finish_game(websocket: WebSocket | None = None, game: Game | None = None):
+	async def finish_game(websocket: WebSocket | None = None, game: Game | None = None, extra_user_ids: list[int] | None = None):
 		if game is None:
 			if websocket is None:
 				return
@@ -670,10 +676,13 @@ class GameHandler:
 				gameResult['partners'] = game.partners
 				await session.commit()
 		gameFinishPacket = packets.end.game_end(gameResult)
-		await manager.broadcast_specific(gameFinishPacket, [x.userID for x in game.players]) # type: ignore
-		for player in game.players:
-			if player.userID in manager.connections:
-				manager.connections[player.userID]['game'] = None
+		recipients = {x.userID for x in game.players}
+		if extra_user_ids:
+			recipients.update(extra_user_ids)
+		await manager.broadcast_specific(gameFinishPacket, list(recipients)) # type: ignore
+		for player_id in recipients:
+			if player_id in manager.connections:
+				manager.connections[player_id]['game'] = None
 		if game.id in manager.games:
 			del manager.games[game.id]
 		
@@ -786,27 +795,34 @@ class GameHandler:
 			return 
 
 		if game.type == "BOT" and game.hasStarted:
-			return await GameHandler.finish_game(game=game)
-		
-		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
-		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
-		leavePacket = packets.start.confirm_leave(game.id)
-		await manager.send_direct_message(leavePacket, userID)
+			return await GameHandler.finish_game(game=game, extra_user_ids=[userID])
+
 		try:
 			game.remove_player(user['info'])
-		except:
-			pass
+		except Exception as er:
+			print(f"Error removing player from game: {er}")
+			manager.connections[userID]['game'] = None
+			leavePacket = packets.start.confirm_leave(game.id)
+			await manager.send_direct_message(leavePacket, userID)
+			return
 		
 		# remove it from the user's dictionary
 		manager.connections[userID]['game'] = None
 
 		if len(game.players) == 0:
+			leavePacket = packets.start.confirm_leave(game.id)
+			await manager.send_direct_message(leavePacket, userID)
 			if game.id in manager.games:
 				del manager.games[game.id]
 			return
 
 		if game.hasStarted and game.game.finished:
-			return await GameHandler.finish_game(game=game)
+			return await GameHandler.finish_game(game=game, extra_user_ids=[userID])
+		
+		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
+		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		leavePacket = packets.start.confirm_leave(game.id)
+		await manager.send_direct_message(leavePacket, userID)
 		
 		# perform game update to show player left.
 		for player in game.players:

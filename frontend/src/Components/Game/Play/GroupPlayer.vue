@@ -24,13 +24,12 @@ const name = computed(() => {
 	}
 })
 
+const isActive = computed(() => {
+	return props.users.some(user => user.userID === props.activePlayer)
+})
+
 const score = computed(() => {
-	for (const user of props.users) {
-		if (user.points) {
-			return user.points
-		}
-	}
-	return 0
+	return props.users.reduce((total, user) => total + (user.points ?? 0), 0)
 })
 </script>
 
@@ -38,7 +37,7 @@ const score = computed(() => {
 
 <template>
 
-	<div class="player-card" :class="{ active: activePlayer === 1 }" v-if="props.users.length > 0">
+	<div class="player-card" :class="{ active: isActive }" v-if="props.users.length > 0">
 		<img class="pfp" src="https://i.pravatar.cc/1000?img=50" />
 		<div class="player-info">
 			<p class="name">{{ name }}</p>

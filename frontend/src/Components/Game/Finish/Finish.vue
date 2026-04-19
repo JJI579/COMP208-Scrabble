@@ -64,8 +64,8 @@ function getPartner(leader: number | undefined) {
 					<span>Score</span>
 				</div>
 				<div v-if="finalData.groups">
-					<div v-for="(leader, ind) in leaderIDs" :key="leader" class="board-row"
-						:class="{ champion: leader === finalData.winner.userID }">
+					<div v-for="(player, ind) in finalData.players" :key="player.userID" class="board-row"
+						:class="{ champion: player.userID === finalData.winner.userID }">
 						<span class="rank">
 							<span v-if="ind === 0">🥇</span>
 							<span v-else-if="ind === 1">🥈</span>
@@ -73,11 +73,9 @@ function getPartner(leader: number | undefined) {
 							<span v-else>{{ ind + 1 }}</span>
 						</span>
 
-						<span>
-							{{ playerMap.get(leader)?.userName }}{{ getPartner(leader) }}
-						</span>
+						<span>{{ player.userName }}</span>
 
-						<span>{{ playerMap.get(leader)?.points }}</span>
+						<span>{{ player.points }}</span>
 					</div>
 				</div>
 				<div v-else>

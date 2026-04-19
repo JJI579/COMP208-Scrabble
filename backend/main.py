@@ -12,7 +12,7 @@ from sqlmodel import select, insert
 
 import json
 
-currentPath = Path.cwd()
+currentPath = Path(__file__).resolve().parent
 
 itemsJSONPath = currentPath / "items.json"
 itemJSON = json.load(open(itemsJSONPath))
