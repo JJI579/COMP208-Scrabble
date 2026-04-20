@@ -132,8 +132,8 @@ const USE_API_PREFIX = import.meta.env.VITE_USE_API_PREFIX === 'true';
 const protocol = SECURE_URL ? 'https' : 'http';
 
 const BASE_URL = USE_API_PREFIX
-  ? `${protocol}://${BASE_HOST}/api`
-  : `${protocol}://${BASE_HOST}`;
+	? `${protocol}://${BASE_HOST}/api`
+	: `${protocol}://${BASE_HOST}`;
 
 console.log("BASE URL: ", BASE_URL)
 
