@@ -37,7 +37,9 @@ async def get_users(search: str = '', session: AsyncSession = Depends(get_sessio
 	if (search == ''):
 		return []
 	query = user_search(select(User), search)
-	results = await session.execute(query.order_by(User.userName.asc().where(User.deactivated == False))) # type: ignore
+	results = await session.execute(
+		query.where(User.deactivated == False).order_by(User.userName.asc())
+	)
 	users = results.scalars().all()
 	return users
 

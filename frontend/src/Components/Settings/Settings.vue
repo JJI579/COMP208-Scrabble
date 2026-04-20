@@ -1,17 +1,21 @@
-
 <script lang="ts" setup>
 import router from '../../router';
 import api from '../../api';
-import { ref} from 'vue';
+import { ref } from 'vue';
+import useUserStore from '../Stores/user';
 
 
 
 function logout() {
+	const userStore = useUserStore()
 	localStorage.removeItem('token');
 	localStorage.removeItem('refresh_token');
 	localStorage.removeItem('userID');
+	userStore.isLoggedIn = false;
 	router.push({ name: 'home' });
 }
+
+
 
 async function deleteAccount() {
 	try {
@@ -24,7 +28,7 @@ async function deleteAccount() {
 
 const showOptions = ref(false);
 function toggleOptions() {
-  showOptions.value = !showOptions.value;
+	showOptions.value = !showOptions.value;
 }
 
 </script>
@@ -36,31 +40,31 @@ function toggleOptions() {
 		<h2 class="settings">Settings</h2>
 
 		<div class="settingItems">
-      		<p class="setting__item" @click="router.push( { name: 'changeUsername' })">Change Username</p>
+			<p class="setting__item" @click="router.push({ name: 'changeUsername' })">Change Username</p>
 			<p class="setting__item" @click="router.push({ name: 'changePassword' })">Change Password</p>
 			<p class="setting__item" @click="toggleOptions()">Delete Account</p>
 		</div>
 
-    <Teleport to="body">
+		<Teleport to="body">
 			<div class="popup__wrapper" v-if="showOptions">
 				<div class="popup">
 					<div class="popup__content">
 						<p class="popup__button__delete" @click="deleteAccount">
-                            Yes, I want to delete my account
-                        </p>
+							Yes, I want to delete my account
+						</p>
 						<hr class="popup__hr">
 						<button class="popup__button" @click="toggleOptions">
-                            No, take me back
-                        </button>
+							No, take me back
+						</button>
 					</div>
 				</div>
 			</div>
 		</Teleport>
 
 
-    <div class="logoutSection">
-      <button class="logoutButton" @click="logout()">Logout</button>
-    </div>
+		<div class="logoutSection">
+			<button class="logoutButton" @click="logout()">Logout</button>
+		</div>
 
 	</div>
 </template>
@@ -187,7 +191,8 @@ function toggleOptions() {
 .popup__content {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem; /* reduced from 1rem */
+	gap: 0.5rem;
+	/* reduced from 1rem */
 	text-align: center;
 }
 

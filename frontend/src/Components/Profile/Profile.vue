@@ -7,7 +7,7 @@ import router from '../../router';
 import useUserStore from '../Stores/user';
 import "../../base.css";
 import type { UserReturn } from '@/types';
-import { useShopStore} from '../Shop/shop';
+import { useShopStore } from '../Shop/shop';
 
 const shopStore = useShopStore();
 const userStore = useUserStore();
@@ -38,14 +38,7 @@ onMounted(async () => {
 	shopStore.setItems(res.data);
 })
 
-function logout() {
-	const userStore = useUserStore()
-	localStorage.removeItem('token');
-	localStorage.removeItem('refresh_token');
-	localStorage.removeItem('userID');
-	userStore.isLoggedIn = false;
-	router.push({ name: 'login' });
-}
+
 
 const calculateWinRate = computed(() => {
 	if (!user.value) {
@@ -270,40 +263,56 @@ function settingsPage() {
 }
 
 @keyframes rainbow {
-	0% { background-position: 0% 50%; }
-	100% { background-position: 100% 50%; }
+	0% {
+		background-position: 0% 50%;
+	}
+
+	100% {
+		background-position: 100% 50%;
+	}
 }
 
 .gold {
-  background: linear-gradient(135deg, gold, #ffdf00, gold);
-  background-size: 400% 400%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+	background: linear-gradient(135deg, gold, #ffdf00, gold);
+	background-size: 400% 400%;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
 
-  animation: shimmer 6s ease infinite, glow 2s ease-in-out infinite;
+	animation: shimmer 6s ease infinite, glow 2s ease-in-out infinite;
 }
 
 /* moving gold shine */
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+	0% {
+		background-position: 0% 50%;
+	}
+
+	50% {
+		background-position: 100% 50%;
+	}
+
+	100% {
+		background-position: 0% 50%;
+	}
 }
 
 /* glowing effect */
 @keyframes glow {
-  0%, 100% {
-    text-shadow:
-      0 0 5px rgba(255, 215, 0, 0.4),
-      0 0 10px rgba(255, 215, 0, 0.3),
-      0 0 20px rgba(255, 215, 0, 0.2);
-  }
-  50% {
-    text-shadow:
-      0 0 10px rgba(255, 215, 0, 0.8),
-      0 0 20px rgba(255, 215, 0, 0.6),
-      0 0 40px rgba(255, 215, 0, 0.4);
-  }
+
+	0%,
+	100% {
+		text-shadow:
+			0 0 5px rgba(255, 215, 0, 0.4),
+			0 0 10px rgba(255, 215, 0, 0.3),
+			0 0 20px rgba(255, 215, 0, 0.2);
+	}
+
+	50% {
+		text-shadow:
+			0 0 10px rgba(255, 215, 0, 0.8),
+			0 0 20px rgba(255, 215, 0, 0.6),
+			0 0 40px rgba(255, 215, 0, 0.4);
+	}
 }
 
 .winsLoses,
