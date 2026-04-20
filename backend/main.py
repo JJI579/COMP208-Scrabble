@@ -34,7 +34,11 @@ async def lifespan(app: FastAPI):
 		for item in itemJSON:
 			resp = await session.execute(select(Item).where(Item.name == item['name']))
 			if resp.scalar_one_or_none() == None:
-				itemObj =Item(name=item['name'], description=item['description'], xpRequired=item['xpRequired']) 
+				itemObj =Item(name=item['name'], 
+                  description=item['description'], 
+                  xpRequired=item['xpRequired'],
+                  category=item['category'],
+                  effect=item['effect']) 
 				session.add(itemObj)
 		
 		await session.commit()

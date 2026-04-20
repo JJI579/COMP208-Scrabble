@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-import { onUnmounted, ref, watch } from 'vue';
+import { onUnmounted, onMounted, ref, watch } from 'vue';
 import useUserStore from '../Stores/user';
 import router from '@/router';
+import api from '@/api';
 import { useRoute } from 'vue-router';
+import { useShopStore} from '../Shop/shop';
 
+const shopStore = useShopStore();
 const route = useRoute();
-
 const userStore = useUserStore();
 
 const menuOpen = ref(false);
@@ -22,9 +24,15 @@ watch(menuOpen, (isOpen) => {
 	document.body.style.overflow = isOpen ? 'hidden' : '';
 });
 
-onUnmounted(() => {
+onUnmounted( () => {
 	document.body.style.overflow = '';
 });
+
+onMounted(async () => {
+	const res = await api.get('/items/fetch');
+	shopStore.setItems(res.data);
+	console.log("Getting the styles: ", res.data);
+})
 
 function profileClicked() {
 	console.log("pfp button clicked")
@@ -71,8 +79,8 @@ function openExternal(url: string) {
 
 			<div class="end">
 				<button class="user-btn" @click="profileClicked">
-					<div class="user">
-						{{ userStore.userData?.userID }}
+					<div class="user" :class="shopStore.profileStyle">
+						<!-- {{ userStore.userData?.userID }} -->
 						<!-- TODO: eventually add functionality for custom pfps etc..-->
 						<i class="pi pi-user"></i>
 					</div>
@@ -222,13 +230,34 @@ function openExternal(url: string) {
 	justify-content: center;
 	align-items: center;
 	font-size: large;
-	border: 1px solid white;
+	border: 5px solid white;
 	border-radius: 50%;
 
 	transition: transform 0.2s;
 	background: rgba(255, 255, 255, 0.08);
 	backdrop-filter: blur(10px);
 	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.user.bronze {
+	border: 3px solid #cd7f32;
+	box-shadow:
+		0 0 8px rgba(205, 127, 50, 0.6),
+		0 0 16px rgba(205, 127, 50, 0.4);
+}
+
+.user.silver {
+	border: 3px solid #c0c0c0;
+	box-shadow:
+		0 0 8px rgba(192, 192, 192, 0.6),
+		0 0 16px rgba(192, 192, 192, 0.4);
+}
+
+.user.gold {
+	border: 3px solid #ffd700;
+	box-shadow:
+		0 0 10px rgba(255, 215, 0, 0.8),
+		0 0 20px rgba(255, 215, 0, 0.5);
 }
 
 .user img {

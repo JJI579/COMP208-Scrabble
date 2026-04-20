@@ -135,7 +135,10 @@ class PersonalItemReturn(BaseModel):
 	name: str
 	description: str
 	xpRequired: int 
+	category: str
+	effect: str
 	unlocked: Optional[bool] = None
+	equipped: Optional[bool] = None
 	
 
 	class Config:

@@ -2,11 +2,14 @@
 
 import api from '@/api';
 import { computed, onMounted, ref, watch } from 'vue';
-import { resolveComponent } from 'vue';
+
 import router from '../../router';
 import useUserStore from '../Stores/user';
 import "../../base.css";
 import type { UserReturn } from '@/types';
+import { useShopStore} from '../Shop/shop';
+
+const shopStore = useShopStore();
 const userStore = useUserStore();
 const user = ref<UserReturn | 0>(0);
 const friends = ref<UserReturn[]>([]);
@@ -27,9 +30,12 @@ async function getCurrentUser() {
 }
 
 
-onMounted(() => {
+onMounted(async () => {
 	getCurrentUser();
 	getFriends();
+
+	const res = await api.get('/items/fetch');
+	shopStore.setItems(res.data);
 })
 
 function logout() {
@@ -93,7 +99,7 @@ function settingsPage() {
 		<div class="userName-row">
 			<div class="userName">
 				<i class="pi pi-user icon" style="font-size: 3rem"></i>
-				<h2 class="profile__title">
+				<h2 class="profile__title" :class="shopStore.nameStyle">
 					{{ user.userName }}
 				</h2>
 				<!-- <p>Username</p> -->
@@ -253,6 +259,51 @@ function settingsPage() {
 	grid-column: 1 / -1;
 	text-align: center;
 	color: var(--title-colour);
+}
+
+.gradient-rainbow {
+	background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+	background-size: 400% 400%;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: rainbow 6s linear infinite;
+}
+
+@keyframes rainbow {
+	0% { background-position: 0% 50%; }
+	100% { background-position: 100% 50%; }
+}
+
+.gold {
+  background: linear-gradient(135deg, gold, #ffdf00, gold);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  animation: shimmer 6s ease infinite, glow 2s ease-in-out infinite;
+}
+
+/* moving gold shine */
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* glowing effect */
+@keyframes glow {
+  0%, 100% {
+    text-shadow:
+      0 0 5px rgba(255, 215, 0, 0.4),
+      0 0 10px rgba(255, 215, 0, 0.3),
+      0 0 20px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 10px rgba(255, 215, 0, 0.8),
+      0 0 20px rgba(255, 215, 0, 0.6),
+      0 0 40px rgba(255, 215, 0, 0.4);
+  }
 }
 
 .winsLoses,

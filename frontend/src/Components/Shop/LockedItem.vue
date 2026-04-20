@@ -3,16 +3,10 @@ import type { Item } from '@/types';
 import type { PropType } from 'vue';
 
 
-const props = defineProps({
-	item: {
-		type: Object as PropType<Item>,
-		required: true
-	},
-	currentScore: {
-		type: Number,
-		required: true
-	}
-})
+const props = defineProps<{
+	item: Item,
+	currentScore: number
+}>();
 
 const item = props.item;
 

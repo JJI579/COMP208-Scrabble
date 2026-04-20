@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import api from '@/api';
 import { onMounted, watch } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import Header from './Components/Header/Header.vue';
@@ -7,10 +8,11 @@ import useWebsocketStore from './Components/Stores/websocket';
 import Alert from './Components/Alert/Alert.vue';
 import useAlertStore from './Components/Stores/alert';
 
+
 const route = useRoute();
 const websocket = useWebsocketStore()
 
-onMounted(() => {
+onMounted(async () => {
 	var hasToken = localStorage.getItem('token');
 	const userStore = useUserStore();
 	if (hasToken) {
@@ -19,8 +21,9 @@ onMounted(() => {
 			console.log("Try to connect...")
 			websocket.connect()
 		}
-
 	}
+
+
 	watch(() => userStore.isLoggedIn, () => {
 		console.log("User has been logged in, now connecting to websocket.")
 		if (userStore.isLoggedIn) {
