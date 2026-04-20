@@ -601,6 +601,7 @@ class GameHandler:
 			game = manager.fetch_game(userConnection['game'])
 			if type(game) == bool:
 				return
+			
 		
 		# {
 		# 	"grid": grid,
