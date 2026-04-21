@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from modules.logger import APILogger
 from sqlmodel import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
