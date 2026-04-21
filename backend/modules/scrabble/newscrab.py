@@ -1,11 +1,13 @@
 # Plan
-# 
+
 
 from exceptions import *
-from typing import Literal, Optional
+from scrabble_types import *
 from pathlib import Path
 import json
-from enum import Enum
+
+
+
 """
 Scrabble class
 
@@ -18,119 +20,8 @@ It will Handle
 - Lots of side effects per module
 - Inconsistent Handling of Data.
 """
-# Constants
-BOARD_SIZE = 15
-BOT_ID = -2
-CENTER = (7,7)
-EMPTY_TILE = "|"
-POINTS_PATH = Path.cwd() / "scrabble_points.json"
-POINTS_DATA = json.load(open(POINTS_PATH))
-LETTER_BAG_PATH = Path.cwd() / "letter_distribution.json"
 
 
-# Types
-class ModifierValue(Enum):
-	DOUBLE_LETTER = "DL"
-	TRIPLE_LETTER = "TL"
-	DOUBLE_WORD = "DW"
-	TRIPLE_WORD = "TW"
-
-class DirectionValue(Enum):
-	RIGHT = "RIGHT"
-	DOWN = "DOWN"
-
-class ValidationResult:
-	def __init__(self, valid: bool, words=None):
-		self.valid = valid
-		self.words = words or []
-
-	def __repr__(self) -> str:
-		return f"ValidationResult(valid={self.valid}, words={self.words})"
-
-class Group:
-	players: list
-	leader: list
-
-class Coordinate:
-	x: int
-	y: int
-
-	def __init__(self, x: int, y: int) -> None:
-		self.x = x
-		self.y = y
-
-	def __str__(self) -> str:
-		return f"({self.x}, {self.y})"
-
-	def __repr__(self) -> str:
-		return f"Coordinate(x={self.x}, y={self.y})"
-	
-	def export(self):
-		return (self.x, self.y)
-	
-	def is_center(self) -> bool:
-		return self.x == CENTER[0] and self.y == CENTER[1]
-	
-class Letter:
-	letter: str
-	isBlank: bool = False
-
-	def __init__(self, letter: str, isBlank: bool) -> None:
-		self.letter = letter.lower()
-		self.isBlank = isBlank
-
-	def __repr__(self) -> str:
-		return f"Letter(letter=\"{self.letter}\", isBlank={self.isBlank})"
-	
-class LetterPlace:
-	coordinate: Coordinate
-	letter: Letter
-
-	def __init__(self, coordinate: Coordinate, letter: Letter) -> None:
-		self.coordinate = coordinate
-		self.letter = letter
-	
-	def __repr__(self) -> str:
-		return f"LetterPlace(coordinate={self.coordinate}, letter={self.letter})"
-
-class Turn:
-	letters: list[LetterPlace]
-	direction: DirectionValue
-
-	def __init__(self, letters: list[LetterPlace], direction: DirectionValue) -> None:
-		self.letters = letters
-		self.direction = direction
-
-
-	def __repr__(self) -> str:
-		return f"Turn(letters={self.letters}, direction={self.direction})"
-class Modifier: 
-	modifier: ModifierValue | None
-	modifierUsed: bool = False
-
-	def __init__(self, modifier: Optional[ModifierValue] , modifierUsed: bool) -> None:
-		self.modifier = modifier
-		self.modifierUsed = modifierUsed
-
-class Tile:
-	letter: Letter
-	modifier: Modifier
-	coordinate: Coordinate
-
-	def __init__(self, letter: Letter, modifier: Modifier, coordinate: Coordinate) -> None:
-		self.letter = letter
-		self.modifier = modifier
-		self.coordinate = coordinate
-
-
-	def update_letter(self, letter: Letter):
-		self.letter = letter
-
-	def __str__(self) -> str:
-		return f"Tile(letter=\"{self.letter}\")"
-
-	def __repr__(self) -> str:
-		return self.__str__()
 
 class Scrabble:
 
@@ -158,6 +49,24 @@ class Scrabble:
 				tile = Tile(letter=letter, modifier=modifier, coordinate=coord)
 				self.grid[y].append(tile)
 
+	def copy(self) -> "Scrabble":
+		new = Scrabble()
+
+		new.grid = [
+			[Tile(
+				Letter(tile.letter.letter, tile.letter.isBlank),
+				Modifier(tile.modifier.modifier, tile.modifier.modifierUsed),
+				Coordinate(tile.coordinate.x, tile.coordinate.y)
+			) for tile in row]
+			for row in self.grid
+		]
+
+		new.placed = self.placed.copy()
+		new.placedFirst = self.placedFirst
+		new.finished = self.finished
+
+		return new
+	
 	def calculate_modifier(self, coordinate: Coordinate) -> Modifier:
 		coord = coordinate.export()
 		if coord in self.double_letter:
@@ -238,19 +147,6 @@ class Scrabble:
 	def expand_horizontally(self, position: Coordinate) -> list[Coordinate]:
 		return self._collect_contiguous_word(position, DirectionValue.RIGHT)
 
-	
-
-	def can_place_word_here(self, turn: Turn):
-		
-		
-		
-		pass
-
-
-	def simulate_place_word(self, turn: Turn):
-		# Simulates whether the word can be placed
-		pass
-
 	def valid_first_word_placement(self, turn: Turn):
 		hasCenter = False
 		for letterPlacement in turn.letters:
@@ -259,25 +155,7 @@ class Scrabble:
 				break
 		return hasCenter
 
-
-
-	def copy(self) -> "Scrabble":
-		new = Scrabble()
-
-		new.grid = [
-			[Tile(
-				Letter(tile.letter.letter, tile.letter.isBlank),
-				Modifier(tile.modifier.modifier, tile.modifier.modifierUsed),
-				Coordinate(tile.coordinate.x, tile.coordinate.y)
-			) for tile in row]
-			for row in self.grid
-		]
-
-		new.placed = self.placed.copy()
-		new.placedFirst = self.placedFirst
-		new.finished = self.finished
-
-		return new
+	
 
 
 	def validate_turn(self, turn: Turn) -> ValidationResult:

@@ -1,7 +1,6 @@
 from pathlib import Path
 import json, random
-from typing import Optional
-from newscrab import Letter
+from scrabble_types import Letter
 
 LETTER_BAG_PATH = Path.cwd() / "letter_distribution.json"
 
