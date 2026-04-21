@@ -39,6 +39,14 @@ class DirectionValue(Enum):
 	RIGHT = "RIGHT"
 	DOWN = "DOWN"
 
+class ValidationResult:
+	def __init__(self, valid: bool, words=None):
+		self.valid = valid
+		self.words = words or []
+
+	def __repr__(self) -> str:
+		return f"ValidationResult(valid={self.valid}, words={self.words})"
+
 class Group:
 	players: list
 	leader: list
@@ -250,122 +258,117 @@ class Scrabble:
 				hasCenter = True
 				break
 		return hasCenter
-	
-	def place_word(self, turn: Turn):
 
-		# This is to calculate points for placing the new letters.
-		newWords: list[list[Tile]] = []
-		newlyPlaced: list[Coordinate] = []
 
-		isWord = False
 
-		# If the first hasn't been placed, check if it a valid first word placement.
+	def copy(self) -> "Scrabble":
+		new = Scrabble()
+
+		new.grid = [
+			[Tile(
+				Letter(tile.letter.letter, tile.letter.isBlank),
+				Modifier(tile.modifier.modifier, tile.modifier.modifierUsed),
+				Coordinate(tile.coordinate.x, tile.coordinate.y)
+			) for tile in row]
+			for row in self.grid
+		]
+
+		new.placed = self.placed.copy()
+		new.placedFirst = self.placedFirst
+		new.finished = self.finished
+
+		return new
+
+
+	def validate_turn(self, turn: Turn) -> ValidationResult:
+		# 1. First move must hit center
 		if not self.placedFirst:
 			if not self.valid_first_word_placement(turn):
 				raise InvalidFirstWordPlacementError()
-			else:
-				# assume the word that they are to place is the first word and therefore should be correct
-				if turn.direction == DirectionValue.DOWN:
-					turn.letters.sort(key=lambda letterPlace: letterPlace.coordinate.y)
-				else:
-					turn.letters.sort(key=lambda letterPlace: letterPlace.coordinate.x)
-				isWord = self.is_word(''.join([letterPlace.letter.letter for letterPlace in turn.letters]))
 
-
-		# Placed all letters
-		for letterPlacement in turn.letters:
-			if self.is_cell_free(letterPlacement.coordinate):
-				# place the word
-				self.get_cell(letterPlacement.coordinate).update_letter(letterPlacement.letter)
-				newlyPlaced.append(letterPlacement.coordinate)
-			else:
-				for placed in newlyPlaced:
-					self.reset_cell(placed)
+		# 2. Ensure all cells are free
+		for lp in turn.letters:
+			if not self.is_cell_free(lp.coordinate):
 				raise CellOccupiedError()
-		
-		# TODO: Check if board is valid.
-		forceBreak = False
-		haveTested: list[list[Tile]] = []
 
-		
-		hasJoiningWord = False
-		# If the word is wrong but we have changed the first placed, then we can reset it via this boolean
-		hasSetFirstPlaced = False
-		
-		for coordinate in newlyPlaced:
-			if forceBreak:
-				break
-			for testDirection in ['right', 'down']:
-				if testDirection == "right":
-					potentialWord = self.expand_horizontally(coordinate)
+		# 3. Simulate on a temp board (NO mutation to real board)
+		temp = self.copy()
+
+		for lp in turn.letters:
+			temp.get_cell(lp.coordinate).update_letter(lp.letter)
+
+		new_coords = [lp.coordinate for lp in turn.letters]
+
+		words = []
+		seen = set()
+
+		for coord in new_coords:
+			for direction in [DirectionValue.RIGHT, DirectionValue.DOWN]:
+				if direction == DirectionValue.RIGHT:
+					coords = temp.expand_horizontally(coord)
 				else:
-					potentialWord = self.expand_vertically(coordinate)
-				testArray = potentialWord.copy()
+					coords = temp.expand_vertically(coord)
 
-				# Convert to comparable format and remove already checked
+				if len(coords) <= 1:
+					continue
 
-				testArrayConverted = [x.export() for x in testArray]
-				for coord in newlyPlaced:
-					if coord.export() in testArrayConverted:
-						testArrayConverted.remove(coord.export())
-				
-				# Reconvert back to a list of coordinates
-				testArray = [Coordinate(x=coord[0], y=coord[1]) for coord in testArrayConverted]
+				coords_sorted = sorted(
+					coords,
+					key=lambda c: c.x if direction == DirectionValue.RIGHT else c.y
+				)
 
-				if len(testArray) != 0:
-					if testDirection == "down":
-						potentialWord.sort(key=lambda coord: coord.y )
-					else:
-						potentialWord.sort(key=lambda coord: coord.x )
-					
-					wordOrdered: list[Tile] = [self.get_cell(coord) for coord in potentialWord]
-					wordString = "".join([tile.letter.letter for tile in wordOrdered])
-					print(wordOrdered)
-					
-					print(f'Checking word found: ' + wordString)
-					
-					if not self.is_word(wordString):
-						isWord = False
-						forceBreak = True
-						print(f"{wordString} is not a word. ")
-						break
-					else:
-						if wordOrdered in haveTested:
-							print("Already tested this word, skipping.")
-						else:
-							print(f"{wordString} is a word.")
-							self.calculate_points([tile.coordinate for tile in wordOrdered])
-							hasJoiningWord = True
-							isWord = True
-							haveTested.append(wordOrdered)
-				else:
-					if not self.placedFirst:
-						hasJoiningWord = True
-						self.placedFirst = True
-						hasSetFirstPlaced = True
+				key = tuple((c.x, c.y) for c in coords_sorted)
+				if key in seen:
+					continue
+				seen.add(key)
 
-		print(f"hasJoiningWord: {hasJoiningWord}, isWord: {isWord}, hasSetFirstPlaced: {hasSetFirstPlaced}")
-		if not hasJoiningWord or not isWord:
-			if hasSetFirstPlaced:
-				self.placedFirst = False
-			# remove coordinates placed
-			for coordinate in newlyPlaced:
-				self.reset_cell(coordinate)
+				word = "".join(
+					temp.get_cell(c).letter.letter for c in coords_sorted
+				)
+
+				if not self.is_word(word):
+					raise InvalidMainWordError()
+
+				words.append(coords_sorted)
+
+		if not words:
 			raise NoWordsFormedError()
-		
+
+		return ValidationResult(True, words)
+
+
+	def apply_turn(self, turn: Turn, words: list[list[Coordinate]]) -> int:
+		newlyPlaced = []
+
+		# Apply letters to real board
+		for lp in turn.letters:
+			self.get_cell(lp.coordinate).update_letter(lp.letter)
+			newlyPlaced.append(lp.coordinate)
+
+		# Mark first placement
+		if not self.placedFirst:
+			self.placedFirst = True
+
+		# Calculate score
 		points = 0
+		for word_coords in words:
+
+			points += self.calculate_points(word_coords)
+
+		# 7-tile bonus
 		if len(turn.letters) == 7:
-			# Full deck
 			points += 50
 
-		if points == 0:
-			points = self.calculate_turn_points(turn)
-		self.placed.extend([self.get_cell(coord) for coord in newlyPlaced])
+		# Track placed tiles
+		self.placed.extend([self.get_cell(c) for c in newlyPlaced])
 
-		# get points for the placement.
-		self.print_board()
 		return points
 
+
+	def place_word(self, turn: Turn) -> int:
+		validation = self.validate_turn(turn)
+		print(validation)
+		return self.apply_turn(turn, validation.words)
 
 
 	def print_board(self):
@@ -405,7 +408,7 @@ class Scrabble:
 						points *= 3
 
 				# Make the modifier used so it cannot be used again?
-				self.set_modifier_used(tile)
+				
 			totalPoints += points
 		for _ in range(wordMultiplierCount):
 			if multiplierType == ModifierValue.DOUBLE_WORD:
