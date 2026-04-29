@@ -91,3 +91,5 @@ letter_distribution.py
 work-split.txt
 __pycache__/
 backend/__pycache__/main.cpython-311.pyc
+/backend/modules/scrabble/letter_distribution.json
+/backend/modules/scrabble/scrabble_points.json
