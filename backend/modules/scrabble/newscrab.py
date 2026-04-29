@@ -21,8 +21,6 @@ It will Handle
 - Inconsistent Handling of Data.
 """
 
-
-
 class Scrabble:
 
 	def __init__(self) -> None:
@@ -35,7 +33,6 @@ class Scrabble:
 		self.grid: list[list[Tile]] = []
 		self.placed: list[Tile] = []
 		self.finished: bool = False
-		self.letterBag = json.load(open(LETTER_BAG_PATH))
 		# Used to detect whether the first word has been placed.
 		self.placedFirst = False
 		
@@ -121,8 +118,6 @@ class Scrabble:
 		else:
 			raise CellOccupiedError()
 	
-
-
 	# Expansion Methods
 	def _collect_contiguous_word(self, position: Coordinate,  direction: DirectionValue) -> list[Coordinate] :
 		"""Return the full contiguous word coordinates passing through a board position."""
@@ -154,9 +149,6 @@ class Scrabble:
 				hasCenter = True
 				break
 		return hasCenter
-
-	
-
 
 	def validate_turn(self, turn: Turn) -> ValidationResult:
 		# 1. First move must hit center

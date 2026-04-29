@@ -20,13 +20,13 @@ class LetterBag:
 		sampled = random.sample(self.bag, k=amount)
 		return [Letter(letter=letter, isBlank=letter == " ") for letter in sampled]
 
-	def give_letters(self, letters: list[Letter]):
+	def put_back_letters(self, letters: list[Letter]):
 		for letter in letters:
 			self.bag.append(letter.letter)
 		self.shuffle_bag()
 
 	def replace_letters(self, letters: list[Letter]) -> list[Letter]:
-		self.give_letters(letters)
+		self.put_back_letters(letters)
 		return self.take_letters(len(letters))
 	
 

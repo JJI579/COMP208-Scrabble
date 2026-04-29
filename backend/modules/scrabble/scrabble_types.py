@@ -25,24 +25,9 @@ class ValidationResult:
 
 	def __repr__(self) -> str:
 		return f"ValidationResult(valid={self.valid}, words={self.words})"
-
-class Player:
-	userID: int
-	userName: str
-	userCreatedAt: datetime.datetime
-
-	def __init__(self, user: UserFetch) -> None:
-		self.userID = user.userID
-		self.userName = user.userName
-		self.userCreatedAt = user.userCreatedAt
-
-	def __repr__(self) -> str:
-		return f"Player(userID={self.userID}, userName={self.userName}, userCreatedAt={self.userCreatedAt})"
 	
 	
-class Group:
-	players: list
-	leader: list
+
 
 class Coordinate:
 	x: int

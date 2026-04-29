@@ -15,6 +15,15 @@ import copy
 
 import re
 
+from pydantic import BaseModel
+
+from modules.websocket.WebsocketManager import Connection
+
+class VerificationReturn(BaseModel):
+	connection: Connection
+	game: Game
+
+
 # Word filter
 def censor_word(word):
     if len(word) <= 2:
@@ -160,24 +169,44 @@ class GameHandler:
 			await manager.send_direct_message(ongoing_game_update, x.userID)
 
 		if game.game.finished:
-			return await GameHandler.finish_game(game=game)
+			return await GameHandler.finish_game(game=game, websocket=websocket)
+	
 	
 	@staticmethod
-	async def skip_turn(data: dict, websocket: WebSocket):
-		# move turn to the next person
-		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-		if type(userConnection) == bool:
-			errorPacket = packets.error("You are not authenticated.")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+	async def verify_connection_and_game(websocket: WebSocket) -> VerificationReturn:
+		try:
+			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+			if type(userConnection) == bool:
+				errorPacket = packets.error("You are not authenticated.")
+				await manager.send_message(websocket, json.dumps(errorPacket))
+				raise Exception("They are not authenticated")
 
-		if userConnection['game'] == None:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+			if userConnection['game'] == None:
+				errorPacket = packets.error("You are not in a game")
+				await manager.send_message(websocket, json.dumps(errorPacket))
+				raise Exception("They are not in a game")
+			
+			game = manager.fetch_game(userConnection['game'])
+			if type(game) == bool:
+				errorPacket = packets.error("You are not in a game")
+				await manager.send_message(websocket, json.dumps(errorPacket))
+				raise Exception("They are not in a game")
+			return VerificationReturn(connection=userConnection, game=game)
+		except Exception as e:
+			raise e
 		
-		game = manager.fetch_game(userConnection['game'])
-		if type(game) == bool:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+	@staticmethod
+	async def skip_turn(data: dict, websocket: WebSocket):
+		userConnection = None
+		game = None
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
+			
 		
 		userID = userConnection['info'].userID
 		currentTurn = game.mm_get_current_turn()
@@ -215,19 +244,15 @@ class GameHandler:
 
 	@staticmethod
 	async def switch_turn(data: dict, websocket: WebSocket):
-		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-		if type(userConnection) == bool:
-			errorPacket = packets.error("You are not authenticated.")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-
-		if userConnection['game'] == None:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-		
-		game = manager.fetch_game(userConnection['game'])
-		if type(game) == bool:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+		userConnection = None
+		game = None
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
 
 		userID = userConnection['info'].userID
 		currentTurn = game.mm_get_current_turn()
@@ -290,19 +315,15 @@ class GameHandler:
 
 	@staticmethod
 	async def draft_placed(data: dict, websocket: WebSocket):
-		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-		if type(userConnection) == bool:
-			errorPacket = packets.error("You are not authenticated.")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-
-		if userConnection['game'] == None:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-		
-		game = manager.fetch_game(userConnection['game'])
-		if type(game) == bool:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+		userConnection = None
+		game = None
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
 		
 		# get the partner to whoever placed the draftt
 		# send the draft to them
@@ -316,20 +337,15 @@ class GameHandler:
 	
 	@staticmethod
 	async def turn_confirmation(data: dict, websocket: WebSocket):
-		# pass it off to the game_turn
-		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-		if type(userConnection) == bool:
-			errorPacket = packets.error("You are not authenticated.")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-
-		if userConnection['game'] == None:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
-		
-		game = manager.fetch_game(userConnection['game'])
-		if type(game) == bool:
-			errorPacket = packets.error("You are not in a game")
-			return await manager.send_message(websocket, json.dumps(errorPacket))
+		userConnection = None
+		game = None
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
 		
 		# Check if the pairing's turn
 		userID = userConnection['info'].userID
@@ -343,79 +359,63 @@ class GameHandler:
 		
 	@staticmethod
 	async def turn_decline(data: dict, websocket: WebSocket):
+		userConnection = None
+		game = None
 		try:
-			# data has nothing.
-			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-			if type(userConnection) == bool:
-				errorPacket = packets.error("You are not authenticated.")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-
-			if userConnection['game'] == None:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-			
-			game = manager.fetch_game(userConnection['game'])
-			if type(game) == bool:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-			
-			# Check if the pairing's turn
-			userID = userConnection['info'].userID
-			partnerID = game.get_partner(userID)
-			turnDeclinePacket = packets.during.turn_decline({
-				"name": userConnection['info'].userName 
-			})
-			await manager.send_direct_message(turnDeclinePacket, partnerID)
-		except Exception as er:
-			print(er)
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
+		
+		# Check if the pairing's turn
+		userID = userConnection['info'].userID
+		partnerID = game.get_partner(userID)
+		turnDeclinePacket = packets.during.turn_decline({
+			"name": userConnection['info'].userName 
+		})
+		await manager.send_direct_message(turnDeclinePacket, partnerID)
+	
 			
 	@staticmethod
 	async def turn_request(data: dict, websocket: WebSocket):
+		
+		userConnection = None
+		game = None
 		try:
-
-			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-			if type(userConnection) == bool:
-				errorPacket = packets.error("You are not authenticated.")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-
-			if userConnection['game'] == None:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-			
-			game = manager.fetch_game(userConnection['game'])
-			if type(game) == bool:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-			
-			# Check if the pairing's turn
-			userID = userConnection['info'].userID
-			
-			# Make it check game type == group else just user userID again.
-			groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID 
-			currentTurn = game.mm_get_current_turn()
-			if userID == currentTurn or groupLeaderID == currentTurn:
-				
-
-				# get partner id and send suggestion
-				# Send the draft to them
-				dataDictionary = copy.deepcopy(data['d'])
-				dataDictionary['user'] = userID
-				sendToPartner = packets.during.turn_request(dataDictionary)
-				partnerID = game.get_partner(userID)
-				if type(partnerID) == bool:
-					# make game turn happen instead
-					print("Partner doesnt exist, performing their game turn instead")
-					return await GameHandler.game_turn(data, websocket)
-				game.game.print_board()
-				await manager.send_direct_message(sendToPartner, partnerID)
-
-			else:
-				errorPacket = packets.error("It is not your turn currently!")
-				return await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
-				
-
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
 		except Exception as e:
-			print(e)
+			print("Error", e)
+			return 
+			
+		# Check if the pairing's turn
+		userID = userConnection['info'].userID
+		
+		# Make it check game type == group else just user userID again.
+		groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID 
+		currentTurn = game.mm_get_current_turn()
+		if userID == currentTurn or groupLeaderID == currentTurn:
+			
+
+			# get partner id and send suggestion
+			# Send the draft to them
+			dataDictionary = copy.deepcopy(data['d'])
+			dataDictionary['user'] = userID
+			sendToPartner = packets.during.turn_request(dataDictionary)
+			partnerID = game.get_partner(userID)
+			if type(partnerID) == bool:
+				# make game turn happen instead
+				print("Partner doesnt exist, performing their game turn instead")
+				return await GameHandler.game_turn(data, websocket)
+			game.game.print_board()
+			await manager.send_direct_message(sendToPartner, partnerID)
+
+		else:
+			errorPacket = packets.error("It is not your turn currently!")
+			return await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
 
 	@staticmethod
 	async def bot_turn_handler(game: Game, websocket: WebSocket):
@@ -467,141 +467,135 @@ class GameHandler:
 			Returns:
 				None
 		"""
+		
+		userConnection = None
+		game = None
 		try:
-			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-			if type(userConnection) == bool:
-				errorPacket = packets.error("You are not authenticated.")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
+			
+		# Check if the pairing's turn
+		userID = userConnection['info'].userID
+		
+		# Make it check game type == group else just user userID again.
+		groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID 
+		currentTurn = game.mm_get_current_turn()
+		if userID == currentTurn or groupLeaderID == currentTurn:
+			scoringPlayer = groupLeaderID if game.type == "GROUP" else userID
+			pointsAmount = await game.game_turn(data['d']['letters'])
+			
+			if type(pointsAmount) == bool:
+				errorPacket = packets.error("Invalid placement of letters!")
+				await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
+				return
+				
+			newGrid = game.game.export_grid()
+			nextTurn = game.mm_next_turn()
 
-			if userConnection['game'] == None:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
+			# Update the board for other players,
+			gameUpdatePacket = packets.during.game_update({
+				"grid": newGrid,
+				"latestPlaced": game.game.export_latest_placed(),
+				"turn": nextTurn,
+				# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
+				"points": pointsAmount,
+				"pointsUser": scoringPlayer
+			})
 			
-			game = manager.fetch_game(userConnection['game'])
-			if type(game) == bool:
-				errorPacket = packets.error("The game does not exist")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-				
-			# Check if the pairing's turn
-			userID = userConnection['info'].userID
-			
-			# Make it check game type == group else just user userID again.
-			groupLeaderID = game.get_group_leader_id(userID) if game.type == "GROUP" else userID 
-			currentTurn = game.mm_get_current_turn()
-			if userID == currentTurn or groupLeaderID == currentTurn:
-				scoringPlayer = groupLeaderID if game.type == "GROUP" else userID
-				pointsAmount = await game.game_turn(data['d']['letters'])
-				
-				if type(pointsAmount) == bool:
-					errorPacket = packets.error("Invalid placement of letters!")
-					await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
+			letterOwnerID = None
+			if game.type == "GROUP":
+				turnPartnersID = game.get_partner(nextTurn)
+				# this is the packet that gets sent to everyone, but if the turn if of their leaders, the turn needs to change to them.
+				if turnPartnersID != None:
+					originalTurn = game.mm_get_current_turn()
+					for player in game.players:
+						if player.userID == userID:
+							continue
+						
+						if player.userID == turnPartnersID:
+							gameUpdatePacket['d']['turn'] = player.userID
+						else:
+							gameUpdatePacket['d']['turn'] = originalTurn
+						await manager.send_direct_message(gameUpdatePacket, player.userID)
+						# await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+
+				leaderID = game.get_group_leader_id(userID) # type: ignore
+				if (leaderID == None):
+					print("Leader ID is none...")
 					return
-					
-				newGrid = game.game.export_grid()
-				nextTurn = game.mm_next_turn()
-
-				# Update the board for other players,
+				letters = game.game.fetch_player_letters(leaderID)
+				partnerID = game.get_partner(userID)
 				gameUpdatePacket = packets.during.game_update({
 					"grid": newGrid,
 					"latestPlaced": game.game.export_latest_placed(),
 					"turn": nextTurn,
-					# Pretty sure if i add this here the way I have implemented it on the frontend will add it to the player.
 					"points": pointsAmount,
-					"pointsUser": scoringPlayer
+					"pointsUser": scoringPlayer,
+					"partner": partnerID,
+					"letters": letters
 				})
-				
-				letterOwnerID = None
-				if game.type == "GROUP":
-					turnPartnersID = game.get_partner(nextTurn)
-					# this is the packet that gets sent to everyone, but if the turn if of their leaders, the turn needs to change to them.
-					if turnPartnersID != None:
-						originalTurn = game.mm_get_current_turn()
-						for player in game.players:
-							if player.userID == userID:
-								continue
-							
-							if player.userID == turnPartnersID:
-								gameUpdatePacket['d']['turn'] = player.userID
-							else:
-								gameUpdatePacket['d']['turn'] = originalTurn
-							await manager.send_direct_message(gameUpdatePacket, player.userID)
-							# await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
-
-					leaderID = game.get_group_leader_id(userID) # type: ignore
-					if (leaderID == None):
-						print("Leader ID is none...")
-						return
-					letters = game.game.fetch_player_letters(leaderID)
-					partnerID = game.get_partner(userID)
-					gameUpdatePacket = packets.during.game_update({
-						"grid": newGrid,
-						"latestPlaced": game.game.export_latest_placed(),
-						"turn": nextTurn,
-						"points": pointsAmount,
-						"pointsUser": scoringPlayer,
-						"partner": partnerID,
-						"letters": letters
-					})
-					hasChanged = False
-					if leaderID == partnerID and nextTurn == partnerID:
-						hasChanged = True
-						gameUpdatePacket['d']['turn'] = userID
-					# send packet to the person who just send the confirmation
-					print(f"Sending user (ID: {userID})\nPacket: {gameUpdatePacket}")
-					await manager.send_direct_message(gameUpdatePacket, userID)
-					# now gets user's partner
-					# if nextturn == userid, change to the partner
-					print("partner id: ", partnerID)
-					print("user id: ", userID)
-					if hasChanged:
-						# Changed from nextTurn to userID, so change it back
-						gameUpdatePacket['d']['turn'] = nextTurn
-					gameUpdatePacket['d']['partner'] = userID
-					del gameUpdatePacket['d']['points']
-					print(f"Sending partner (ID: {partnerID})\nPacket: {gameUpdatePacket}")
-					await manager.send_direct_message(gameUpdatePacket, partnerID)
-				else:
-					letterOwnerID = userID
-					letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
-					updateCurrentUser = packets.during.game_update({
-						"grid": newGrid,
-						"latestPlaced": game.game.export_latest_placed(),
-						"turn": nextTurn,
-						"points": pointsAmount,
-						"pointsUser": scoringPlayer,
-						"letters": letters
-					})
-					await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
-					await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
-			
-				if nextTurn == -2:
-					await GameHandler.bot_turn_handler(game, websocket)
-				if game.game.finished:
-					return await GameHandler.finish_game(websocket)
+				hasChanged = False
+				if leaderID == partnerID and nextTurn == partnerID:
+					hasChanged = True
+					gameUpdatePacket['d']['turn'] = userID
+				# send packet to the person who just send the confirmation
+				print(f"Sending user (ID: {userID})\nPacket: {gameUpdatePacket}")
+				await manager.send_direct_message(gameUpdatePacket, userID)
+				# now gets user's partner
+				# if nextturn == userid, change to the partner
+				print("partner id: ", partnerID)
+				print("user id: ", userID)
+				if hasChanged:
+					# Changed from nextTurn to userID, so change it back
+					gameUpdatePacket['d']['turn'] = nextTurn
+				gameUpdatePacket['d']['partner'] = userID
+				del gameUpdatePacket['d']['points']
+				print(f"Sending partner (ID: {partnerID})\nPacket: {gameUpdatePacket}")
+				await manager.send_direct_message(gameUpdatePacket, partnerID)
 			else:
-				errorPacket = packets.error("It is not your turn currently!")
-				return await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
+				letterOwnerID = userID
+				letters = game.game.fetch_player_letters(letterOwnerID) # type: ignore
+				updateCurrentUser = packets.during.game_update({
+					"grid": newGrid,
+					"latestPlaced": game.game.export_latest_placed(),
+					"turn": nextTurn,
+					"points": pointsAmount,
+					"pointsUser": scoringPlayer,
+					"letters": letters
+				})
+				await manager.broadcast_specific(gameUpdatePacket, [x.userID for x in game.players if x.userID != websocket.user_id]) # type: ignore
+				await manager.send_direct_message(updateCurrentUser, websocket.user_id) # type: ignore
+		
+			if nextTurn == -2:
+				await GameHandler.bot_turn_handler(game, websocket)
+			if game.game.finished:
+				return await GameHandler.finish_game(websocket)
+		else:
+			errorPacket = packets.error("It is not your turn currently!")
+			return await manager.send_direct_message(errorPacket, websocket.user_id) # type: ignore
 
-		except Exception as e:
-			print(e)
+
 
 	@staticmethod
 	async def finish_game(websocket: WebSocket | None = None, game: Game | None = None, extra_user_ids: list[int] | None = None):
-		if game is None:
-			if websocket is None:
-				return
-			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-			if type(userConnection) == bool:
-				return
 
-			if userConnection['game'] == None:
-				errorPacket = packets.error("You are not in a game")
-				return await manager.send_message(websocket, json.dumps(errorPacket))
-			
-			game = manager.fetch_game(userConnection['game'])
-			if type(game) == bool:
-				return
-			
+		
+		userConnection = None
+		game = None
+		if websocket is None:
+			return
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
+		
 		
 		# {
 		# 	"grid": grid,
@@ -610,8 +604,6 @@ class GameHandler:
 		# }
 		gameResult = game.finish_game()
 		
-		
-	
 		async for session in get_session():
 			if game.type == "BOT" or game.type == "NORMAL":
 				for player in gameResult['players']:
@@ -728,12 +720,8 @@ class GameHandler:
 			sendPacket = packets.during.chat_message(message, fetchModel)
 			await manager.broadcast_specific(sendPacket, [x.userID for x in game.players])
 		
-
-		
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
-		
-		
 		game = manager.fetch_game(data['d']['code'])
 		if type(game) == bool:
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
