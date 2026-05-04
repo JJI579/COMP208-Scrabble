@@ -1,5 +1,6 @@
 
-from typing import Literal, TypedDict
+from typing import Literal
+from typing_extensions import TypedDict
 from modules.schema import PacketType, UserFetch
 
 class BasePacket(TypedDict):

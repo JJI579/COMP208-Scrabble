@@ -120,15 +120,16 @@ class refreshForm(BaseModel):
  
 #  Friends
 class FriendRequest(BaseModel):
-    toUserID: int
-    
+	toUserID: int
+	
 
 class GameOptions(BaseModel):
-    game_type: GAME_TYPE
-    group_size: Optional[int] = None
-    time_limit: int | str
-    dictionary: bool
-    bot_difficulty: Optional[BOT_DIFFICULTY] = "hard"
+	code: Optional[str] = ""
+	game_type: GAME_TYPE
+	group_size: Optional[int] = None
+	time_limit: int | str
+	dictionary: bool
+	bot_difficulty: Optional[BOT_DIFFICULTY] = "hard"
 
 class PersonalItemReturn(BaseModel):
 	itemID: int

@@ -2,14 +2,16 @@ from fastapi import APIRouter, WebSocket, Depends, WebSocketDisconnect
 from modules.database.database import get_session, AsyncSession
 from modules.functions import get_current_user
 from modules.logger import WebsocketLogger
-from typing import Annotated, TypedDict
+from typing import Annotated
+from typing_extensions import TypedDict
 from modules.database.models import User
 from modules.schema import GameOptions, PacketType, UserFetch
 from modules.websocket.WebsocketManager import manager
 from sqlmodel import select
 import asyncio, secrets, json
 from modules.websocket.packets import packets
-from modules.scrabble.game import Game
+# from modules.scrabble.game import Game
+from modules.scrabble.newgame import BotGame, GroupGame, NormalGame
 
 import copy
 
@@ -19,9 +21,17 @@ from pydantic import BaseModel
 
 from modules.websocket.WebsocketManager import Connection
 
-class VerificationReturn(BaseModel):
+
+from typing import TypeAlias
+Game: TypeAlias = BotGame | GroupGame | NormalGame
+
+class VerificationReturn:
 	connection: Connection
 	game: Game
+
+	def __init__(self, conn: Connection, game: Game) -> None:
+		self.connection = conn
+		self.game = game
 
 
 # Word filter
@@ -66,7 +76,7 @@ gameRouter = APIRouter(
 
 @gameRouter.post("/create")
 async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
-
+	print(options)
 	if options.time_limit == "none":
 		options.time_limit = 999999999
 	elif options.time_limit == "45":
@@ -80,8 +90,8 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 	# Add the creator to the game immediately so they become the leader lobby
 	try:
 		game = manager.fetch_game(CODE)
-		if type(game) != bool:
-			game.add_player(UserFetch.model_validate(current_user))
+		if game is not None:
+			game.create_player(UserFetch.model_validate(current_user))
 			manager.set_game(current_user.userID, CODE) # type: ignore
 			await manager.send_direct_message(packets.start.update_game(game.export_data(), game.id), current_user.userID) # type: ignore
 	except Exception as e:
@@ -121,7 +131,7 @@ class GameHandler:
 			return
 		
 		game = manager.fetch_game(data['code'])
-		if type(game) == bool:
+		if game is None:
 			print("Game does not exist")
 			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['code'])))
 			return False
@@ -131,18 +141,18 @@ class GameHandler:
 			return
 
 		gameTurn = game.start_game()
-
-		await manager.broadcast_specific(packets.start.update_game(game.export_data(), game.id), [x.userID for x in game.players])
-		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.userID for x in game.players])
+		
+		await manager.broadcast_specific(packets.start.update_game(game.export_game(), game.id), [x.id for x in game.players])
+		await manager.broadcast_specific(packets.start.start_game(data['code']), [x.id for x in game.players])
 
 		await asyncio.sleep(.5)
 		for x in game.players:
-			if x.userID == -2:
+			if x.id == -2:
 				continue
-			await GameHandler.game_update(data['code'], x.userID)
+			await GameHandler.game_update(data['code'], x.id)
 			letterOwnerID = None
 			if game.type == "GROUP":
-				checkResponse = game.get_group_leader_id(x.userID)
+				checkResponse = game.get_group_leader_id(x.id)
 				if checkResponse == None:
 					# This shouldnt happen
 					# TODO: RETURN ERROR SAYING THAT USER CANNOT BE FOUND?
@@ -173,25 +183,31 @@ class GameHandler:
 	
 	
 	@staticmethod
+	async def verify_connection(websocket: WebSocket) -> Connection:
+		userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
+		if type(userConnection) == bool:
+			errorPacket = packets.error("You are not authenticated.")
+			await manager.send_message(websocket, json.dumps(errorPacket))
+			raise Exception("They are not authenticated")
+		return userConnection
+	
+	@staticmethod
 	async def verify_connection_and_game(websocket: WebSocket) -> VerificationReturn:
+		
 		try:
-			userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-			if type(userConnection) == bool:
-				errorPacket = packets.error("You are not authenticated.")
-				await manager.send_message(websocket, json.dumps(errorPacket))
-				raise Exception("They are not authenticated")
-
+			userConnection = await GameHandler.verify_connection(websocket)
+			print(userConnection)
 			if userConnection['game'] == None:
 				errorPacket = packets.error("You are not in a game")
 				await manager.send_message(websocket, json.dumps(errorPacket))
 				raise Exception("They are not in a game")
 			
 			game = manager.fetch_game(userConnection['game'])
-			if type(game) == bool:
+			if game is None:
 				errorPacket = packets.error("You are not in a game")
 				await manager.send_message(websocket, json.dumps(errorPacket))
 				raise Exception("They are not in a game")
-			return VerificationReturn(connection=userConnection, game=game)
+			return VerificationReturn(userConnection, game)
 		except Exception as e:
 			raise e
 		
@@ -722,79 +738,92 @@ class GameHandler:
 		
 	@staticmethod
 	async def player_join(data: dict, websocket: WebSocket):
-		game = manager.fetch_game(data['d']['code'])
-		if type(game) == bool:
-			await manager.send_message(websocket, json.dumps(packets.start.invalid_game(data['d']['code'])))
-			return False
-		userID = websocket.user_id # type: ignore
-		userData = manager.connections[userID]['info']
-		fetchModel = UserFetch.model_validate(userData)
 
-		if any(player.userID == userID for player in game.players):
-			manager.set_game(userID, game.id)
-			await GameHandler.game_update(game.id, websocket)
-			if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted: # type: ignore
-				await GameHandler.game_start({"d": {"code": game.id}}, websocket)
-			return True
+		userConnection = None
+		game = None
+		if websocket is None:
+			return
 		try:
-			game.add_player(fetchModel)
-			manager.set_game(userID, game.id)
-		except Exception as er:
-			if er.args[0] == "Player already in game":
-				sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
-				await GameHandler.game_update(game.id, websocket)
-				await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
-				if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted: # type: ignore
-					await GameHandler.game_start({"d": {"code": game.id}}, websocket)
-				return True
-			else:
-				print("Error with game not exsiting.")
-			print(f"error: {er}")
-			
-			# INFO: This error is weird.
-			errorPacket = packets.error(er.args[0])
-			await manager.send_message(websocket, json.dumps(errorPacket))
-			return False
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
+			return 
+	
+		userID = userConnection['info'].userID
 		try:
+			game.create_player(userConnection['info'])
 			manager.set_game(userID, game.id)
 		except Exception as er:
 			print("trying to set user game but error: ", er)
-		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
-		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+			return
+		sendPacket = packets.start.join_game(gameID=game.id, user=userConnection['info'].model_dump(mode="json"))
+		await manager.broadcast_specific(sendPacket, [x.id for x in game.players if x.id != userID])
 		await asyncio.sleep(.4)
 		for player in game.players:
-			await GameHandler.game_update(game.id, player.userID)
-		return True
+			await GameHandler.game_update(game.id, player.id)
+
+
+		# 
+		# if any(player.userID == userID for player in game.players):
+		# 	manager.set_game(userID, game.id)
+		# 	await GameHandler.game_update(game.id, websocket)
+		# 	if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted: # type: ignore
+		# 		await GameHandler.game_start({"d": {"code": game.id}}, websocket)
+		# 	return True
+		# try:
+		# 	game.add_player(fetchModel)
+		# 	manager.set_game(userID, game.id)
+		# except Exception as er:
+		# 	if er.args[0] == "Player already in game":
+		# 		sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
+		# 		await GameHandler.game_update(game.id, websocket)
+		# 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		# 		if game.type == "BOT" and websocket.user_id == game.leader and not game.hasStarted: # type: ignore
+		# 			await GameHandler.game_start({"d": {"code": game.id}}, websocket)
+		# 		return True
+		# 	else:
+		# 		print("Error with game not exsiting.")
+		# 	print(f"error: {er}")
+			
+		# 	# INFO: This error is weird.
+		# 	errorPacket = packets.error(er.args[0])
+		# 	await manager.send_message(websocket, json.dumps(errorPacket))
+		# 	return False
+		# try:
+		# 	manager.set_game(userID, game.id)
+		# except Exception as er:
+		# 	print("trying to set user game but error: ", er)
+		# sendPacket = packets.start.join_game(gameID=game.id, user=fetchModel.model_dump(mode="json"))
+		# await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
+		# await asyncio.sleep(.4)
+		# for player in game.players:
+		# 	await GameHandler.game_update(game.id, player.userID)
+		# return True
 
 	@staticmethod
 	async def player_leave(data: dict, websocket: WebSocket):
-		userID = websocket.user_id # type: ignore
-		user = manager.fetch_connection(userID)
-		if type(user) == bool:
-			# INFO: if the websocket has managed to send this yet not be authenticated within the manager 
-			# class this is like impossible
-			# so close their websocket,
-			print("websocket should not be existing...")
-			errorPacket = packets.error("Your websocket has not been authenticated yet...")
-			await manager.send_message(websocket, json.dumps(errorPacket))
-			await websocket.close()
-			return
-		
 
-		if user['game'] == None:
-			print("No game exists under the user....")
+		userConnection = None
+		game = None
+		if websocket is None:
 			return
-		
-		game = manager.fetch_game(user['game'])
-		if type(game) == bool:
-			print("the game doesnt exist...")
+		try:
+			resp = await GameHandler.verify_connection_and_game(websocket)
+			userConnection = resp.connection
+			game = resp.game
+		except Exception as e:
+			print("Error", e)
 			return 
-
+		
+		userID = userConnection['info'].userID
+		
 		if game.type == "BOT" and game.hasStarted:
 			return await GameHandler.finish_game(game=game, extra_user_ids=[userID])
 
 		try:
-			game.remove_player(user['info'])
+			game.remove_player(userConnection['info'])
 		except Exception as er:
 			print(f"Error removing player from game: {er}")
 			manager.connections[userID]['game'] = None
@@ -805,6 +834,7 @@ class GameHandler:
 		# remove it from the user's dictionary
 		manager.connections[userID]['game'] = None
 
+		
 		if len(game.players) == 0:
 			leavePacket = packets.start.confirm_leave(game.id)
 			await manager.send_direct_message(leavePacket, userID)
@@ -815,7 +845,7 @@ class GameHandler:
 		if game.hasStarted and game.game.finished:
 			return await GameHandler.finish_game(game=game, extra_user_ids=[userID])
 		
-		sendPacket = packets.start.leave_game(game.id, user['info'].model_dump(mode="json"))
+		sendPacket = packets.start.leave_game(game.id, userConnection['info'].model_dump(mode="json"))
 		await manager.broadcast_specific(sendPacket, [x.userID for x in game.players if x.userID != userID])
 		leavePacket = packets.start.confirm_leave(game.id)
 		await manager.send_direct_message(leavePacket, userID)
@@ -829,7 +859,7 @@ class GameHandler:
 	@staticmethod
 	async def game_update(gameID: str, websocket: WebSocket | int):
 		game = manager.fetch_game(gameID)
-		if type(game) == bool:
+		if game is None:
 			print("game type is bool")
 			errorPacket = json.dumps(packets.start.invalid_game(gameID))
 			if type(websocket) == int:
@@ -839,17 +869,19 @@ class GameHandler:
 			return False
 		
 		
-		packetData = packets.start.update_game(game.export_data(), game.id)
-		if game.hasStarted:
+		packetData = packets.start.update_game(game.export_game(), game.id)
+		if game.get_started():
 			userID = websocket.user_id if type(websocket) == WebSocket else websocket # type: ignore
-			if game.type == "GROUP":
+			if game.get_type() == "GROUP":
 				groupLeaderID = game.get_group_leader_id(userID) # type: ignore
 				letters = game.game.fetch_player_letters(groupLeaderID) # type: ignore
 				packetData['d']['letters'] = letters # type: ignore
 			else:
 				packetData['d']['letters'] = game.game.fetch_player_letters(userID) # type: ignore
-				
+		
+		
 		await manager.send_direct_message(packetData, websocket.user_id if type(websocket) == WebSocket else websocket) # type: ignore
+		
 	
 	class GroupJoinData(TypedDict):
 		index: int

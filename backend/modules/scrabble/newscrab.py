@@ -1,10 +1,7 @@
 # Plan
+from modules.scrabble.exceptions import *
+from modules.scrabble.scrabble_types import *
 
-
-from exceptions import *
-from scrabble_types import *
-from pathlib import Path
-import json
 
 
 
@@ -40,7 +37,7 @@ class Scrabble:
 			self.grid.append([])
 			for x in range(BOARD_SIZE):
 
-				coord = Coordinate(x,y)
+				coord = Coordinate(x=x,y=y)
 				modifier: Modifier = self.calculate_modifier(coord)
 				letter = Letter(letter=EMPTY_TILE, isBlank=False)
 				tile = Tile(letter=letter, modifier=modifier, coordinate=coord)
@@ -51,9 +48,9 @@ class Scrabble:
 
 		new.grid = [
 			[Tile(
-				Letter(tile.letter.letter, tile.letter.isBlank),
-				Modifier(tile.modifier.modifier, tile.modifier.modifierUsed),
-				Coordinate(tile.coordinate.x, tile.coordinate.y)
+				Letter(letter=tile.letter.letter, isBlank=tile.letter.isBlank),
+				Modifier(modifier=tile.modifier.modifier, modifierUsed=tile.modifier.modifierUsed),
+				Coordinate(x=tile.coordinate.x, y=tile.coordinate.y)
 			) for tile in row]
 			for row in self.grid
 		]
@@ -67,15 +64,15 @@ class Scrabble:
 	def calculate_modifier(self, coordinate: Coordinate) -> Modifier:
 		coord = coordinate.export()
 		if coord in self.double_letter:
-			return Modifier(ModifierValue.DOUBLE_LETTER, False)
+			return Modifier(modifier=ModifierValue.DOUBLE_LETTER, modifierUsed=False)
 		elif coord in self.triple_letter:
-			return Modifier(ModifierValue.TRIPLE_LETTER, False)
+			return Modifier(modifier=ModifierValue.TRIPLE_LETTER, modifierUsed=False)
 		elif coord in self.double_word:
-			return Modifier(ModifierValue.DOUBLE_WORD, False)
+			return Modifier(modifier=ModifierValue.DOUBLE_WORD, modifierUsed=False)
 		elif coord in self.triple_word:
-			return Modifier(ModifierValue.TRIPLE_WORD, False)
+			return Modifier(modifier=ModifierValue.TRIPLE_WORD, modifierUsed=False)
 		else:
-			return Modifier(None, False)
+			return Modifier(modifier=None, modifierUsed=False)
 
 	# Validation Methods
 	def reset_cell(self, coordinate: Coordinate):
@@ -101,7 +98,7 @@ class Scrabble:
 	def convert_id_to_coordinate(self, squareID: int):
 		x = squareID % 15
 		y = squareID // 15
-		return Coordinate(x, y)
+		return Coordinate(x=x, y=y)
 
 	def convert_coordinate_to_id(self, coordinate: Coordinate):
 		x = coordinate.x
@@ -124,13 +121,13 @@ class Scrabble:
 		x, y = position.export()
 		dx, dy = (1, 0) if direction == DirectionValue.RIGHT else (0, 1)
 
-		while 0 <= x - dx < 15 and 0 <= y - dy < 15 and self.get_cell(Coordinate(x - dx, y - dy)).letter.letter != EMPTY_TILE:
+		while 0 <= x - dx < 15 and 0 <= y - dy < 15 and self.get_cell(Coordinate(x=x - dx, y=y - dy)).letter.letter != EMPTY_TILE:
 			x -= dx
 			y -= dy
 
 		coordinates = []
-		while 0 <= x < 15 and 0 <= y < 15 and self.get_cell(Coordinate(x, y)).letter.letter != EMPTY_TILE:
-			coordinates.append(Coordinate(x,y))
+		while 0 <= x < 15 and 0 <= y < 15 and self.get_cell(Coordinate(x=x, y=y)).letter.letter != EMPTY_TILE:
+			coordinates.append(Coordinate(x=x,y=y))
 			x += dx
 			y += dy
 
@@ -299,4 +296,12 @@ class Scrabble:
 	def set_modifier_used(self, tile: Tile):
 		tile.modifier.modifierUsed = True
 
-			
+	def export_grid(self) -> dict:
+		toSend = {}
+		for tile in self.placed:
+			x = tile.coordinate.x
+			y = tile.coordinate.y
+			letter = tile.letter.letter
+			toSend[str((y*15)+x)] = letter
+		return toSend
+	

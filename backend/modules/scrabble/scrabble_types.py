@@ -2,10 +2,10 @@
 
 from typing import Optional
 from enum import Enum
-from scrabble_constants import *
+from modules.scrabble.scrabble_constants import *
 from modules.schema import UserFetch
 import datetime
-
+from pydantic import BaseModel, model_validator
 
 # Types
 class ModifierValue(Enum):
@@ -18,7 +18,7 @@ class DirectionValue(Enum):
 	RIGHT = "RIGHT"
 	DOWN = "DOWN"
 
-class ValidationResult:
+class ValidationResult(BaseModel):
 	def __init__(self, valid: bool, words=None):
 		self.valid = valid
 		self.words = words or []
@@ -26,16 +26,10 @@ class ValidationResult:
 	def __repr__(self) -> str:
 		return f"ValidationResult(valid={self.valid}, words={self.words})"
 	
-	
 
-
-class Coordinate:
+class Coordinate(BaseModel):
 	x: int
 	y: int
-
-	def __init__(self, x: int, y: int) -> None:
-		self.x = x
-		self.y = y
 
 	def __str__(self) -> str:
 		return f"({self.x}, {self.y})"
@@ -49,57 +43,41 @@ class Coordinate:
 	def is_center(self) -> bool:
 		return self.x == CENTER[0] and self.y == CENTER[1]
 	
-class Letter:
+class Letter(BaseModel):
 	letter: str
 	isBlank: bool = False
 
-	def __init__(self, letter: str, isBlank: bool) -> None:
-		self.letter = letter.lower()
-		self.isBlank = isBlank
+	@model_validator(mode="after")
+	def validate_letter(self):
+		self.letter = self.letter.lower()
+		return self
 
 	def __repr__(self) -> str:
 		return f"Letter(letter=\"{self.letter}\", isBlank={self.isBlank})"
 	
-class LetterPlace:
+class LetterPlace(BaseModel):
 	coordinate: Coordinate
 	letter: Letter
 
-	def __init__(self, coordinate: Coordinate, letter: Letter) -> None:
-		self.coordinate = coordinate
-		self.letter = letter
 	
 	def __repr__(self) -> str:
 		return f"LetterPlace(coordinate={self.coordinate}, letter={self.letter})"
 
-class Turn:
+class Turn(BaseModel):
 	letters: list[LetterPlace]
 	direction: DirectionValue
 
-	def __init__(self, letters: list[LetterPlace], direction: DirectionValue) -> None:
-		self.letters = letters
-		self.direction = direction
-
-
 	def __repr__(self) -> str:
 		return f"Turn(letters={self.letters}, direction={self.direction})"
-class Modifier: 
+	
+class Modifier(BaseModel): 
 	modifier: ModifierValue | None
 	modifierUsed: bool = False
 
-	def __init__(self, modifier: Optional[ModifierValue] , modifierUsed: bool) -> None:
-		self.modifier = modifier
-		self.modifierUsed = modifierUsed
-
-class Tile:
+class Tile(BaseModel):
 	letter: Letter
 	modifier: Modifier
 	coordinate: Coordinate
-
-	def __init__(self, letter: Letter, modifier: Modifier, coordinate: Coordinate) -> None:
-		self.letter = letter
-		self.modifier = modifier
-		self.coordinate = coordinate
-
 
 	def update_letter(self, letter: Letter):
 		self.letter = letter

@@ -5,7 +5,8 @@ from modules.database.database import get_session
 from sqlmodel import select
 from sqlalchemy import and_, or_
 from modules.database.models import User, Token
-from modules.scrabble.game import Game
+# from modules.scrabble.game import Game
+from modules.scrabble.newgame import BotGame, GroupGame, NormalGame
 from modules.schema import GameOptions, UserFetch
 from modules.websocket.packets import packets
 import asyncio
@@ -13,7 +14,7 @@ import secrets
 
 letterChoice = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 
 class Connection(TypedDict):
@@ -51,13 +52,25 @@ class WebsocketManager:
 		code = generateGameCode()
 		while code in self.games:
 			code = generateGameCode()
-		self.games[code] = Game(code, options, leaderID)
+
+		options.code = code
+		if options.game_type == 'NORMAL':
+			self.games[code] = NormalGame(options)
+		elif options.game_type == 'GROUP':
+			groups = []
+			for _ in range(4):
+				groups.append([])
+			self.games[code] = GroupGame(options, groups)
+		else:
+			# Bot
+			self.games[code] = BotGame(options)
 		return code
 	
-	def fetch_game(self, code: str) -> Game | bool:
+	def fetch_game(self, code: str) -> Optional[GroupGame | NormalGame | BotGame]:
 		if code in self.games:
 			return self.games[code]
-		return False
+		return None
+		
 	
 	async def send_message(self, websocket: WebSocket, message: str):
 		try:
@@ -171,6 +184,7 @@ class WebsocketManager:
 	def set_game(self, userID: int, gameID: str):
 		if userID in self.connections: 
 			if gameID in self.games:
+				print("set game id")
 				self.connections[userID]['game'] = gameID
 			else:
 				raise Exception("Game does not exist")
