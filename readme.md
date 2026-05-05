@@ -7,6 +7,11 @@ This is a University Group Project where we developed a live websocketed-solutio
 - Bot - A CPU to play against which has different levels of difficulty
 - Group - A new mode where you can play in pairs against other groups / individuals and work together
 
+# How to access
+
+Our game is hosted live at:
+https://scrab.online/
+
 # How to install
 
 ## Backend
