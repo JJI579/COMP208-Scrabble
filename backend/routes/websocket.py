@@ -6,12 +6,14 @@ from typing import Annotated
 from typing_extensions import TypedDict
 from modules.database.models import User
 from modules.schema import GameOptions, PacketType, UserFetch
-from modules.websocket.WebsocketManager import manager
+from backend.modules.handlers.ConnectionsHandler import manager
 from sqlmodel import select
 import asyncio, secrets, json
 from modules.websocket.packets import packets
 # from modules.scrabble.game import Game
 from modules.scrabble.newgame import BotGame, GroupGame, NormalGame
+
+from typing import Optional
 
 import copy
 
@@ -19,7 +21,7 @@ import re
 
 from pydantic import BaseModel
 
-from modules.websocket.WebsocketManager import Connection
+from backend.modules.handlers.ConnectionsHandler import Connection
 
 
 from typing import TypeAlias
@@ -63,16 +65,6 @@ gameRouter = APIRouter(
 )
 
 
-# @gameRouter.get('/words')
-# async def addwords(session: AsyncSession = Depends(get_session)):
-	
-# 	_words = [{'word': x.strip()} for x in open('sowpods.txt', 'r').read().split('\n')]
-# 	total = 0
-
-# 	await session.execute(insert(Word), _words)
-# 	await session.commit()
-	
-# 	return {'total': len(_words)}
 
 @gameRouter.post("/create")
 async def createGame(options: GameOptions, current_user: Annotated[User, Depends(get_current_user)], session: AsyncSession = Depends(get_session)):
@@ -103,7 +95,14 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 
 wsLogger = WebsocketLogger()
 
-class GameHandler:
+# New gamehandler class
+# only handles packets related to the game, such as starting the game, making a turn, skipping, etc.
+
+from modules.websocket.WebsocketWrapper import WebsocketWrapper
+from modules.handlers.BaseHandler import handler
+
+	
+class _GameHandler:
 
 	def __init__(self) -> None:
 		pass
@@ -928,11 +927,17 @@ class GameHandler:
 		await manager.broadcast_specific(packetData, [x.userID for x in gameData.players])
 		
 
+# Handle authentication
+from modules.database.models import Token
+from sqlalchemy import and_
+
 @router.websocket('/ws')
-async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
+async def websocket_endpoint(ws: WebSocket, session: AsyncSession = Depends(get_session)):
+	websocket = WebsocketWrapper(ws)
+
 	hasIdentified = False
 	sessionID = secrets.token_hex(20)
-	await websocket.accept()
+	await wsClient.accept()
 	websocket.session_id = sessionID # type: ignore
 	while True:
 		try:
@@ -942,16 +947,29 @@ async def websocket_endpoint(websocket: WebSocket, session: AsyncSession = Depen
 			return
 		packetType: PacketType = data.get('t', '')
 		if packetType == "IDENTIFY" and not hasIdentified:
-			identifyResponse = await manager.identify(websocket, data['d']['token'], sessionID)
+			token = data['d']['token']
+			# Handle authentication
+			async for session in get_session():
+				resp = await session.execute(select(Token.userID, User).where(and_(Token.bearerTokenID == token, Token.isActive == True)).join(
+					User, User.userID == Token.userID
+				))
+				result = resp.all()
+				if not result: 
+					# Close websocket as it does not exist
+					wsLogger.error("Not found, closing websocket.")
+					return await websocket.close()
 			
-			if not identifyResponse:
-				wsLogger.error("Not found, closing websocket.")
-				return await websocket.close()
-			userIdentified = identifyResponse
-			wsLogger.info(f"WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
-			websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
+				else:
+					userID, userInfo = result[0]
+					wsLogger.info(f"WS ID: {websocket.session_id} | User Identified: {userIdentified}")
+					websocket.set_user(UserFetch.model_validate(userInfo))
+					handler.connections.set_connection(websocket)
+					break
+				
+
 			await manager.send_direct_message(packets.authentication.identify(websocket.session_id), userIdentified) # type: ignore
 			hasIdentified = True
+
 		elif packetType == "RESUME" and not hasIdentified:
 			
 			resumeResponse = await manager.resume(websocket, data['d']['session_id'])

@@ -1,6 +1,6 @@
 from modules.scrabble.newscrab import Scrabble
 from modules.schema import UserFetch
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 import datetime
 import copy
 
@@ -9,6 +9,7 @@ from modules.scrabble.scrabble_types import *
 from modules.scrabble.letter_bag import LetterBag
 from modules.schema import GameOptions
 
+
 # --------------------
 # Models
 # --------------------
@@ -16,7 +17,7 @@ from modules.schema import GameOptions
 class Player(BaseModel):
 	id: int = -1
 	data: UserFetch
-	letters: list[Letter] = []
+	letters: list[Letter] = Field(default_factory=list)
 	points: int = 0
 
 	@model_validator(mode="after")
@@ -29,10 +30,10 @@ class Player(BaseModel):
 # 	leader: list
 
 class Group(BaseModel):
-	players: list[Player]
+	players: list[Player] = Field(default_factory=list)
 	leader: Player
 	points: int =  0
-	letters: list[Letter] = []
+	letters: list[Letter] = Field(default_factory=list)
 	
 
 A = TypeVar("A", Group, Player)  # Turn type (Player or Group)
@@ -125,10 +126,7 @@ class BaseGame(Generic[A]):
 		return player
 	
 	def fetch_player(self, user: UserFetch) -> Player:
-		for player in self.players:
-			if player.data.userID == user.userID:
-				return player
-		raise Exception("Player does not exist")
+		return self.fetch_player_by_id(user.userID)
 
 	def fetch_player_by_id(self, userID: int) -> Player:
 		for player in self.players:
@@ -159,18 +157,17 @@ class BaseGame(Generic[A]):
 	
 	def get_type(self):
 		return self.options.game_type
+	
+
 # --------------------
 # Normal Game (Player turns)
 # --------------------
-
 class NormalGame(BaseGame[Player]):
 
 	def __init__(self, options: GameOptions) -> None:
 		
 		super().__init__(options)
 		self.players: list[Player] = []
-
-	
 
 	def get_current_turn(self) -> Player:
 		return self.players[self.turn]
@@ -193,10 +190,10 @@ class NormalGame(BaseGame[Player]):
 
 class GroupGame(BaseGame[Group]):
 
-	def __init__(self, options: GameOptions, group: list[list[int]]) -> None:
+	def __init__(self, options: GameOptions, groups: list[Group]) -> None:
 		super().__init__(options)
 		self.players: list[Player] = []
-		self.groups: list[Group] = []
+		self.groups: list[Group] = groups
 		self.partners = {}
 
 	def get_all_players(self) -> list[Player]:

@@ -93,3 +93,4 @@ __pycache__/
 backend/__pycache__/main.cpython-311.pyc
 /backend/modules/scrabble/letter_distribution.json
 /backend/modules/scrabble/scrabble_points.json
+.continue/agents/new-config.yaml
