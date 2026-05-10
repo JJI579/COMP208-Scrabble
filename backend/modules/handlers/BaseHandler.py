@@ -1,5 +1,5 @@
 from backend.modules.handlers import ConnectionsHandler
-from modules.handlers import LobbyHandler, GameHandler, CreationHandler, WebsocketHandler
+from modules.handlers import LobbyHandler, GameHandler, CreationHandler
 
 class BaseHandler:
 	def __init__(self):
@@ -7,7 +7,6 @@ class BaseHandler:
 		self.create = CreationHandler.CreationHandler()
 		self.game = GameHandler.GameHandler()
 		self.lobby = LobbyHandler.LobbyHandler()
-		self.websocket = WebsocketHandler.WebsocketHandler()
 
 handler = BaseHandler()
 

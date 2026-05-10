@@ -11,7 +11,7 @@ from sqlmodel import select
 import asyncio, secrets, json
 from modules.websocket.packets import packets
 # from modules.scrabble.game import Game
-from modules.scrabble.newgame import BotGame, GroupGame, NormalGame
+from modules.scrabble.newgame import BotGame, GroupGame, NormalGame, BaseGame
 
 from typing import Optional
 
@@ -78,14 +78,23 @@ async def createGame(options: GameOptions, current_user: Annotated[User, Depends
 	elif options.time_limit == "2":
 		options.time_limit = 7200
 	
-	CODE = manager.create_game(options, current_user.userID) # type: ignore
+	gameObject: BaseGame = None
+	if options.game_type == 'BOT':
+		gameObject = handler.create.create_bot_game(options, current_user.userID)
+	elif options.game_type == 'GROUP':
+		gameObject = handler.create.create_group_game(options, current_user.userID)
+	else:
+		gameObject = handler.create.create_game(options, current_user.userID)
 	# Add the creator to the game immediately so they become the leader lobby
+	CODE = handler.game.generate_code()
+	handler.game.set_game(CODE, gameObject)
 	try:
-		game = manager.fetch_game(CODE)
-		if game is not None:
-			game.create_player(UserFetch.model_validate(current_user))
-			manager.set_game(current_user.userID, CODE) # type: ignore
-			await manager.send_direct_message(packets.start.update_game(game.export_data(), game.id), current_user.userID) # type: ignore
+		
+		gameObject.create_player(UserFetch.model_validate(current_user))
+		userWebsocket = handler.connections.get_connection_or_none(current_user.userID)
+		if userWebsocket != None:
+			userWebsocket.set_game(gameObject)
+			await manager.send_direct_message(packets.start.update_game(gameObject.export_data(), gameObject.get_id()), current_user.userID) # type: ignore
 	except Exception as e:
 		print("Error setting creator into game:", e)
 	# TODO: add to database
@@ -937,7 +946,7 @@ async def websocket_endpoint(ws: WebSocket, session: AsyncSession = Depends(get_
 
 	hasIdentified = False
 	sessionID = secrets.token_hex(20)
-	await wsClient.accept()
+	await websocket.accept()
 	websocket.session_id = sessionID # type: ignore
 	while True:
 		try:
@@ -965,38 +974,41 @@ async def websocket_endpoint(ws: WebSocket, session: AsyncSession = Depends(get_
 					websocket.set_user(UserFetch.model_validate(userInfo))
 					handler.connections.set_connection(websocket)
 					break
-				
 
 			await manager.send_direct_message(packets.authentication.identify(websocket.session_id), userIdentified) # type: ignore
 			hasIdentified = True
 
 		elif packetType == "RESUME" and not hasIdentified:
-			
-			resumeResponse = await manager.resume(websocket, data['d']['session_id'])
-			if type(resumeResponse) == bool:
-				wsLogger.error("Not found, closing websocket.")
-				return await websocket.close()
-			userData = manager.fetch_connection(resumeResponse)
-			userIdentified = resumeResponse
-			wsLogger.info(f"RESUME | WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
-			websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
-			hasIdentified = True
-			if type(userData) != bool:
-				await asyncio.sleep(1)
-				# send game update to the user.
-				if type(userData['game']) == str:
-					await GameHandler.game_update(userData['game'], websocket)
+			# TODO: reimplement resuming the websocket.
+
+
+			# resumeResponse = await manager.resume(websocket, data['d']['session_id'])
+			# if type(resumeResponse) == bool:
+			# 	wsLogger.error("Not found, closing websocket.")
+			# 	return await websocket.close()
+			# userData = manager.fetch_connection(resumeResponse)
+			# userIdentified = resumeResponse
+			# wsLogger.info(f"RESUME | WS ID: {websocket.session_id} | User Identified: {userIdentified}") # pyright: ignore[reportAttributeAccessIssue]
+			# websocket.user_id = userIdentified # pyright: ignore[reportAttributeAccessIssue]
+			# hasIdentified = True
+			# if type(userData) != bool:
+			# 	await asyncio.sleep(1)
+			# 	# send game update to the user.
+			# 	if type(userData['game']) == str:
+			# 		await GameHandler.game_update(userData['game'], websocket)
+			pass
 		else:
 			if hasIdentified:
 				# ignore ping as doesnt help with debug.
 				if packetType != "PING":
 					print("RECEIVED: ", packetType)
-				userConnection = manager.fetch_connection(websocket.user_id) # type: ignore
-				if type(userConnection) == bool: # will be false
-					print("USER DOES NOT EIXST, REMOVE WEBSOCKET?")
+
+				userIdentified = websocket.get_user()
+				if not userIdentified:
+					wsLogger.error("handler tried to get user and error happened")
 					await manager.send_message(websocket, json.dumps(packets.error("You are not authenticated, Closing websocket.")))
-					break # should break to exit while True.
-				# else is Connection class
+					break # Break to exist while loop
+					
 				match (packetType):
 					case "PLAYER_JOIN":
 						await GameHandler.player_join(data, websocket)

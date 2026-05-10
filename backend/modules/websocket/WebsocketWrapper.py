@@ -35,12 +35,18 @@ class WebsocketWrapper:
 		self._game = game
 
 	# Getters
-	def get_user(self) -> Optional[UserFetch]:
+	def get_user(self) -> UserFetch:
 		return self._user
 	
-	def get_authenticated(self):
+	def get_authenticated(self) -> bool:
 		return self._user is not None
 	
-	def get_session_id(self):
+	def get_session_id(self) -> str:
 		return self._sessionID
+	
+	def get_game(self) -> Optional[BaseGame]:
+		return self._game
+
+
+
 	

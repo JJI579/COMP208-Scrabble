@@ -58,6 +58,7 @@ class BaseGame(Generic[A]):
 
 
 	# --- Turn handling (must be implemented by subclasses) ---
+	
 	def get_current_turn(self) -> A:
 		raise NotImplementedError
 
@@ -154,6 +155,9 @@ class BaseGame(Generic[A]):
 			"finishes": self.finishes
 		}
 		return data
+	
+	def get_id(self):
+		return self.id
 	
 	def get_type(self):
 		return self.options.game_type
